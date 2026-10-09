@@ -289,6 +289,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     </svg>
     <div class="selbar" id="selbar" hidden></div>
     <button class="drivewarn" id="drivewarn" hidden></button>
+    <div class="polybar" id="smartbar" hidden>
+      <div class="seg"><button data-sm="rec" class="on">Reconocer figuras</button><button data-sm="free">Trazo libre</button></div>
+      <label class="seg" style="padding:6px 12px;gap:6px;font-weight:800;font-size:13px;cursor:pointer"><input type="checkbox" id="sm-reg" checked style="accent-color:var(--primary)">Regularizar</label>
+    </div>
     <div class="polybar" id="polybar" hidden>
       <div class="seg"><button data-pm="free" class="on">Libre</button><button data-pm="reg">Regular</button></div>
       <div class="nstep" id="nstep" hidden><button data-n="-1" aria-label="Menos lados">−</button><span id="nval">5 lados</span><button data-n="1" aria-label="Más lados">+</button></div>
@@ -439,6 +443,7 @@ const I={
  circle:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/>',
  rect:'<rect x="4" y="6" width="16" height="12"/>',
  polygon:'<path d="M12 3.5l8 6-3 9.5H7L4 9.5z"/>',
+ smart:'<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/><path d="M3 4c3-2 5 2 8 0" stroke-dasharray="2 2"/>',
  shapes:'<path d="M3 20l5-9 5 9z"/><rect x="13" y="4" width="8" height="8"/><circle cx="7" cy="6" r="3"/>',
  angle:'<path d="M4 19h16M4 19L15 5"/><path d="M11 19a7 7 0 0 0-2.4-5.3"/>',
  dim:'<path d="M4 7v11M20 7v11M4 12.5h16M4 12.5l3-2.3M4 12.5l3 2.3M20 12.5l-3-2.3M20 12.5l-3 2.3"/>',
@@ -489,7 +494,7 @@ const I={
  axes:'<path d="M5 21V3M3 19h18M5 3L3.2 5.6M5 3l1.8 2.6M21 19l-2.6-1.8M21 19l-2.6 1.8"/><path d="M7 17c4-1 7-6 12-12"/>'
 };
 const TOOLS=[
- {g:'Geometría',items:[['point','Punto'],['segment','Segmento'],['line','Recta'],['ray','Rayo'],['circle','Circunfer.'],['rect','Rectángulo'],['polygon','Polígono'],['shapes','Biblioteca'],['angle','Ángulo'],['dim','Cota'],['text','Texto']]},
+ {g:'Geometría',items:[['point','Punto'],['segment','Segmento'],['line','Recta'],['ray','Rayo'],['circle','Circunfer.'],['rect','Rectángulo'],['smart','A mano'],['polygon','Polígono'],['shapes','Biblioteca'],['angle','Ángulo'],['dim','Cota'],['text','Texto']]},
  {g:'Matemática',items:[['solid','Cuerpos 3D'],['numline','Recta num.'],['circgeo','Circ. y ángulos'],['axes','Plano cart.'],['tree','Árbol prob.'],['stat','Estadística']]},
  {g:'Mecánica',items:[['vector','Vector'],['frame','Sist. ref.'],['block','Bloque'],['cart','Carro'],['movers','Móviles'],['bodies','Objetos'],['ball','Esfera'],['incline','Plano incl.'],['rope','Cuerda'],['ground','Superficie'],['spring','Resorte'],['pulley','Polea'],['mgraph','Gráf. mov.'],['proj','Proyectil'],['circmov','Mov. circular'],['coaster','Montaña rusa'],['pendulum','Péndulo'],['fluid','Fluidos']]},
  {g:'Ondas y luz',items:[['wave','Onda'],['fronts','Frentes'],['refr','Refracción'],['optlens','Lente'],['optmirror','Espejo']]},
@@ -502,6 +507,7 @@ const HINTS={
  select:'Clic para seleccionar · arrastra para mover · arrastra en un espacio vacío para seleccionar varios · Alt desactiva el ajuste',
  pan:'Arrastra para desplazar la hoja · rueda del mouse para acercar o alejar',
  point:'Clic para ubicar un punto (se nombra solo: A, B, C…)',
+ smart:'Dibuja con el mouse o el dedo: la app reconoce segmentos, circunferencias, triángulos, cuadriláteros y polígonos regulares',
  polygon:'Libre: clic en cada vértice y en el primero para cerrar · Regular: arrastra desde el centro hasta un vértice',
  wire:'Clic en cada esquina del cable · doble clic o Enter para terminar',
  angle:'Clic en un punto del primer lado, luego en el vértice y luego en el segundo lado',
@@ -617,9 +623,40 @@ function mtext(str,x,y,o){
 }
 
 /* ---------- dibujo ---------- */
+/* ---------- texturas de relleno ---------- */
+const TEX_TYPES=['circle','rect','polygon','block','incline','ground'];
+function rng(seed){let s=seed>>>0||1;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+const TEX={
+ pasto:['Pasto',28,28,()=>{const R=rng(7);let d1='',d2='';for(let i=0;i<14;i++){const x=R()*28,y=4+R()*24,h=4+R()*6,b=(R()-.5)*4;const p=`M${r2(x)} ${r2(y)}q${r2(b*.4)} ${r2(-h*.6)} ${r2(b)} ${r2(-h)}`;if(i%2)d1+=p;else d2+=p}return `<rect width="28" height="28" fill="#7cb342"/><path d="${d1}" stroke="#4f7f2a" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="${d2}" stroke="#a5d063" stroke-width="1.1" fill="none" stroke-linecap="round"/>`}],
+ concreto:['Concreto',32,32,()=>{const R=rng(3);let s='<rect width="32" height="32" fill="#b4b4b0"/>';for(let i=0;i<26;i++){const g=R();s+=`<circle cx="${r2(R()*32)}" cy="${r2(R()*32)}" r="${r2(.4+R()*1.1)}" fill="${g<.5?'#8e8e8a':g<.8?'#cfcfcb':'#6f6f6b'}"/>`}return s}],
+ madera:['Madera',64,22,()=>`<rect width="64" height="22" fill="#c8955a"/><path d="M0 3Q16 1 32 3T64 3M0 9Q16 11 32 8.5T64 9M0 15Q16 13 32 15.5T64 15M0 20Q16 21.5 32 19.5T64 20" stroke="#a06c38" stroke-width="1" fill="none"/><path d="M0 6Q16 5 32 6T64 6M0 12Q16 13 32 12T64 12" stroke="#d9ab74" stroke-width=".8" fill="none"/><ellipse cx="44" cy="12" rx="4" ry="1.8" fill="none" stroke="#8a5a2c" stroke-width=".9"/>`],
+ tierra:['Tierra',32,32,()=>{const R=rng(11);let s='<rect width="32" height="32" fill="#8d6e4f"/>';for(let i=0;i<20;i++){const g=R();s+=`<ellipse cx="${r2(R()*32)}" cy="${r2(R()*32)}" rx="${r2(.6+R()*1.6)}" ry="${r2(.4+R()*1)}" fill="${g<.45?'#6d5038':g<.8?'#a88a68':'#5a412c'}"/>`}return s}],
+ roca:['Roca',48,48,()=>`<rect width="48" height="48" fill="#8f8f8f"/><g stroke="#5e5e5e" stroke-width="1.2" stroke-linejoin="round"><path d="M0 0L14 2L18 14L6 18L0 12Z" fill="#9c9c9c"/><path d="M14 2L30 0L34 12L18 14Z" fill="#878787"/><path d="M30 0L48 0L48 12L34 12Z" fill="#a3a3a3"/><path d="M0 12L6 18L4 32L0 34Z" fill="#949494"/><path d="M6 18L18 14L24 26L14 34L4 32Z" fill="#a8a8a8"/><path d="M18 14L34 12L38 26L24 26Z" fill="#8b8b8b"/><path d="M34 12L48 12L48 30L38 26Z" fill="#999"/><path d="M0 34L4 32L14 34L12 48L0 48Z" fill="#8a8a8a"/><path d="M14 34L24 26L38 26L34 40L22 48L12 48Z" fill="#9f9f9f"/><path d="M38 26L48 30L48 48L22 48L34 40Z" fill="#868686"/></g>`],
+ arena:['Arena',18,18,()=>{const R=rng(5);let s='<rect width="18" height="18" fill="#e6cf98"/>';for(let i=0;i<14;i++)s+=`<circle cx="${r2(R()*18)}" cy="${r2(R()*18)}" r="${r2(.35+R()*.5)}" fill="${R()<.6?'#c4a25a':'#f5e6bf'}"/>`;return s}],
+ agua:['Agua',40,16,()=>`<rect width="40" height="16" fill="#9fd1f0"/><path d="M0 5Q5 2 10 5T20 5T30 5T40 5M-10 13Q-5 10 0 13T10 13T20 13T30 13T40 13T50 13" stroke="#5aa9dc" stroke-width="1.2" fill="none"/>`],
+ ladrillo:['Ladrillo',40,20,()=>`<rect width="40" height="20" fill="#d8cfc4"/><g fill="#b5523b"><rect x="1" y="1" width="38" height="8" rx=".6"/><rect x="-19" y="11" width="38" height="8" rx=".6"/><rect x="21" y="11" width="38" height="8" rx=".6"/></g><g fill="#c96a50" opacity=".6"><rect x="4" y="2.5" width="14" height="1.6"/><rect x="25" y="12.5" width="10" height="1.6"/></g>`],
+ hielo:['Hielo',44,44,()=>`<rect width="44" height="44" fill="#dff2fb"/><path d="M4 10L18 4M10 30L30 20M26 40L42 32M30 8L40 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M0 22L8 18L12 24L22 21M28 0L26 8L32 14" stroke="#9ccfe8" stroke-width=".9" fill="none"/>`],
+ metal:['Metal',12,12,()=>`<rect width="12" height="12" fill="#a7b0ba"/><path d="M-3 3L3 -3M-3 15L15 -3M9 15L15 9" stroke="#c9d0d7" stroke-width="1.1"/><path d="M-3 9L9 -3M3 15L15 3" stroke="#8b949e" stroke-width=".7"/>`],
+ achurado:['Achurado (líneas)',10,10,o=>`${o.s.fill!=='none'?`<rect width="10" height="10" fill="${o.s.fill}" fill-opacity="${o.s.fop}"/>`:''}<path d="M-2.5 2.5L2.5 -2.5M0 10L10 0M7.5 12.5L12.5 7.5" stroke="${o.s.c}" stroke-width="1"/>`],
+ cruzado:['Achurado cruzado',10,10,o=>`${o.s.fill!=='none'?`<rect width="10" height="10" fill="${o.s.fill}" fill-opacity="${o.s.fop}"/>`:''}<path d="M-2.5 2.5L2.5 -2.5M0 10L10 0M7.5 12.5L12.5 7.5M-2.5 7.5L2.5 12.5M0 0L10 10M7.5 -2.5L12.5 2.5" stroke="${o.s.c}" stroke-width=".8"/>`],
+ puntos:['Puntos',10,10,o=>`${o.s.fill!=='none'?`<rect width="10" height="10" fill="${o.s.fill}" fill-opacity="${o.s.fop}"/>`:''}<circle cx="5" cy="5" r="1.3" fill="${o.s.c}"/>`],
+ cuadriculado:['Cuadriculado',12,12,o=>`${o.s.fill!=='none'?`<rect width="12" height="12" fill="${o.s.fill}" fill-opacity="${o.s.fop}"/>`:''}<path d="M0 0H12M0 0V12" stroke="${o.s.c}" stroke-width=".7" fill="none"/>`],
+};
+const hasTex=o=>!!(o.s.tex&&o.s.tex!=='none'&&(o.s.tex!=='imagen'||o.s.timg));
+function texBox(o){let pts;const p=o.pts;
+ if(o.type==='circle'){const r=dist(p[0],p[1]);return [p[0][0]-r,p[0][1]-r,2*r,2*r]}
+ if(o.type==='block')pts=blockCorners(o);else if(o.type==='incline')pts=inclinePts(o);else pts=p;
+ const xs=pts.map(q=>q[0]),ys=pts.map(q=>q[1]),x0=Math.min(...xs),y0=Math.min(...ys);return [x0,y0,Math.max(1,Math.max(...xs)-x0),Math.max(1,Math.max(...ys)-y0)]}
+function texDefs(o,box){if(!hasTex(o))return '';const s=o.s,id='tx'+o.id,sc=s.tsc||1,ro=s.trot||0;
+ if(s.tex==='imagen'){const ar=s.tar||1;
+  if(s.tmode==='cover'){const [x,y,w,h]=box||texBox(o);return `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" x="${r2(x)}" y="${r2(y)}" width="${r2(w)}" height="${r2(h)}"><use href="#ti-${o.id}" width="${r2(w)}" height="${r2(h)}"/></pattern></defs>`}
+  const W=80,H=W/ar;return `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${r2(W)}" height="${r2(H)}" patternTransform="rotate(${ro}) scale(${sc})"><use href="#ti-${o.id}" width="${r2(W)}" height="${r2(H)}"/></pattern></defs>`}
+ const T=TEX[s.tex];if(!T)return '';
+ return `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${T[1]}" height="${T[2]}" patternTransform="rotate(${ro}) scale(${sc})">${T[3](o)}</pattern></defs>`}
+const texFill=o=>`fill="url(#tx${o.id})" fill-opacity="${o.s.top??1}"`;
 function sa(o,fill,w){const s=o.s,W=w??s.w;let d='';
  if(s.dash==='dash')d=` stroke-dasharray="${r2(W*4)} ${r2(W*2.6)}"`;else if(s.dash==='dot')d=` stroke-dasharray="0.1 ${r2(W*2.6)}"`;
- const f=(fill&&s.fill!=='none')?`fill="${s.fill}" fill-opacity="${s.fop}"`:'fill="none"';
+ const f=(fill&&TEX_TYPES.includes(o.type)&&hasTex(o))?texFill(o):(fill&&s.fill!=='none')?`fill="${s.fill}" fill-opacity="${s.fop}"`:'fill="none"';
  return `stroke="${s.c}" stroke-width="${W}" ${f} stroke-linecap="round" stroke-linejoin="round"${d}`}
 function head(tip,from,o){const bk=BOOK(),u=unit(sub(tip,from)),L=bk?9+o.s.w*2.7:7+o.s.w*2.6,W=L*(bk?0.4:0.42),b=sub(tip,mul(u,L)),n=perp(u);
  return {svg:`<polygon points="${P(tip).replace(' ',',')} ${P(add(b,mul(n,W))).replace(' ',',')} ${P(sub(b,mul(n,W))).replace(' ',',')}" fill="${o.s.c}" stroke="${o.s.c}" stroke-width="${r2(o.s.w*0.4)}" stroke-linejoin="round"/>`,back:sub(tip,mul(u,L*0.8))}}
@@ -687,12 +724,13 @@ function drawBox(o){
  if(!BOOK())s+=`<path d="M${C.map(P).join('L')}Z" ${sa(o,true)}/>`;
  else{const base=o.s.fill!=='none'?o.s.fill:'#e0a458',id='g'+o.id,d=Math.min(o.x.w,o.x.h)*(o.type==='cart'?0.3:0.24),D=rot([d*0.8,-d*0.6],o.x.rot),st=`stroke="${shade(base,-0.55)}" stroke-width="1.1" stroke-linejoin="round"`;
   const top=[C[0],C[1],add(C[1],D),add(C[0],D)],side=[C[1],C[2],add(C[2],D),add(C[1],D)];
-  s+=`<defs>${lgrad(id,shade(base,0.45),shade(base,0.05))}</defs><path d="M${side.map(P).join('L')}Z" fill="${shade(base,-0.22)}" ${st}/><path d="M${top.map(P).join('L')}Z" fill="${shade(base,0.62)}" ${st}/><path d="M${C.map(P).join('L')}Z" fill="url(#${id})" ${st}/>`}
+  if(o.type==='block'&&hasTex(o)){const tf=texFill(o),T3=(pp,ov,op)=>`<path d="M${pp.map(P).join('L')}Z" fill="${shade(base,0)}"/><path d="M${pp.map(P).join('L')}Z" ${tf}/><path d="M${pp.map(P).join('L')}Z" fill="${ov}" fill-opacity="${op}" ${st}/>`;s+=T3(side,'#000',0.28)+T3(top,'#fff',0.35)+T3(C,'#fff',0.05)}
+  else s+=`<defs>${lgrad(id,shade(base,0.45),shade(base,0.05))}</defs><path d="M${side.map(P).join('L')}Z" fill="${shade(base,-0.22)}" ${st}/><path d="M${top.map(P).join('L')}Z" fill="${shade(base,0.62)}" ${st}/><path d="M${C.map(P).join('L')}Z" fill="url(#${id})" ${st}/>`}
  if(o.type==='cart'){const r=o.x.h*0.36,c=o.pts[0];[-1,1].forEach((sg,i)=>{s+=wheel(add(c,rot([sg*o.x.w*0.3,o.x.h/2],o.x.rot)),r,o,i)})}
  return s}
 function angleText(o){const p=o.pts;if(p.length<3)return '';const {d}=arcInfo(p[1],p[0],p[2],o.x.reflex),deg=Math.abs(d)*180/Math.PI;return o.label&&o.x.val?o.label+' = '+fDeg(deg):o.label?o.label:o.x.val?fDeg(deg):''}
 function draw(o){
- const p=o.pts,c=o.s.c,fs=o.fs;let s='';const showLab=o.label&&o.type!=='text';
+ const p=o.pts,c=o.s.c,fs=o.fs;let s=(TEX_TYPES.includes(o.type)&&o.type!=='ground')?texDefs(o):'';const showLab=o.label&&o.type!=='text';
  switch(o.type){
   case 'point': s+=`<circle cx="${r2(p[0][0])}" cy="${r2(p[0][1])}" r="${r2(2.2+o.s.w)}" fill="${c}"/>`;break;
   case 'segment':case 'line':case 'ray':case 'vector':{
@@ -778,7 +816,8 @@ function draw(o){
    s+=o.x.src?`<use href="#is-${o.id}" x="${r2(x0)}" y="${r2(y0)}" width="${r2(w)}" height="${r2(h)}" opacity="${o.x.op}"/>`:`<rect x="${r2(x0)}" y="${r2(y0)}" width="${r2(w)}" height="${r2(h)}" fill="#eeeeee" stroke="#999" stroke-dasharray="4 3"/>`;
    if(o.x.border)s+=`<rect x="${r2(x0)}" y="${r2(y0)}" width="${r2(w)}" height="${r2(h)}" ${sa(o)}/>`;break}
   case 'incline':{const [a,C,b]=inclinePts(o);
-   if(BOOK()){const base=(o.s.fill==='none'||o.s.fill==='#6b6b6b')?'#cdb592':o.s.fill,id='g'+o.id;s+=`<defs>${lgrad(id,shade(base,0.5),shade(base,-0.08))}</defs><path d="M${P(a)}L${P(C)}L${P(b)}Z" fill="url(#${id})" stroke="${shade(base,-0.55)}" stroke-width="1.3" stroke-linejoin="round"/>`}
+   if(BOOK()&&hasTex(o)){const base=(o.s.fill==='none'||o.s.fill==='#6b6b6b')?'#cdb592':o.s.fill;s+=`<path d="M${P(a)}L${P(C)}L${P(b)}Z" ${texFill(o)} stroke="${shade(base,-0.55)}" stroke-width="1.3" stroke-linejoin="round"/>`}
+   else if(BOOK()){const base=(o.s.fill==='none'||o.s.fill==='#6b6b6b')?'#cdb592':o.s.fill,id='g'+o.id;s+=`<defs>${lgrad(id,shade(base,0.5),shade(base,-0.08))}</defs><path d="M${P(a)}L${P(C)}L${P(b)}Z" fill="url(#${id})" stroke="${shade(base,-0.55)}" stroke-width="1.3" stroke-linejoin="round"/>`}
    else s+=`<path d="M${P(a)}L${P(C)}L${P(b)}Z" ${sa(o,true)}/>`;
    const {a1,d}=arcInfo(a,C,b,false),deg=Math.abs(d)*180/Math.PI,r=o.x.r;if(r>0&&deg>0.5){s+=`<path d="${arcD(a,r,a1,d)}" ${sa(o,false,Math.max(1.2,o.s.w*0.75))}/>`;
     const t=o.x.alab&&o.x.val?o.x.alab+' = '+fDeg(deg):o.x.alab?o.x.alab:o.x.val?fDeg(deg):'';
@@ -786,6 +825,8 @@ function draw(o){
    if(o.x.sq){const u1=unit(sub(a,C)),u2=unit(sub(b,C)),k=Math.min(14,dist(a,C)*0.2,dist(b,C)*0.3);if(k>2)s+=`<path d="M${P(add(C,mul(u1,k)))}L${P(add(C,mul(add(u1,u2),k)))}L${P(add(C,mul(u2,k)))}" ${sa(o,false,Math.max(1,o.s.w*0.6))}/>`}
    break}
   case 'ground':{const [a,b]=p,L=dist(a,b);if(L<1)break;const u=unit(sub(b,a));let n=mul(upN(u),-1);if(o.x.flip)n=mul(n,-1);
+   if(hasTex(o)){const T=o.x.th||16,a2=add(a,mul(n,T)),b2=add(b,mul(n,T)),qs=[a,b,b2,a2],xs=qs.map(q=>q[0]),ys=qs.map(q=>q[1]),x0=Math.min(...xs),y0=Math.min(...ys);
+    s+=texDefs(o,[x0,y0,Math.max(...xs)-x0,Math.max(...ys)-y0])+`<path d="M${P(a)}L${P(b)}L${P(b2)}L${P(a2)}Z" ${texFill(o)}/>`+(BOOK()?`<path d="M${P(a)}L${P(b)}L${P(b2)}L${P(a2)}Z" fill="url(#gs${o.id})"/><defs><linearGradient id="gs${o.id}" gradientUnits="userSpaceOnUse" x1="${r2(a[0])}" y1="${r2(a[1])}" x2="${r2(a2[0])}" y2="${r2(a2[1])}"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient></defs>`:'')+`<path d="M${P(a)}L${P(b)}" stroke="${BOOK()?'#3d3328':c}" stroke-width="${BOOK()?1.6:o.s.w}" fill="none" stroke-linecap="round"/>`;break}
    if(BOOK()){const T=14,a2=add(a,mul(n,T)),b2=add(b,mul(n,T)),id='g'+o.id,base=o.s.c==='#1f1f1f'?'#b89b74':o.s.c;
     s+=`<defs><linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${r2(a[0])}" y1="${r2(a[1])}" x2="${r2(a2[0])}" y2="${r2(a2[1])}"><stop offset="0" stop-color="${shade(base,0.3)}"/><stop offset="1" stop-color="${shade(base,-0.15)}"/></linearGradient></defs><path d="M${P(a)}L${P(b)}L${P(b2)}L${P(a2)}Z" fill="url(#${id})"/><path d="M${P(a)}L${P(b)}" stroke="${shade(base,-0.55)}" stroke-width="1.6" fill="none"/>`;break}
    s+=ln(a,b,o);let d='';for(let t=6;t<L;t+=10){const q=add(a,mul(u,t));d+=`M${P(q)}L${P(add(q,add(mul(n,9),mul(u,-7))))}`}
@@ -1526,10 +1567,10 @@ function keyPts(o){
 /* ---------- render ---------- */
 const svg=$('#cv');
 function objSvg(o){const ol=outline(o),tr=rotTr(o);return `<g data-id="${o.id}"><g pointer-events="none"><g${tr}>${draw(o)}</g></g><path${tr} d="${ol.d}" fill="transparent" stroke="transparent" stroke-width="${r2((COARSE?26:14)/view.z)}" pointer-events="${ol.area?'all':'stroke'}" style="cursor:${tool==='select'?'move':'inherit'}"/></g>`}
-function imgSymbols(list){return list.filter(o=>o.type==='image'&&o.x.src).map(o=>`<symbol id="is-${o.id}" viewBox="0 0 100 100" preserveAspectRatio="none"><image href="${o.x.src}" width="100" height="100" preserveAspectRatio="none"/></symbol>`).join('')+list.filter(o=>o.type==='optics'&&o.x.osrc).map(o=>`<symbol id="os-${o.id}" viewBox="0 0 100 100" preserveAspectRatio="none"><image href="${o.x.osrc}" width="100" height="100" preserveAspectRatio="none"/></symbol>`).join('')}
+function imgSymbols(list){return list.filter(o=>o.s&&o.s.tex==='imagen'&&o.s.timg).map(o=>`<symbol id="ti-${o.id}" viewBox="0 0 100 ${r2(100/(o.s.tar||1))}" preserveAspectRatio="xMidYMid slice"><image href="${o.s.timg}" width="100" height="${r2(100/(o.s.tar||1))}" preserveAspectRatio="none"/></symbol>`).join('')+list.filter(o=>o.type==='image'&&o.x.src).map(o=>`<symbol id="is-${o.id}" viewBox="0 0 100 100" preserveAspectRatio="none"><image href="${o.x.src}" width="100" height="100" preserveAspectRatio="none"/></symbol>`).join('')+list.filter(o=>o.type==='optics'&&o.x.osrc).map(o=>`<symbol id="os-${o.id}" viewBox="0 0 100 100" preserveAspectRatio="none"><image href="${o.x.osrc}" width="100" height="100" preserveAspectRatio="none"/></symbol>`).join('')}
 let imgKey='';
 function render(){
- const ik=S.objs.filter(o=>o.type==='image'||o.type==='optics').map(o=>o.id+':'+(o.x.src||o.x.osrc||'').length).join('|');if(ik!==imgKey){imgKey=ik;$('#imgdefs').innerHTML=`<defs>${imgSymbols(S.objs)}</defs>`}
+ const ik=S.objs.filter(o=>o.type==='image'||o.type==='optics'||(o.s&&o.s.timg)).map(o=>o.id+':'+(o.x.src||o.x.osrc||'').length+':'+(o.s.timg||'').length+':'+(o.s.tar||'')).join('|');if(ik!==imgKey){imgKey=ik;$('#imgdefs').innerHTML=`<defs>${imgSymbols(S.objs)}</defs>`}
  const W=svg.clientWidth,H=svg.clientHeight,z=view.z;
  $('#world').setAttribute('transform',`translate(${r2(view.tx)} ${r2(view.ty)}) scale(${z})`);
  const g=S.settings.grid,gr=$('#gridrect');
@@ -1545,6 +1586,7 @@ function render(){
  if(tool==='select')for(const id of sel){const o=getObj(id);if(!o)continue;const rr=isTR(o)&&o.r?o.r:0,pv=rr?piv(o):null;for(const h0 of handles(o)){const h=rr?{...h0,p:rotAround(h0.p,pv,rr)}:h0;const r=r2((h.t==='l'?5:6)*(COARSE?1.7:1)/z);
   if(h.t==='l')ov+=`<rect class="hd-l" data-h="L" data-oid="${o.id}" x="${r2(h.p[0]-r)}" y="${r2(h.p[1]-r)}" width="${r2(2*r)}" height="${r2(2*r)}" transform="rotate(45 ${P(h.p)})" stroke-width="${r2(1.5/z)}"/>`;
   else ov+=`<circle class="${h.t==='r'?'hd-r':'hd'}" data-h="${h.k}" data-oid="${o.id}" cx="${r2(h.p[0])}" cy="${r2(h.p[1])}" r="${r}" stroke-width="${r2(2/z)}"/>`}}
+ if(mode==='free'&&drag&&drag.pts.length>1)ov+=`<path d="M${drag.pts.map(P).join('L')}" fill="none" style="stroke:var(--primary)" stroke-width="${r2(2.5/z)}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".8" pointer-events="none"/>`;
  if(mode==='marquee'&&drag){const a=drag.a,b=drag.b;ov+=`<rect x="${r2(Math.min(a[0],b[0]))}" y="${r2(Math.min(a[1],b[1]))}" width="${r2(Math.abs(b[0]-a[0]))}" height="${r2(Math.abs(b[1]-a[1]))}" style="fill:var(--primary);stroke:var(--primary)" fill-opacity=".08" stroke-width="${r2(1/z)}" stroke-dasharray="${r2(4/z)} ${r2(3/z)}"/>`}
  if(snapMark)ov+=`<circle cx="${r2(snapMark[0])}" cy="${r2(snapMark[1])}" r="${r2(9/z)}" fill="none" style="stroke:var(--primary)" stroke-width="${r2(2/z)}"/>`;
  $('#ovl').innerHTML=ov;
@@ -1599,6 +1641,7 @@ function selDown(e,raw){
  mode='marquee';drag={a:raw,b:raw};render();
 }
 function drawDown(e,raw){
+ if(tool==='smart'){mode='free';drag={pts:[raw]};render();return}
  const sp=snapPt(raw,null,e),p=sp.p,cl=(tool==='polygon'&&polyReg)?2:(CLICKS[tool]||2);
  if(cl===1){const o=make(tool,[p]);commitNew(o);if(tool==='text'||tool==='axes'){setTool('select');renderPanel();focusLabel()}return}
  if(cl===2){if(mode==='await2'&&draft){shape2(draft,draft._a,p);finishDraft();return}
@@ -1631,6 +1674,7 @@ svg.addEventListener('pointermove',e=>{
   if(!drag.pushed){if(len(sub(raw,drag.start))*view.z<3)return;pushHist();drag.pushed=true}
   snapMark=sp.k?sp.p:null;for(const [id,orig] of drag.orig){const o=getObj(id);if(o)o.pts=orig.pts.map(q=>add(q,d))}render();return}
  if(mode==='marquee'){drag.b=raw;render();return}
+ if(mode==='free'&&drag){const l=drag.pts[drag.pts.length-1];if(dist(l,raw)*view.z>2){drag.pts.push(raw);render()}return}
  if(draft){const sp=snapPt(raw,null,e);snapMark=sp.k?sp.p:null;
   if(mode==='draw2'||mode==='await2')shape2(draft,draft._a,sp.p);else draft.pts[draft.pts.length-1]=sp.p;render();return}
  if(tool!=='select'&&tool!=='pan'){const sp=snapPt(raw,null,e);const nm=sp.k?sp.p:null;if(String(nm)!==String(snapMark)){snapMark=nm;render()}}
@@ -1644,6 +1688,7 @@ function endPointer(e){
  if(mode==='marquee'){const a=drag.a,b=drag.b,x0=Math.min(a[0],b[0]),x1=Math.max(a[0],b[0]),y0=Math.min(a[1],b[1]),y1=Math.max(a[1],b[1]);
   if((x1-x0)*view.z>4||(y1-y0)*view.z>4){for(const o of S.objs){const bb=bboxOf(o);if(bb&&bb.x>=x0&&bb.y>=y0&&bb.x+bb.width<=x1&&bb.y+bb.height<=y1)sel.add(o.id)}}
   mode=null;drag=null;renderPanel();render();return}
+ if(mode==='free'){const pts=drag?drag.pts:[];mode=null;drag=null;smartFinish(pts);return}
  if(mode==='draw2'&&draft){if(dist(draft._a,draft._b)*view.z>6)finishDraft();else{mode='await2';updHint()}}
 }
 svg.addEventListener('pointerup',endPointer);svg.addEventListener('pointercancel',endPointer);
@@ -1711,7 +1756,84 @@ function alignBlock(o){
 }
 /* ---------- polígonos: modo y biblioteca ---------- */
 let polyReg=false,polyN=5;
+/* ---------- dibujo a mano alzada con reconocimiento de figuras ---------- */
+let smartMode='rec',smartReg=true;
+function segDist(p,a,b){const ab=sub(b,a),l2=dot(ab,ab);if(!l2)return dist(p,a);const t=clamp(dot(sub(p,a),ab)/l2,0,1);return dist(p,add(a,mul(ab,t)))}
+function rdp(pts,eps){if(pts.length<3)return pts.slice();let dm=0,ix=0;const a=pts[0],b=pts[pts.length-1];for(let i=1;i<pts.length-1;i++){const d=segDist(pts[i],a,b);if(d>dm){dm=d;ix=i}}
+ if(dm>eps){const l=rdp(pts.slice(0,ix+1),eps),r=rdp(pts.slice(ix),eps);return l.slice(0,-1).concat(r)}return [a,b]}
+const angAt=(a,v,b)=>{const u1=unit(sub(a,v)),u2=unit(sub(b,v));return Math.acos(clamp(dot(u1,u2),-1,1))*180/Math.PI};
+const dirDeg=(a,b)=>{let d=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI;d=((d%180)+180)%180;return d};
+const dirDiff=(d1,d2)=>{const x=Math.abs(d1-d2)%180;return Math.min(x,180-x)};
+const cv=a=>{const m=a.reduce((s,v)=>s+v,0)/a.length;return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/a.length)/(m||1)};
+function cleanPoly(p,diag){
+ let q=p.slice();let changed=true;
+ while(changed&&q.length>3){changed=false;
+  for(let i=0;i<q.length;i++){const a=q[(i-1+q.length)%q.length],v=q[i],b=q[(i+1)%q.length];
+   if(angAt(a,v,b)>158||dist(a,v)<diag*0.1){q.splice(i,1);changed=true;break}}}
+ return q}
+function resample(pts,N){const cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+dist(pts[i],pts[i-1]));const T=cum[cum.length-1]||1,out=[];let j=1;
+ for(let k=0;k<N;k++){const t=k*T/N;while(j<cum.length-1&&cum[j]<t)j++;const s0=cum[j-1],s1=cum[j]||s0+1,f=(t-s0)/((s1-s0)||1);out.push(add(pts[j-1],mul(sub(pts[j]||pts[j-1],pts[j-1]),f)))}return out}
+function maxTurn(raw){let q=resample(raw.concat([raw[0]]),64);for(let r=0;r<2;r++)q=q.map((p,i)=>centroid([q[(i-1+64)%64],p,q[(i+1)%64]]));
+ const tr=q.map((p,i)=>{const a=sub(p,q[(i-1+64)%64]),b=sub(q[(i+1)%64],p);let d=Math.atan2(b[1],b[0])-Math.atan2(a[1],a[0]);while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d*180/Math.PI});
+ let mx=0;for(let i=0;i<64;i++){let t=0;for(let k=0;k<5;k++)t+=tr[(i+k)%64];mx=Math.max(mx,Math.abs(t))}return mx}
+function recognize(raw){
+ const xs=raw.map(p=>p[0]),ys=raw.map(p=>p[1]),w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys),diag=Math.hypot(w,h);
+ if(diag*view.z<10)return null;
+ let L=0;for(let i=1;i<raw.length;i++)L+=dist(raw[i],raw[i-1]);
+ const closed=dist(raw[0],raw[raw.length-1])<Math.max(diag*0.22,16/view.z)&&L>diag*1.6;
+ if(!closed){
+  const dev=Math.max(...raw.map(p=>segDist(p,raw[0],raw[raw.length-1])));
+  if(dev<L*0.06+3/view.z){let a=raw[0],b=raw[raw.length-1];if(smartReg){const dd=dirDeg(a,b);if(Math.min(dd,180-dd)<6)b=[b[0],a[1]];else if(Math.abs(dd-90)<6)b=[a[0],b[1]]}return {kind:'segment',pts:[a,b],name:'segmento'}}
+  const s=rdp(raw,diag*0.06);return {kind:'open',pts:s,name:'línea poligonal'}}
+ // ¿circunferencia?
+ const c=centroid(raw),rs=raw.map(p=>dist(p,c)),r=rs.reduce((s,v)=>s+v,0)/rs.length;
+ let s=rdp(raw.concat([raw[0]]),diag*0.07);if(dist(s[0],s[s.length-1])<1e-6)s.pop();s=cleanPoly(s,diag);
+ if(cv(rs)<0.15&&Math.max(w,h)/Math.max(1,Math.min(w,h))<1.35&&maxTurn(raw)<57)return {kind:'circle',c,r,name:'circunferencia'};
+ if(s.length<3)return {kind:'circle',c,r,name:'circunferencia'};
+ const n=s.length,cen=centroid(s);let name='polígono de '+n+' lados';
+ if(!smartReg)return {kind:'poly',pts:s,name};
+ const sides=s.map((p,i)=>dist(p,s[(i+1)%n])),angs=s.map((v,i)=>angAt(s[(i-1+n)%n],v,s[(i+1)%n]));
+ if(n===3){
+  if(Math.max(...sides)/Math.min(...sides)<1.16)return {kind:'reg',c:cen,v:s[0],n:3,name:'triángulo equilátero'};
+  const ri=angs.findIndex(a=>Math.abs(a-90)<12);
+  if(ri>=0){const V=s[ri],A=s[(ri+1)%3],B=s[(ri+2)%3],u=unit(sub(A,V));let pp=perp(u);if(dot(pp,sub(B,V))<0)pp=mul(pp,-1);
+   let A2=A,B2=add(V,mul(pp,dist(B,V)));const ux=dirDeg(V,A2);if(Math.min(ux,180-ux)<8||Math.abs(ux-90)<8){A2=Math.min(ux,180-ux)<8?[A[0],V[1]]:[V[0],A[1]];const u2=unit(sub(A2,V));let p2=perp(u2);if(dot(p2,sub(B,V))<0)p2=mul(p2,-1);B2=add(V,mul(p2,dist(B,V)))}
+   const out=[];out[ri]=V;out[(ri+1)%3]=A2;out[(ri+2)%3]=B2;const iso=Math.abs(dist(V,A2)-dist(V,B2))/Math.max(dist(V,A2),dist(V,B2))<0.12;
+   if(iso){const m=(dist(V,A2)+dist(V,B2))/2;out[(ri+1)%3]=add(V,mul(unit(sub(A2,V)),m));out[(ri+2)%3]=add(V,mul(unit(sub(B2,V)),m))}
+   return {kind:'poly',pts:out,name:iso?'triángulo rectángulo isósceles':'triángulo rectángulo'}}
+  for(let i=0;i<3;i++){const a=sides[(i+2)%3],b=sides[i];if(Math.abs(a-b)/Math.max(a,b)<0.12){const V=s[i],P1=s[(i+2)%3],P2=s[(i+1)%3],m=mid(P1,P2),bu=unit(sub(P2,P1));let nn=perp(bu);if(dot(nn,sub(V,m))<0)nn=mul(nn,-1);const hgt=Math.abs(dot(sub(V,m),nn));const out=s.slice();out[i]=add(m,mul(nn,hgt));return {kind:'poly',pts:out,name:'triángulo isósceles'}}}
+  return {kind:'poly',pts:s,name:'triángulo escaleno'}}
+ if(n===4){
+  if(angs.every(a=>Math.abs(a-90)<14)){let d=dirDeg(s[0],s[1]);if(Math.min(d,180-d)<8)d=0;else if(Math.abs(d-90)<8)d=90;const u=[Math.cos(d*Math.PI/180),Math.sin(d*Math.PI/180)],v=perp(u);
+   let a1=(sides[0]+sides[2])/2,a2=(sides[1]+sides[3])/2;const sq=Math.abs(a1-a2)/Math.max(a1,a2)<0.12;if(sq)a1=a2=(a1+a2)/2;
+   const pts=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>add(cen,add(mul(u,i*a1/2),mul(v,j*a2/2))));return {kind:'poly',pts,name:sq?'cuadrado':'rectángulo',axis:d===0||d===90}}
+  const d0=dirDeg(s[0],s[1]),d1=dirDeg(s[1],s[2]),d2=dirDeg(s[2],s[3]),d3=dirDeg(s[3],s[0]);const par02=dirDiff(d0,d2)<11,par13=dirDiff(d1,d3)<11;
+  if(par02&&par13){const p3=add(s[0],sub(s[2],s[1]));const pts=[s[0],s[1],s[2],p3];const rh=Math.abs(sides[0]-sides[1])/Math.max(sides[0],sides[1])<0.14;
+   if(rh){const m=(dist(pts[0],pts[1])+dist(pts[1],pts[2]))/2;pts[1]=add(pts[0],mul(unit(sub(pts[1],pts[0])),m));pts[2]=add(pts[1],mul(unit(sub(s[2],s[1])),m));pts[3]=add(pts[0],sub(pts[2],pts[1]))}
+   return {kind:'poly',pts,name:rh?'rombo':'romboide (paralelogramo)'}}
+  if(par02||par13){const k=par02?0:1,a=s[k],b=s[k+1],c2=s[(k+2)%4],d2_=s[(k+3)%4],u=unit(sub(b,a)),m=mid(c2,d2_);const pr=q=>add(m,mul(u,dot(sub(q,m),u)));const pts=s.slice();pts[(k+2)%4]=pr(c2);pts[(k+3)%4]=pr(d2_);
+   const l1=dist(pts[(k+1)%4],pts[(k+2)%4]),l2=dist(pts[(k+3)%4],pts[k]);return {kind:'poly',pts,name:Math.abs(l1-l2)/Math.max(l1,l2)<0.12?'trapecio isósceles':'trapecio'}}
+  const kite=Math.abs(sides[0]-sides[1])/Math.max(sides[0],sides[1])<0.12&&Math.abs(sides[2]-sides[3])/Math.max(sides[2],sides[3])<0.12||Math.abs(sides[1]-sides[2])/Math.max(sides[1],sides[2])<0.12&&Math.abs(sides[3]-sides[0])/Math.max(sides[3],sides[0])<0.12;
+  return {kind:'poly',pts:s,name:kite?'deltoide':'trapezoide'}}
+ if(cv(sides)<0.16&&cv(angs)<0.12){const nm={5:'pentágono',6:'hexágono',7:'heptágono',8:'octágono'}[n]||('polígono regular de '+n+' lados');return {kind:'reg',c:cen,v:s[0],n,name:nm+' regular'}}
+ return {kind:'poly',pts:s,name}}
+function smartFinish(raw){
+ if(raw.length<3){render();return}
+ let o=null,res;
+ if(smartMode==='free'){o=make('polygon',[raw[0],raw[1]]);o.x.closed=false;o.x.vl=false;o.pts=rdp(raw,1.2/view.z);res={name:'trazo libre'}}
+ else{res=recognize(raw);if(!res){render();return}
+  const sn=p=>snapPt(p,null,null).p;
+  if(res.kind==='segment'){o=make('segment',res.pts.map(sn))}
+  else if(res.kind==='circle'){const c=sn(res.c),st=GRID*S.settings.step,r=S.settings.snap?Math.max(st,Math.round(res.r/st)*st):res.r;o=make('circle',[c,[c[0]+r,c[1]]])}
+  else if(res.kind==='open'){o=make('polygon',res.pts.map(sn));o.x.closed=false;o.x.vl=false}
+  else if(res.kind==='reg'){const c=sn(res.c);let v=add(c,sub(res.v,res.c));const r_=dist(v,c);let a=Math.atan2(v[1]-c[1],v[0]-c[0])*180/Math.PI;if(S.settings.snap)a=Math.round(a/15)*15;v=add(c,[r_*Math.cos(a*Math.PI/180),r_*Math.sin(a*Math.PI/180)]);o=make('polygon',regPts(c,v,res.n));o.x.reg=true;o.x.n=res.n}
+  else{let pts=res.pts;if(!smartReg||res.axis||res.name.startsWith('polígono')||res.name==='trapezoide')pts=pts.map(sn);else{const d=sub(sn(pts[0]),pts[0]);pts=pts.map(p=>add(p,d))}o=make('polygon',pts)}}
+ commitNew(o);toast('Reconocido: '+res.name)}
+function updSmartbar(){const b=$('#smartbar');if(!b)return;b.hidden=tool!=='smart';b.querySelectorAll('[data-sm]').forEach(x=>x.classList.toggle('on',x.dataset.sm===smartMode));const r=$('#sm-reg');if(r){r.checked=smartReg;r.closest('label').style.display=smartMode==='rec'?'':'none'}}
+
 function updPolybar(){const b=$('#polybar');b.hidden=tool!=='polygon';b.querySelectorAll('[data-pm="free"],[data-pm="reg"]').forEach(x=>x.classList.toggle('on',(x.dataset.pm==='reg')===polyReg));$('#nstep').hidden=!polyReg;$('#nval').textContent=polyN+' lados'}
+$('#smartbar').addEventListener('click',e=>{const b=e.target.closest('[data-sm]');if(b){smartMode=b.dataset.sm;updSmartbar()}});
+$('#sm-reg').addEventListener('change',e=>{smartReg=e.target.checked});
 $('#polybar').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
  if(b.dataset.pm==='lib'){openShapes();return}
  if(b.dataset.pm){polyReg=b.dataset.pm==='reg';if(draft){draft=null;mode=null;render()}}
@@ -1762,7 +1884,7 @@ $('#sh-list').addEventListener('click',e=>{const b=e.target.closest('button[data
 function toggleLook(){S.settings.look=BOOK()?'flat':'book';ls.set('diagramas.ajustes.v1',JSON.stringify(S.settings));updLook();render();renderPanel();save();toast(BOOK()?'Estilo libro de texto':'Estilo simple para fotocopiar')}
 function updLook(){const l=$('#look-l');if(l)l.textContent=BOOK()?'Estilo libro':'Estilo simple'}
 /* ---------- imágenes ---------- */
-let replaceId=null,optImgId=null;const imgInput=document.createElement('input');imgInput.type='file';imgInput.accept='image/*';imgInput.hidden=true;document.body.appendChild(imgInput);
+let replaceId=null,optImgId=null,texImgId=null;const imgInput=document.createElement('input');imgInput.type='file';imgInput.accept='image/*';imgInput.hidden=true;document.body.appendChild(imgInput);
 imgInput.onchange=()=>{const f=imgInput.files[0];imgInput.value='';if(f)insertImageFile(f)};
 function insertImageFile(f,at){
  if(!f||!/^image\//.test(f.type)){toast('Ese archivo no es una imagen');return}
@@ -1772,6 +1894,7 @@ function insertImageFile(f,at){
    if(!/png|gif|webp|svg/.test(f.type)){ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height)}ctx.drawImage(im,0,0,cv.width,cv.height);
    const out=/png|gif|webp|svg/.test(f.type)?cv.toDataURL('image/png'):cv.toDataURL('image/jpeg',0.88);if(out.length<src.length||k<1)src=out}
   const ar=w/h;
+  if(texImgId){const o=getObj(texImgId);texImgId=null;if(o){pushHist();o.s.timg=src;o.s.tar=ar;o.s.tex='imagen';o.s.tmode=o.s.tmode||'tile';render();save();renderPanel();toast('Imagen asignada como relleno')}return}
   if(optImgId){const o=getObj(optImgId);optImgId=null;if(o){pushHist();o.x.osrc=src;o.x.oar=ar;o.x.obj='imagen';render();save();renderPanel();toast('Imagen asignada como objeto')}return}
   if(replaceId){const o=getObj(replaceId);replaceId=null;if(o){pushHist();o.x.src=src;o.x.ar=ar;const W=Math.abs(o.pts[1][0]-o.pts[0][0]);o.pts[1]=[o.pts[0][0]+W,o.pts[0][1]+W/ar];render();save();renderPanel();toast('Imagen reemplazada')}return}
   const W=Math.min(320,w),H=W/ar,c=at||[(svg.clientWidth/2-view.tx)/view.z,(svg.clientHeight/2-view.ty)/view.z];
@@ -1788,7 +1911,7 @@ function setTool(t){
  if(t==='bodies'){openBodies();return}
  if(draft){draft=null;mode=null}tool=t;snapMark=null;
  document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
- svg.className.baseVal=t==='select'?'m-select':t==='pan'?'m-pan':'';updHint();render();updPolybar();
+ svg.className.baseVal=t==='select'?'m-select':t==='pan'?'m-pan':'';updHint();render();updPolybar();updSmartbar();
  if(isMobile()&&t!=='select'){let h=HINTS[t]||'Arrastra con el dedo, o toca el inicio y luego el final';h=h.replace(/doble clic o Enter/g,'el botón Terminar').replace(/o doble clic/g,'o el botón Terminar').replace(/Clic/g,'Toca').replace(/clic/g,'toca').replace(/ · rueda del mouse para acercar o alejar/,' · pellizca para acercar').replace(/ · usa v_0.*$/,'');toast(h)}
 }
 function updHint(){const h=$('#hint');let t=HINTS[tool]||'Arrastra para dibujar, o haz clic en el inicio y luego en el final';
@@ -1887,7 +2010,11 @@ function renderPanel(){
  if(T.lab){h+=`<div class="sec"><b>${o.type==='text'?'Texto':'Etiqueta'}</b>${F.text(o.type==='text'?'Contenido':'Etiqueta','label',o.label,o.type==='angle'?'α (opcional)':'')}${row(F.num('Tamaño de letra','fs',o.fs,1,6,96),`<div style="flex:0 0 auto;padding-bottom:8px">${F.bool('Cursiva','it',o.it)}</div>`)}${LABHINT}${hasLabel(o)?'<p class="tip">El rombo morado mueve la etiqueta.</p>':''}</div>`}
  else if(o.type!=='image')h+=`<div class="sec">${row(F.num('Tamaño de letra','fs',o.fs,1,6,48))}</div>`;
  h+=strokeFields(o);
- if(T.fill)h+=`<div class="sec"><b>Relleno</b>${F.color('Color','s.fill',o.s.fill,1)}${o.s.fill!=='none'?F.num('Opacidad (0 a 1)','s.fop',o.s.fop,0.05,0,1):''}</div>`;
+ if(T.fill||o.type==='ground'){const tx=TEX_TYPES.includes(o.type),tv=o.s.tex||'none';let th='';
+  if(tx){th+=F.sel('Textura','s.tex',tv,[['none','Sin textura'],...Object.entries(TEX).map(([k,v])=>[k,v[0]]),['imagen','Imagen propia…']]);
+   if(tv==='imagen')th+=`<div class="acts"><button class="btn" data-act="teximg">${o.s.timg?'Cambiar imagen':'Elegir imagen'}</button></div>`+F.sel('Ajuste de la imagen','s.tmode',o.s.tmode||'tile',[['tile','Repetir como mosaico'],['cover','Cubrir toda la figura']]);
+   if(tv!=='none'){if(!(tv==='imagen'&&o.s.tmode==='cover'))th+=row(F.num('Escala de textura','s.tsc',o.s.tsc??1,0.1,0.1,10),F.num('Rotación (°)','s.trot',o.s.trot??0,5));th+=F.num('Opacidad de textura (0 a 1)','s.top',o.s.top??1,0.05,0,1);if(o.type==='ground')th+=F.num('Grosor de la franja','x.th',o.x.th??16,2,4,200)}}
+  h+=`<div class="sec"><b>Relleno</b>${o.type==='ground'?'':F.color(['achurado','cruzado','puntos','cuadriculado'].includes(tv)?'Color de fondo':'Color','s.fill',o.s.fill,1)+(o.s.fill!=='none'?F.num('Opacidad (0 a 1)','s.fop',o.s.fop,0.05,0,1):'')}${th}</div>`}
  const ex=extraFields(o),meas=T.meas&&(o.type!=='polygon'||o.x.closed);
  if(T.arr||meas||ex){h+=`<div class="sec"><b>Opciones</b>`;
   if(T.arr&&(o.type!=='polygon'||!o.x.closed))h+=row(F.bool('Flecha al inicio','s.a0',o.s.a0),F.bool('Flecha al final','s.a1',o.s.a1));
@@ -1945,6 +2072,7 @@ panel.addEventListener('click',e=>{
  else if(a==='alignframe'){const o=getObj([...sel][0]);const inc=[...S.objs].reverse().find(q=>q.type==='incline');if(!inc){toast('Primero dibuja un plano inclinado');return}const [ia,,ib]=inclinePts(inc),u=unit(sub(ib,ia));let ang=Math.atan2(u[1],u[0])*180/Math.PI;if(ang>90)ang-=180;if(ang<-90)ang+=180;pushHist();o.x.rot=Math.round(ang*10)/10;renderPanel();render();save()}
  else if(a==='imgrep'){replaceId=[...sel][0];imgInput.click()}
  else if(a==='optimg'){optImgId=[...sel][0];replaceId=null;imgInput.click()}
+ else if(a==='teximg'){texImgId=[...sel][0];replaceId=null;optImgId=null;imgInput.click()}
  else if(a==='imgratio'){const o=getObj([...sel][0]);if(o){pushHist();const w=Math.abs(o.pts[1][0]-o.pts[0][0]);o.pts[1]=[o.pts[0][0]+w,o.pts[0][1]+w/o.x.ar];render();save()}}
 });
 
