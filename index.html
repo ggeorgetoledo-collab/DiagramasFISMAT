@@ -171,6 +171,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 .hbtn.drive-on{background:rgba(255,255,255,.28)}
 .polybar{position:absolute;top:56px;left:10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;z-index:3;max-width:calc(100% - 20px)}
 .polybar[hidden]{display:none!important}
+.smsel{border:0;background:var(--primary-weak);color:var(--fg);font:inherit;font-weight:700;border-radius:999px;padding:5px 8px;max-width:190px}
+.smalt{flex-basis:100%;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}.smalt[hidden]{display:none!important}.smalt button{white-space:nowrap;padding:6px 10px!important}.smq{font-size:12px;font-weight:800;color:var(--muted);padding:0 4px 0 10px;white-space:nowrap;align-self:center}
 .seg,.nstep{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:3px;box-shadow:var(--shadow);align-items:center}
 .seg button,.nstep button,.polybar .lib{border:0;background:none;color:var(--fg);font-weight:800;font-size:13px;padding:7px 13px;border-radius:999px;cursor:pointer}
 .seg button.on{background:var(--primary);color:var(--on-primary)}
@@ -292,6 +294,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     <div class="polybar" id="smartbar" hidden>
       <div class="seg"><button data-sm="rec" class="on">Reconocer figuras</button><button data-sm="free">Trazo libre</button></div>
       <label class="seg" style="padding:6px 12px;gap:6px;font-weight:800;font-size:13px;cursor:pointer"><input type="checkbox" id="sm-reg" checked style="accent-color:var(--primary)">Regularizar</label>
+      <label class="seg" style="padding:3px 6px 3px 12px;gap:6px;font-weight:800;font-size:13px">Figura <select id="sm-target" class="smsel"><option value="auto">Automática</option><option value="segment">Segmento</option><option value="circle">Circunferencia</option><option value="tri">Triángulo</option><option value="equi">Triángulo equilátero</option><option value="rtri">Triángulo rectángulo</option><option value="iso">Triángulo isósceles</option><option value="rect">Rectángulo</option><option value="square">Cuadrado</option><option value="rhombus">Rombo</option><option value="para">Romboide</option><option value="trap">Trapecio</option><option value="reg5">Pentágono regular</option><option value="reg6">Hexágono regular</option><option value="reg8">Octágono regular</option><option value="poly">Polígono (vértices dibujados)</option></select></label>
+      <div class="seg smalt" id="sm-alt" hidden></div>
     </div>
     <div class="polybar" id="polybar" hidden>
       <div class="seg"><button data-pm="free" class="on">Libre</button><button data-pm="reg">Regular</button></div>
@@ -507,7 +511,7 @@ const HINTS={
  select:'Clic para seleccionar · arrastra para mover · arrastra en un espacio vacío para seleccionar varios · Alt desactiva el ajuste',
  pan:'Arrastra para desplazar la hoja · rueda del mouse para acercar o alejar',
  point:'Clic para ubicar un punto (se nombra solo: A, B, C…)',
- smart:'Dibuja con el mouse o el dedo: la app reconoce segmentos, circunferencias, triángulos, cuadriláteros y polígonos regulares',
+ smart:'Dibuja de un solo trazo. Si no reconoce lo que querías, toca la figura correcta en «¿Era otra?» o fíjala en «Figura»',
  polygon:'Libre: clic en cada vértice y en el primero para cerrar · Regular: arrastra desde el centro hasta un vértice',
  wire:'Clic en cada esquina del cable · doble clic o Enter para terminar',
  angle:'Clic en un punto del primer lado, luego en el vértice y luego en el segundo lado',
@@ -1756,8 +1760,10 @@ function alignBlock(o){
 }
 /* ---------- polígonos: modo y biblioteca ---------- */
 let polyReg=false,polyN=5;
-/* ---------- dibujo a mano alzada con reconocimiento de figuras ---------- */
-let smartMode='rec',smartReg=true;
+/* ---------- dibujo a mano alzada con reconocimiento de figuras (v2) ---------- */
+let smartMode='rec',smartReg=true,smartTarget='auto',smartLast=null;
+const SM_T={auto:'Automática',segment:'Segmento',circle:'Circunferencia',tri:'Triángulo',equi:'Triángulo equilátero',rtri:'Triángulo rectángulo',iso:'Triángulo isósceles',rect:'Rectángulo',square:'Cuadrado',rhombus:'Rombo',para:'Romboide',trap:'Trapecio',reg5:'Pentágono regular',reg6:'Hexágono regular',reg8:'Octágono regular',poly:'Polígono (vértices dibujados)'};
+const SM_ALT=[['circle','Circunf.'],['tri','Triángulo'],['rtri','Tri. rectángulo'],['equi','Equilátero'],['rect','Rectángulo'],['square','Cuadrado'],['rhombus','Rombo'],['para','Romboide'],['trap','Trapecio'],['reg5','Pentágono'],['reg6','Hexágono'],['poly','Polígono'],['free','Tal cual']];
 function segDist(p,a,b){const ab=sub(b,a),l2=dot(ab,ab);if(!l2)return dist(p,a);const t=clamp(dot(sub(p,a),ab)/l2,0,1);return dist(p,add(a,mul(ab,t)))}
 function rdp(pts,eps){if(pts.length<3)return pts.slice();let dm=0,ix=0;const a=pts[0],b=pts[pts.length-1];for(let i=1;i<pts.length-1;i++){const d=segDist(pts[i],a,b);if(d>dm){dm=d;ix=i}}
  if(dm>eps){const l=rdp(pts.slice(0,ix+1),eps),r=rdp(pts.slice(ix),eps);return l.slice(0,-1).concat(r)}return [a,b]}
@@ -1765,74 +1771,134 @@ const angAt=(a,v,b)=>{const u1=unit(sub(a,v)),u2=unit(sub(b,v));return Math.acos
 const dirDeg=(a,b)=>{let d=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI;d=((d%180)+180)%180;return d};
 const dirDiff=(d1,d2)=>{const x=Math.abs(d1-d2)%180;return Math.min(x,180-x)};
 const cv=a=>{const m=a.reduce((s,v)=>s+v,0)/a.length;return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/a.length)/(m||1)};
-function cleanPoly(p,diag){
- let q=p.slice();let changed=true;
- while(changed&&q.length>3){changed=false;
-  for(let i=0;i<q.length;i++){const a=q[(i-1+q.length)%q.length],v=q[i],b=q[(i+1)%q.length];
-   if(angAt(a,v,b)>158||dist(a,v)<diag*0.1){q.splice(i,1);changed=true;break}}}
- return q}
-function resample(pts,N){const cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+dist(pts[i],pts[i-1]));const T=cum[cum.length-1]||1,out=[];let j=1;
- for(let k=0;k<N;k++){const t=k*T/N;while(j<cum.length-1&&cum[j]<t)j++;const s0=cum[j-1],s1=cum[j]||s0+1,f=(t-s0)/((s1-s0)||1);out.push(add(pts[j-1],mul(sub(pts[j]||pts[j-1],pts[j-1]),f)))}return out}
-function maxTurn(raw){let q=resample(raw.concat([raw[0]]),64);for(let r=0;r<2;r++)q=q.map((p,i)=>centroid([q[(i-1+64)%64],p,q[(i+1)%64]]));
- const tr=q.map((p,i)=>{const a=sub(p,q[(i-1+64)%64]),b=sub(q[(i+1)%64],p);let d=Math.atan2(b[1],b[0])-Math.atan2(a[1],a[0]);while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d*180/Math.PI});
- let mx=0;for(let i=0;i<64;i++){let t=0;for(let k=0;k<5;k++)t+=tr[(i+k)%64];mx=Math.max(mx,Math.abs(t))}return mx}
-function recognize(raw){
- const xs=raw.map(p=>p[0]),ys=raw.map(p=>p[1]),w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys),diag=Math.hypot(w,h);
- if(diag*view.z<10)return null;
- let L=0;for(let i=1;i<raw.length;i++)L+=dist(raw[i],raw[i-1]);
- const closed=dist(raw[0],raw[raw.length-1])<Math.max(diag*0.22,16/view.z)&&L>diag*1.6;
- if(!closed){
-  const dev=Math.max(...raw.map(p=>segDist(p,raw[0],raw[raw.length-1])));
-  if(dev<L*0.06+3/view.z){let a=raw[0],b=raw[raw.length-1];if(smartReg){const dd=dirDeg(a,b);if(Math.min(dd,180-dd)<6)b=[b[0],a[1]];else if(Math.abs(dd-90)<6)b=[a[0],b[1]]}return {kind:'segment',pts:[a,b],name:'segmento'}}
-  const s=rdp(raw,diag*0.06);return {kind:'open',pts:s,name:'línea poligonal'}}
- // ¿circunferencia?
- const c=centroid(raw),rs=raw.map(p=>dist(p,c)),r=rs.reduce((s,v)=>s+v,0)/rs.length;
- let s=rdp(raw.concat([raw[0]]),diag*0.07);if(dist(s[0],s[s.length-1])<1e-6)s.pop();s=cleanPoly(s,diag);
- if(cv(rs)<0.15&&Math.max(w,h)/Math.max(1,Math.min(w,h))<1.35&&maxTurn(raw)<57)return {kind:'circle',c,r,name:'circunferencia'};
- if(s.length<3)return {kind:'circle',c,r,name:'circunferencia'};
- const n=s.length,cen=centroid(s);let name='polígono de '+n+' lados';
- if(!smartReg)return {kind:'poly',pts:s,name};
- const sides=s.map((p,i)=>dist(p,s[(i+1)%n])),angs=s.map((v,i)=>angAt(s[(i-1+n)%n],v,s[(i+1)%n]));
- if(n===3){
-  if(Math.max(...sides)/Math.min(...sides)<1.16)return {kind:'reg',c:cen,v:s[0],n:3,name:'triángulo equilátero'};
-  const ri=angs.findIndex(a=>Math.abs(a-90)<12);
-  if(ri>=0){const V=s[ri],A=s[(ri+1)%3],B=s[(ri+2)%3],u=unit(sub(A,V));let pp=perp(u);if(dot(pp,sub(B,V))<0)pp=mul(pp,-1);
-   let A2=A,B2=add(V,mul(pp,dist(B,V)));const ux=dirDeg(V,A2);if(Math.min(ux,180-ux)<8||Math.abs(ux-90)<8){A2=Math.min(ux,180-ux)<8?[A[0],V[1]]:[V[0],A[1]];const u2=unit(sub(A2,V));let p2=perp(u2);if(dot(p2,sub(B,V))<0)p2=mul(p2,-1);B2=add(V,mul(p2,dist(B,V)))}
-   const out=[];out[ri]=V;out[(ri+1)%3]=A2;out[(ri+2)%3]=B2;const iso=Math.abs(dist(V,A2)-dist(V,B2))/Math.max(dist(V,A2),dist(V,B2))<0.12;
-   if(iso){const m=(dist(V,A2)+dist(V,B2))/2;out[(ri+1)%3]=add(V,mul(unit(sub(A2,V)),m));out[(ri+2)%3]=add(V,mul(unit(sub(B2,V)),m))}
-   return {kind:'poly',pts:out,name:iso?'triángulo rectángulo isósceles':'triángulo rectángulo'}}
-  for(let i=0;i<3;i++){const a=sides[(i+2)%3],b=sides[i];if(Math.abs(a-b)/Math.max(a,b)<0.12){const V=s[i],P1=s[(i+2)%3],P2=s[(i+1)%3],m=mid(P1,P2),bu=unit(sub(P2,P1));let nn=perp(bu);if(dot(nn,sub(V,m))<0)nn=mul(nn,-1);const hgt=Math.abs(dot(sub(V,m),nn));const out=s.slice();out[i]=add(m,mul(nn,hgt));return {kind:'poly',pts:out,name:'triángulo isósceles'}}}
-  return {kind:'poly',pts:s,name:'triángulo escaleno'}}
- if(n===4){
-  if(angs.every(a=>Math.abs(a-90)<14)){let d=dirDeg(s[0],s[1]);if(Math.min(d,180-d)<8)d=0;else if(Math.abs(d-90)<8)d=90;const u=[Math.cos(d*Math.PI/180),Math.sin(d*Math.PI/180)],v=perp(u);
-   let a1=(sides[0]+sides[2])/2,a2=(sides[1]+sides[3])/2;const sq=Math.abs(a1-a2)/Math.max(a1,a2)<0.12;if(sq)a1=a2=(a1+a2)/2;
-   const pts=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>add(cen,add(mul(u,i*a1/2),mul(v,j*a2/2))));return {kind:'poly',pts,name:sq?'cuadrado':'rectángulo',axis:d===0||d===90}}
-  const d0=dirDeg(s[0],s[1]),d1=dirDeg(s[1],s[2]),d2=dirDeg(s[2],s[3]),d3=dirDeg(s[3],s[0]);const par02=dirDiff(d0,d2)<11,par13=dirDiff(d1,d3)<11;
-  if(par02&&par13){const p3=add(s[0],sub(s[2],s[1]));const pts=[s[0],s[1],s[2],p3];const rh=Math.abs(sides[0]-sides[1])/Math.max(sides[0],sides[1])<0.14;
-   if(rh){const m=(dist(pts[0],pts[1])+dist(pts[1],pts[2]))/2;pts[1]=add(pts[0],mul(unit(sub(pts[1],pts[0])),m));pts[2]=add(pts[1],mul(unit(sub(s[2],s[1])),m));pts[3]=add(pts[0],sub(pts[2],pts[1]))}
-   return {kind:'poly',pts,name:rh?'rombo':'romboide (paralelogramo)'}}
-  if(par02||par13){const k=par02?0:1,a=s[k],b=s[k+1],c2=s[(k+2)%4],d2_=s[(k+3)%4],u=unit(sub(b,a)),m=mid(c2,d2_);const pr=q=>add(m,mul(u,dot(sub(q,m),u)));const pts=s.slice();pts[(k+2)%4]=pr(c2);pts[(k+3)%4]=pr(d2_);
-   const l1=dist(pts[(k+1)%4],pts[(k+2)%4]),l2=dist(pts[(k+3)%4],pts[k]);return {kind:'poly',pts,name:Math.abs(l1-l2)/Math.max(l1,l2)<0.12?'trapecio isósceles':'trapecio'}}
-  const kite=Math.abs(sides[0]-sides[1])/Math.max(sides[0],sides[1])<0.12&&Math.abs(sides[2]-sides[3])/Math.max(sides[2],sides[3])<0.12||Math.abs(sides[1]-sides[2])/Math.max(sides[1],sides[2])<0.12&&Math.abs(sides[3]-sides[0])/Math.max(sides[3],sides[0])<0.12;
+const pathLen=a=>{let L=0;for(let i=1;i<a.length;i++)L+=dist(a[i],a[i-1]);return L};
+const near=(a,b,tol)=>Math.abs(a-b)/Math.max(a,b,1e-9)<tol;
+function resample(a,N){const L=pathLen(a);if(L<=0||a.length<2)return Array.from({length:N},()=>a[0]);const st=L/(N-1),out=[a[0]];let acc=0,prev=a[0];
+ for(let i=1;i<a.length;i++){const cur=a[i];let d=dist(prev,cur);while(acc+d>=st&&out.length<N){const t=(st-acc)/d,q=add(prev,mul(sub(cur,prev),t));out.push(q);prev=q;d=dist(prev,cur);acc=0}acc+=d;prev=cur}
+ while(out.length<N)out.push(a[a.length-1]);return out}
+const smoothC=(p,k=1)=>p.map((_,i)=>{let s=[0,0];for(let j=-k;j<=k;j++)s=add(s,p[(i+j+p.length)%p.length]);return mul(s,1/(2*k+1))});
+function strokeBox(a){const xs=a.map(p=>p[0]),ys=a.map(p=>p[1]),x0=Math.min(...xs),y0=Math.min(...ys),w=Math.max(...xs)-x0,h=Math.max(...ys)-y0;return {x0,y0,w,h,diag:Math.hypot(w,h)}}
+/* ¿el trazo es cerrado? recorta el sobrante cuando el final pasa por encima del inicio */
+function closeInfo(raw,diag){const n=raw.length,L=pathLen(raw);if(n<6||L<diag*1.45)return {closed:false};
+ const H=Math.max(2,Math.floor(n*0.25));let best=Infinity,bi=-1,bj=-1;
+ for(let i=n-H;i<n;i++)for(let j=0;j<H;j++){if(i-j<n*0.5)continue;const d=dist(raw[i],raw[j]);if(d<best){best=d;bi=i;bj=j}}
+ if(best<diag*0.12)return {closed:true,loop:raw.slice(bj,bi+1)};
+ const gap=dist(raw[0],raw[n-1]);
+ if(gap<diag*0.45||(gap<diag*0.6&&L>diag*2.3)){
+  // si el hueco cae en una esquina, la reconstruye prolongando el final y el inicio del trazo
+  const back=(from,dirn)=>{let acc=0,j=from;while(acc<L*0.07&&j+dirn>=0&&j+dirn<n){acc+=dist(raw[j],raw[j+dirn]);j+=dirn}return raw[j]};
+  const E=raw[n-1],B=raw[0],dE=unit(sub(E,back(n-1,-1))),dB=unit(sub(B,back(0,1))),den=dE[0]*dB[1]-dE[1]*dB[0];
+  if(Math.abs(den)>0.35&&gap>diag*0.06){const w=sub(B,E),t=(w[0]*dB[1]-w[1]*dB[0])/den,u=(w[0]*dE[1]-w[1]*dE[0])/den;
+   if(t>0&&u>0&&t<diag*0.6&&u<diag*0.6)return {closed:true,loop:raw.concat([add(E,mul(dE,t))])}}
+  return {closed:true,loop:raw}}
+ return {closed:false}}
+const N_LOOP=96;
+const loopPts=loop=>smoothC(resample(loop.concat([loop[0]]),N_LOOP+1).slice(0,N_LOOP),1);
+function turnArr(p,k){const N=p.length;return p.map((v,i)=>180-angAt(p[(i-k+N)%N],v,p[(i+k)%N]))}
+function cornerCands(p,k){const N=p.length,t=turnArr(p,k),c=[];
+ for(let i=0;i<N;i++){let mx=true;for(let j=-k;j<=k&&mx;j++){if(!j)continue;const v=t[(i+j+N)%N];if(v>t[i]||(j<0&&v===t[i]))mx=false}if(mx)c.push({i,t:t[i]})}
+ const med=[...t].sort((a,b)=>a-b)[N>>1];return {c,t,med}}
+function pickCorners(cands,n,N){const out=[],gap=N/(2.6*n);for(const c of [...cands].sort((a,b)=>b.t-a.t)){if(out.length>=n)break;if(out.every(o=>{const d=Math.abs(o.i-c.i);return Math.min(d,N-d)>=gap}))out.push(c)}return out.map(o=>o.i).sort((a,b)=>a-b)}
+function fps(p,n){const c=centroid(p);let first=0,dm=-1;p.forEach((q,i)=>{const d=dist(q,c);if(d>dm){dm=d;first=i}});const sel=[first];
+ while(sel.length<n){let bi=0,bd=-1;p.forEach((q,i)=>{const d=Math.min(...sel.map(j=>dist(q,p[j])));if(d>bd){bd=d;bi=i}});sel.push(bi)}return sel.sort((a,b)=>a-b)}
+function fitLine(pts){const m=centroid(pts);let sxx=0,syy=0,sxy=0;pts.forEach(q=>{const dx=q[0]-m[0],dy=q[1]-m[1];sxx+=dx*dx;syy+=dy*dy;sxy+=dx*dy});const th=0.5*Math.atan2(2*sxy,sxx-syy);return {m,u:[Math.cos(th),Math.sin(th)]}}
+function lineX(l1,l2){const d=l1.u[0]*l2.u[1]-l1.u[1]*l2.u[0];if(Math.abs(d)<0.12)return null;const w=sub(l2.m,l1.m),t=(w[0]*l2.u[1]-w[1]*l2.u[0])/d;return add(l1.m,mul(l1.u,t))}
+/* afina los vértices: ajusta una recta a cada lado y corta las rectas vecinas (corrige esquinas redondeadas) */
+function cleanVerts(s,diag){let q=s.slice(),ch=true;while(ch&&q.length>3){ch=false;for(let i=0;i<q.length;i++){const a=q[(i-1+q.length)%q.length],v=q[i],b=q[(i+1)%q.length];if(angAt(a,v,b)>152||dist(a,v)<diag*0.08){q.splice(i,1);ch=true;break}}}return q}
+function refineVerts(p,idx,diag){const N=p.length,n=idx.length;if(n<3)return idx.map(i=>p[i]);
+ const lines=idx.map((a,m)=>{const b=idx[(m+1)%n];let len=(b-a+N)%N;const g=Math.max(1,Math.round(len*0.2)),pts=[];for(let j=g;j<=len-g;j++)pts.push(p[(a+j)%N]);return pts.length>=2?fitLine(pts):null});
+ return idx.map((i,m)=>{const l1=lines[(m-1+n)%n],l2=lines[m];const x=l1&&l2?lineX(l1,l2):null;return x&&dist(x,p[i])<diag*0.25?x:p[i]})}
+function minRect(p){let best=null;for(let a=0;a<90;a+=0.5){const t=a*Math.PI/180,u=[Math.cos(t),Math.sin(t)],v=perp(u);let a0=Infinity,a1=-Infinity,b0=Infinity,b1=-Infinity;
+  p.forEach(q=>{const x=dot(q,u),y=dot(q,v);a0=Math.min(a0,x);a1=Math.max(a1,x);b0=Math.min(b0,y);b1=Math.max(b1,y)});const A=(a1-a0)*(b1-b0);if(!best||A<best.A)best={A,a,w:a1-a0,h:b1-b0,c:add(mul(u,(a0+a1)/2),mul(v,(b0+b1)/2))}}
+ return best}
+function rectRes(p,square){const r=minRect(p),t0=r.a*Math.PI/180,u0=[Math.cos(t0),Math.sin(t0)],v0=perp(u0);
+ // percentiles en vez de mínimo/máximo: los temblores del trazo no agrandan la figura
+ const q=(arr,f)=>{const b=[...arr].sort((x,y)=>x-y);return b[Math.min(b.length-1,Math.max(0,Math.round(f*(b.length-1))))]},xs=p.map(z=>dot(z,u0)),ys=p.map(z=>dot(z,v0));
+ const xa=q(xs,0.03),xb=q(xs,0.97),ya=q(ys,0.03),yb=q(ys,0.97);r.c=add(mul(u0,(xa+xb)/2),mul(v0,(ya+yb)/2));let a=r.a,w=xb-xa,h=yb-ya;if(a>45){a-=90;[w,h]=[h,w]}if(smartReg&&Math.abs(a)<10)a=0;
+ if(square)w=h=(w+h)/2;const t=a*Math.PI/180,u=[Math.cos(t),Math.sin(t)],v=perp(u);
+ const pts=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([i,j])=>add(r.c,add(mul(u,i*w/2),mul(v,j*h/2))));return {kind:'poly',pts,name:square?'cuadrado':'rectángulo',axis:a===0}}
+/* clasificación y regularización de un polígono a partir de sus vértices */
+function triRight(s,ri){const V=s[ri],A=s[(ri+1)%3],B=s[(ri+2)%3];let u=unit(sub(A,V));const ux=dirDeg(V,A);let A2=A;
+ if(smartReg&&(Math.min(ux,180-ux)<10||Math.abs(ux-90)<10)){A2=Math.min(ux,180-ux)<10?[A[0],V[1]]:[V[0],A[1]];u=unit(sub(A2,V))}
+ let pp=perp(u);if(dot(pp,sub(B,V))<0)pp=mul(pp,-1);let B2=add(V,mul(pp,Math.max(dot(sub(B,V),pp),dist(B,V)*0.5)));
+ const out=[];out[ri]=V;out[(ri+1)%3]=A2;out[(ri+2)%3]=B2;const iso=near(dist(V,A2),dist(V,B2),0.12);
+ if(iso){const m=(dist(V,A2)+dist(V,B2))/2;out[(ri+1)%3]=add(V,mul(unit(sub(A2,V)),m));out[(ri+2)%3]=add(V,mul(unit(sub(B2,V)),m))}
+ return {kind:'poly',pts:out,name:iso?'triángulo rectángulo isósceles':'triángulo rectángulo'}}
+function triIso(s,i){const V=s[i],P1=s[(i+2)%3],P2=s[(i+1)%3],m=mid(P1,P2),bu=unit(sub(P2,P1));let nn=perp(bu);if(dot(nn,sub(V,m))<0)nn=mul(nn,-1);const hgt=Math.abs(dot(sub(V,m),nn));const out=s.slice();out[i]=add(m,mul(nn,hgt));return {kind:'poly',pts:out,name:'triángulo isósceles'}}
+const equiRes=s=>({kind:'reg',c:centroid(s),v:s[0],n:3,name:'triángulo equilátero'});
+function paraRes(s){const p3=add(s[0],sub(s[2],s[1]));return {kind:'poly',pts:[s[0],s[1],s[2],p3],name:'romboide (paralelogramo)'}}
+function rhombRes(s){const ctr=centroid(s),d1=mul(sub(s[2],s[0]),0.5),d2=mul(sub(s[3],s[1]),0.5),u=unit(d1);let v=perp(u);if(dot(v,d2)<0)v=mul(v,-1);
+ const a=(dist(s[0],s[2]))/2,b=Math.abs(dot(d2,v))||dist(s[1],s[3])/2;return {kind:'poly',pts:[sub(ctr,mul(u,a)),sub(ctr,mul(v,b)),add(ctr,mul(u,a)),add(ctr,mul(v,b))],name:'rombo'}}
+function trapRes(s,force){const d=[0,1,2,3].map(i=>dirDeg(s[i],s[(i+1)%4]));const e02=dirDiff(d[0],d[2]),e13=dirDiff(d[1],d[3]);const k=e02<=e13?0:1;
+ const a=s[k],b=s[k+1],c2=s[(k+2)%4],d2=s[(k+3)%4],u=unit(sub(b,a)),m=mid(c2,d2),pr=q=>add(m,mul(u,dot(sub(q,m),u)));const pts=s.slice();pts[(k+2)%4]=pr(c2);pts[(k+3)%4]=pr(d2);
+ const l1=dist(pts[(k+1)%4],pts[(k+2)%4]),l2=dist(pts[(k+3)%4],pts[k]);return {kind:'poly',pts,name:near(l1,l2,0.12)?'trapecio isósceles':'trapecio'}}
+function classify(s,p){const n=s.length;let name='polígono de '+n+' lados';if(!smartReg)return {kind:'poly',pts:s,name:n===3?'triángulo':n===4?'cuadrilátero':name};
+ const sides=s.map((q,i)=>dist(q,s[(i+1)%n])),angs=s.map((v,i)=>angAt(s[(i-1+n)%n],v,s[(i+1)%n]));
+ if(n===3){if(Math.max(...sides)/Math.min(...sides)<1.18)return equiRes(s);
+  let ri=-1,bd=99;angs.forEach((a,i)=>{const d=Math.abs(a-90);if(d<bd){bd=d;ri=i}});if(bd<6)return triRight(s,ri);
+  for(let i=0;i<3;i++)if(near(sides[(i+2)%3],sides[i],0.12))return triIso(s,i);
+  if(bd<11)return triRight(s,ri);return {kind:'poly',pts:s,name:'triángulo escaleno'}}
+ if(n===4){if(angs.every(a=>Math.abs(a-90)<20)){const r=rectRes(p||s,false);const w=dist(r.pts[0],r.pts[1]),h=dist(r.pts[1],r.pts[2]);return near(w,h,0.13)?rectRes(p||s,true):r}
+  const d=[0,1,2,3].map(i=>dirDeg(s[i],s[(i+1)%4])),par02=dirDiff(d[0],d[2])<14,par13=dirDiff(d[1],d[3])<14;
+  if(par02&&par13)return near(sides[0],sides[1],0.15)?rhombRes(s):paraRes(s);
+  if(par02||par13)return trapRes(s);
+  const kite=(near(sides[0],sides[1],0.13)&&near(sides[2],sides[3],0.13))||(near(sides[1],sides[2],0.13)&&near(sides[3],sides[0],0.13));
+  if(!kite&&near(dist(s[0],s[2]),dist(s[1],s[3]),0.2)&&Math.abs(angAt(s[0],centroid(s),s[1])-90)<20)return rhombRes(s);
   return {kind:'poly',pts:s,name:kite?'deltoide':'trapezoide'}}
- if(cv(sides)<0.16&&cv(angs)<0.12){const nm={5:'pentágono',6:'hexágono',7:'heptágono',8:'octágono'}[n]||('polígono regular de '+n+' lados');return {kind:'reg',c:cen,v:s[0],n,name:nm+' regular'}}
+ if(cv(sides)<0.2&&cv(angs)<0.14){const nm={5:'pentágono',6:'hexágono',7:'heptágono',8:'octágono'}[n]||('polígono regular de '+n+' lados');return {kind:'reg',c:centroid(s),v:s[0],n,name:nm+' regular'}}
  return {kind:'poly',pts:s,name}}
+function shapeData(raw){const bb=strokeBox(raw),ci=closeInfo(raw,bb.diag),p=loopPts(ci.closed?ci.loop:raw),c=centroid(p),rs=p.map(q=>dist(q,c)),r=rs.reduce((a,v)=>a+v,0)/rs.length,cc=cornerCands(p,4);return {bb,ci,p,c,r,rs,cc}}
+function vertsN(D,n){const N=D.p.length;let idx=pickCorners(D.cc.c.filter(o=>o.t>12),n,N);if(idx.length<n)idx=fps(D.p,n);return refineVerts(D.p,idx,D.bb.diag)}
+function recognize(raw){const bb=strokeBox(raw),diag=bb.diag;if(diag*view.z<10)return null;
+ const ci=closeInfo(raw,diag),L=pathLen(raw);
+ if(!ci.closed){const dev=Math.max(...raw.map(q=>segDist(q,raw[0],raw[raw.length-1])));
+  if(dev<L*0.07+4/view.z){let a=raw[0],b=raw[raw.length-1];if(smartReg){const dd=dirDeg(a,b);if(Math.min(dd,180-dd)<7)b=[b[0],a[1]];else if(Math.abs(dd-90)<7)b=[a[0],b[1]]}return {kind:'segment',pts:[a,b],name:'segmento'}}
+  return {kind:'open',pts:rdp(raw,diag*0.06),name:'línea poligonal'}}
+ const D=shapeData(raw),N=D.p.length,st=[...D.cc.t].sort((a,b)=>a-b),q=f=>st[Math.round(f*(N-1))],med=Math.max(1,q(0.5));
+ // circunferencia: la curvatura es pareja en todo el contorno (sin tramos rectos ni picos)
+ if(q(0.9)/med<1.85&&q(0.25)/med>0.5&&med>6)return {kind:'circle',c:D.c,r:D.r,name:'circunferencia'};
+ const peak=Math.max(...D.cc.t),thr=Math.max(20,peak*0.3,med*1.5),corners=D.cc.c.filter(o=>o.t>thr);
+ if(corners.length>9)return {kind:'circle',c:D.c,r:D.r,name:'circunferencia'};
+ let idx=pickCorners(corners,corners.length,N);if(idx.length<3)return classify(vertsN(D,3),D.p);
+ return classify(cleanVerts(refineVerts(D.p,idx,diag),diag),D.p)}
+/* ajuste forzado a una figura elegida */
+function fitTarget(t,raw){const D=shapeData(raw);
+ switch(t){
+  case 'segment':return {kind:'segment',pts:[raw[0],raw[raw.length-1]],name:'segmento'};
+  case 'circle':return {kind:'circle',c:D.c,r:D.r,name:'circunferencia'};
+  case 'rect':return rectRes(D.p,false);case 'square':return rectRes(D.p,true);
+  case 'tri':{const s=vertsN(D,3);return classify(s,D.p)}
+  case 'equi':return equiRes(vertsN(D,3));
+  case 'rtri':{const s=vertsN(D,3),angs=s.map((v,i)=>angAt(s[(i+2)%3],v,s[(i+1)%3]));const ri=angs.indexOf(Math.max(...angs));return triRight(s,ri)}
+  case 'iso':{const s=vertsN(D,3),sd=s.map((q,i)=>dist(q,s[(i+1)%3]));let bi=0,bd=9;for(let i=0;i<3;i++){const d=Math.abs(sd[(i+2)%3]-sd[i])/Math.max(sd[i],sd[(i+2)%3]);if(d<bd){bd=d;bi=i}}return triIso(s,bi)}
+  case 'rhombus':return rhombRes(vertsN(D,4));case 'para':return paraRes(vertsN(D,4));case 'trap':return trapRes(vertsN(D,4));
+  case 'reg5':case 'reg6':case 'reg8':{const n=+t.slice(3),s=vertsN(D,n),R=s.reduce((a,q)=>a+dist(q,D.c),0)/n;const v=add(D.c,mul(unit(sub(s[0],D.c)),R));return {kind:'reg',c:D.c,v,n,name:{5:'pentágono',6:'hexágono',8:'octágono'}[n]+' regular'}}
+  case 'poly':{const thr=Math.max(30,D.cc.med*1.5),cs=D.cc.c.filter(o=>o.t>thr);let idx=pickCorners(cs,cs.length,D.p.length);if(idx.length<3)idx=fps(D.p,3);return {kind:'poly',pts:refineVerts(D.p,idx,D.bb.diag),name:'polígono de '+idx.length+' lados'}}
+ }return recognize(raw)}
+function objFromRes(res,raw){let o;const sn=p=>snapPt(p,null,null).p;
+ if(res.kind==='free'){o=make('polygon',[raw[0],raw[1]]);o.x.closed=false;o.x.vl=false;o.pts=rdp(raw,1.2/view.z)}
+ else if(res.kind==='segment')o=make('segment',res.pts.map(sn));
+ else if(res.kind==='circle'){const c=sn(res.c),st=GRID*S.settings.step,r=S.settings.snap?Math.max(st,Math.round(res.r/st)*st):res.r;o=make('circle',[c,[c[0]+r,c[1]]])}
+ else if(res.kind==='open'){o=make('polygon',res.pts.map(sn));o.x.closed=false;o.x.vl=false}
+ else if(res.kind==='reg'){const c=sn(res.c);let v=add(c,sub(res.v,res.c));const r_=dist(v,c);let a=Math.atan2(v[1]-c[1],v[0]-c[0])*180/Math.PI;if(S.settings.snap)a=Math.round(a/15)*15;v=add(c,[r_*Math.cos(a*Math.PI/180),r_*Math.sin(a*Math.PI/180)]);o=make('polygon',regPts(c,v,res.n));o.x.reg=true;o.x.n=res.n}
+ else{let pts=res.pts;if(!smartReg||res.axis||/^pol[ií]gono|trapezoide|cuadrilátero|^triángulo$/.test(res.name))pts=pts.map(sn);else{const d=sub(sn(pts[0]),pts[0]);pts=pts.map(p=>add(p,d))}o=make('polygon',pts)}
+ return o}
 function smartFinish(raw){
  if(raw.length<3){render();return}
- let o=null,res;
- if(smartMode==='free'){o=make('polygon',[raw[0],raw[1]]);o.x.closed=false;o.x.vl=false;o.pts=rdp(raw,1.2/view.z);res={name:'trazo libre'}}
- else{res=recognize(raw);if(!res){render();return}
-  const sn=p=>snapPt(p,null,null).p;
-  if(res.kind==='segment'){o=make('segment',res.pts.map(sn))}
-  else if(res.kind==='circle'){const c=sn(res.c),st=GRID*S.settings.step,r=S.settings.snap?Math.max(st,Math.round(res.r/st)*st):res.r;o=make('circle',[c,[c[0]+r,c[1]]])}
-  else if(res.kind==='open'){o=make('polygon',res.pts.map(sn));o.x.closed=false;o.x.vl=false}
-  else if(res.kind==='reg'){const c=sn(res.c);let v=add(c,sub(res.v,res.c));const r_=dist(v,c);let a=Math.atan2(v[1]-c[1],v[0]-c[0])*180/Math.PI;if(S.settings.snap)a=Math.round(a/15)*15;v=add(c,[r_*Math.cos(a*Math.PI/180),r_*Math.sin(a*Math.PI/180)]);o=make('polygon',regPts(c,v,res.n));o.x.reg=true;o.x.n=res.n}
-  else{let pts=res.pts;if(!smartReg||res.axis||res.name.startsWith('polígono')||res.name==='trapezoide')pts=pts.map(sn);else{const d=sub(sn(pts[0]),pts[0]);pts=pts.map(p=>add(p,d))}o=make('polygon',pts)}}
- commitNew(o);toast('Reconocido: '+res.name)}
-function updSmartbar(){const b=$('#smartbar');if(!b)return;b.hidden=tool!=='smart';b.querySelectorAll('[data-sm]').forEach(x=>x.classList.toggle('on',x.dataset.sm===smartMode));const r=$('#sm-reg');if(r){r.checked=smartReg;r.closest('label').style.display=smartMode==='rec'?'':'none'}}
-
+ let res;
+ if(smartMode==='free')res={kind:'free',name:'trazo libre'};
+ else{res=smartTarget==='auto'?recognize(raw):fitTarget(smartTarget,raw);if(!res){render();return}}
+ const o=objFromRes(res,raw);commitNew(o);smartLast={raw,id:o.id};updSmartAlt();toast('Reconocido: '+res.name)}
+function smartConvert(t){if(!smartLast)return;const i=S.objs.findIndex(q=>q.id===smartLast.id);if(i<0){smartLast=null;updSmartAlt();return}
+ const res=t==='free'?{kind:'free',name:'trazo libre'}:fitTarget(t,smartLast.raw),o=objFromRes(res,smartLast.raw),old=S.objs[i];
+ o.s={...old.s};pushHist();S.objs[i]=o;smartLast.id=o.id;sel=new Set([o.id]);renderPanel();render();save();toast('Cambiado a: '+res.name)}
+function updSmartAlt(){const a=$('#sm-alt');if(!a)return;const ok=tool==='smart'&&smartMode==='rec'&&smartLast&&S.objs.some(q=>q.id===smartLast.id);a.hidden=!ok}
+function updSmartbar(){const b=$('#smartbar');if(!b)return;b.hidden=tool!=='smart';b.querySelectorAll('[data-sm]').forEach(x=>x.classList.toggle('on',x.dataset.sm===smartMode));
+ const rec=smartMode==='rec';const r=$('#sm-reg');if(r){r.checked=smartReg;r.closest('label').style.display=rec?'':'none'}const t=$('#sm-target');if(t){t.value=smartTarget;t.closest('label').style.display=rec?'':'none'}updSmartAlt()}
 function updPolybar(){const b=$('#polybar');b.hidden=tool!=='polygon';b.querySelectorAll('[data-pm="free"],[data-pm="reg"]').forEach(x=>x.classList.toggle('on',(x.dataset.pm==='reg')===polyReg));$('#nstep').hidden=!polyReg;$('#nval').textContent=polyN+' lados'}
-$('#smartbar').addEventListener('click',e=>{const b=e.target.closest('[data-sm]');if(b){smartMode=b.dataset.sm;updSmartbar()}});
+$('#smartbar').addEventListener('click',e=>{const b=e.target.closest('[data-sm]');if(b){smartMode=b.dataset.sm;updSmartbar();return}const c=e.target.closest('[data-alt]');if(c)smartConvert(c.dataset.alt)});
+$('#sm-target').addEventListener('change',e=>{smartTarget=e.target.value;smartLast=null;updSmartbar();toast(smartTarget==='auto'?'Reconocimiento automático':'Cada trazo se ajustará a: '+SM_T[smartTarget])});
+$('#sm-alt').innerHTML='<span class="smq">¿Era otra?</span>'+SM_ALT.map(([k,n])=>`<button data-alt="${k}">${n}</button>`).join('');
 $('#sm-reg').addEventListener('change',e=>{smartReg=e.target.checked});
 $('#polybar').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
  if(b.dataset.pm==='lib'){openShapes();return}
