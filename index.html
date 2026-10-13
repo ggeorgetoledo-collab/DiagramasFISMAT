@@ -164,6 +164,9 @@ body.board .polybar{top:118px}
 .sidetab:hover{color:var(--primary)}.sidetab.l{left:0;border-left:0;border-radius:0 10px 10px 0}.sidetab.r{right:0;border-right:0;border-radius:10px 0 0 10px}
 @media (min-width:761px){body.notools main{--tw:0px}body.notools .tools{visibility:hidden;padding:0;border:0;overflow:hidden;min-width:0}body.nopanel main{--pw:0px}body.nopanel .panel{visibility:hidden;padding:0;border:0;overflow:hidden;min-width:0}}
 @media (max-width:760px){.sidetab,.tfold{display:none}.tg h4[data-fold]{display:none}.tg.fold .tgrid{display:grid}}
+.simbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0 10px}.simbar span{font-weight:800;color:var(--primary);font-size:13px}
+.ctab{width:100%;border-collapse:collapse;font-size:13px}.ctab td{padding:3px 4px;border-bottom:1px solid rgba(127,127,127,.25)}.ctab td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.lrow{display:flex;gap:6px;align-items:flex-end}.lrow .fld{flex:1}.btn.sm{padding:6px 9px;margin-bottom:8px}.lsec{border-left:3px solid var(--primary-weak);padding-left:8px;margin:4px 0}
 /* Ventanas */
 .eqbox{width:min(760px,100%)}
 .eqpal{margin-bottom:10px}
@@ -446,6 +449,21 @@ body.board .polybar{top:118px}
   </div>
 </div>
 
+<div class="modal" id="m-circ" hidden>
+  <div class="mbox" style="width:min(560px,100%)">
+    <div class="mhead"><h2>Ejemplos de circuitos</h2><button class="x" data-close>✕</button></div>
+    <p class="tip">Se insertan listos para simular. Cambia valores en el panel, arrastra componentes o patas y observa cómo cambian corrientes y voltajes.</p>
+    <div id="ce-list" style="display:grid;gap:8px;margin-top:10px"></div>
+  </div>
+</div>
+<div class="modal" id="m-heat" hidden>
+  <div class="mbox" style="width:min(900px,100%)">
+    <div class="mhead"><h2>Transmisión de calor</h2><button class="x" data-close>✕</button></div>
+    <p class="tip">Elige una simulación. En el panel puedes reproducirla, pausarla, cambiar materiales, temperaturas y masas, y mostrar u ocultar fórmulas y valores.</p>
+    <div class="shgrid wpgrid" id="hp-list" style="margin-top:10px"></div>
+  </div>
+</div>
+
 <div class="modal" id="m-bodies" hidden>
   <div class="mbox">
     <div class="mhead"><h2>Objetos</h2><button class="x" data-close>✕</button></div>
@@ -553,6 +571,7 @@ const I={
  angle:'<path d="M4 19h16M4 19L15 5"/><path d="M11 19a7 7 0 0 0-2.4-5.3"/>',
  dim:'<path d="M4 7v11M20 7v11M4 12.5h16M4 12.5l3-2.3M4 12.5l3 2.3M20 12.5l-3-2.3M20 12.5l-3 2.3"/>',
  text:'<path d="M5 6h14M12 6v13M9 19h6"/>',
+ heat:'<path d="M10 14V5a2 2 0 0 1 4 0v9a4 4 0 1 1-4 0z"/><path d="M12 9v7"/><path d="M18 5c1 1 1 2 0 3s-1 2 0 3M21 5c1 1 1 2 0 3s-1 2 0 3"/>',
  reflx:'<path d="M3 4v16M21 4v16"/><path d="M3 8l18 4-18 4 18 4" opacity=".7"/>',
  refl:'<path d="M3 18h18"/><path d="M5 18l-2 3M9 18l-2 3M13 18l-2 3M17 18l-2 3M21 18l-2 3"/><path d="M5 6l7 9 7-9"/>',
  emit:'<path d="M3 10h6v4H3z"/><path d="M10 12h11M18 9l3 3-3 3"/>',
@@ -605,6 +624,21 @@ const I={
  capacitor:'<path d="M2 12h8M14 12h8M10 6v12M14 6v12"/>',
  switch:'<path d="M2 16h5M17 16h5M7 16l9-6"/><circle cx="7" cy="16" r="1.5"/><circle cx="17" cy="16" r="1.5"/>',
  meter:'<circle cx="12" cy="12" r="7"/><path d="M9.5 15l2.5-6 2.5 6M10.4 13h3.2"/>',
+ diode:'<path d="M2 12h6M16 12h6M8 7v10l8-5zM16 7v10"/>',
+ npn:'<circle cx="13" cy="12" r="8"/><path d="M2 12h7M9 7v10M9 10l6-5V2M9 14l6 5v3M13.5 18l1.5 1-.3-1.8"/>',
+ csim:'<path d="M3 12h3l2-5 3 10 3-10 2 5h5"/><circle cx="19" cy="12" r="1.6"/>',
+ circex:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h4v6h6M7 9v6"/><circle cx="17" cy="9" r="1.5"/>',
+ bboard:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M5 8h14M5 16h14" stroke-dasharray="1 2"/><path d="M5 11h14M5 13h14" stroke-dasharray="1 2"/>',
+ bbwire:'<path d="M4 18C4 6 20 6 20 18"/><circle cx="4" cy="18" r="1.6"/><circle cx="20" cy="18" r="1.6"/>',
+ bbres:'<path d="M2 12h4M18 12h4"/><rect x="6" y="9" width="12" height="6" rx="3"/><path d="M9 9v6M12 9v6M15.5 9v6"/>',
+ bbled:'<path d="M9 22v-8M15 22v-8M7 14h10M8 14V9a4 4 0 0 1 8 0v5"/><path d="M18 4l2-2M20 7h2"/>',
+ bbdio:'<path d="M2 12h5M17 12h5"/><rect x="7" y="9" width="10" height="6" rx="1"/><path d="M14 9v6"/>',
+ bbcap:'<path d="M9 22v-6M15 22v-6"/><rect x="6" y="3" width="12" height="13" rx="3"/><path d="M14 3v13"/>',
+ bbsw:'<rect x="4" y="9" width="16" height="8" rx="1"/><rect x="12" y="6" width="5" height="5" rx="1"/><path d="M7 17v4M17 17v4"/>',
+ bbpot:'<rect x="4" y="4" width="16" height="13" rx="2"/><circle cx="12" cy="10.5" r="3.5"/><path d="M12 10.5l2-2M7 17v4M12 17v4M17 17v4"/>',
+ bbnpn:'<path d="M5 13V6a7 7 0 0 1 14 0v7z"/><path d="M8 13v8M12 13v8M16 13v8"/>',
+ bbbat:'<rect x="6" y="6" width="12" height="16" rx="1.5"/><path d="M6 11h12M9 6V3M15 6V3"/>',
+ bbmeter:'<rect x="5" y="2" width="14" height="20" rx="2"/><rect x="7.5" y="4.5" width="9" height="5"/><circle cx="12" cy="15" r="3"/>',
  axes:'<path d="M5 21V3M3 19h18M5 3L3.2 5.6M5 3l1.8 2.6M21 19l-2.6-1.8M21 19l-2.6 1.8"/><path d="M7 17c4-1 7-6 12-12"/>'
 };
 const TOOLS=[
@@ -612,10 +646,12 @@ const TOOLS=[
  {g:'Matemática',items:[['eq','Ecuación'],['solid','Cuerpos 3D'],['numline','Recta num.'],['circgeo','Circ. y ángulos'],['axes','Plano cart.'],['tree','Árbol prob.'],['stat','Estadística']]},
  {g:'Mecánica',items:[['vector','Vector'],['frame','Sist. ref.'],['block','Bloque'],['cart','Carro'],['movers','Móviles'],['bodies','Objetos'],['ball','Esfera'],['incline','Plano incl.'],['rope','Cuerda'],['ground','Superficie'],['spring','Resorte'],['pulley','Polea'],['mgraph','Gráf. mov.'],['proj','Proyectil'],['circmov','Mov. circular'],['coaster','Montaña rusa'],['pendulum','Péndulo'],['fluid','Fluidos']]},
  {g:'Ondas y luz',items:[['wphen','Fenómenos'],['reflx','Reflexiones'],['refl','Superficie'],['emit','Emisor'],['wave','Onda'],['fronts','Frentes'],['refr','Refracción'],['optlens','Lente'],['optmirror','Espejo']]},
- {g:'Electricidad',items:[['charge','Carga'],['efield','Campo eléctr.'],['magnet','Imán'],['wirefield','Corriente'],['wire','Cable'],['battery','Pila'],['resistor','Resistencia'],['bulb','Ampolleta'],['capacitor','Condensador'],['switch','Interruptor'],['meter','Medidor']]},
+ {g:'Calor',items:[['heat','Transmisión de calor']]},
+ {g:'Electricidad',items:[['charge','Carga'],['efield','Campo eléctr.'],['magnet','Imán'],['wirefield','Corriente'],['wire','Cable'],['battery','Pila'],['resistor','Resistencia'],['bulb','Ampolleta'],['capacitor','Condensador'],['switch','Interruptor'],['meter','Medidor'],['diode','Diodo / LED'],['npn','Transistor'],['csim','Simular'],['circex','Ejemplos']]},
+ {g:'Protoboard',items:[['bboard','Protoboard'],['bbwire','Cable'],['bbres','Resistencia'],['bbled','LED'],['bbdio','Diodo'],['bbcap','Condensador'],['bbsw','Interruptor'],['bbpot','Potenciómetro'],['bbnpn','Transistor'],['bbbat','Batería'],['bbmeter','Multímetro'],['circex','Ejemplos']]},
  {g:'Universo',items:[['orbit','Órbita'],['earth','Tierra']]}
 ];
-const CLICKS={homot:1,tales:1,euclides:1,eq:1,solid:1,numline:1,circgeo:1,tree:1,stat:1,mgraph:1,proj:1,circmov:1,fronts:1,refr:1,coaster:1,pendulum:1,fluid:1,efield:1,magnet:1,wirefield:1,orbit:1,earth:1,frame:1,optlens:1,optmirror:1,point:1,text:1,axes:1,charge:1,polygon:'poly',wire:'poly',angle:3};
+const CLICKS={homot:1,tales:1,euclides:1,eq:1,solid:1,numline:1,circgeo:1,tree:1,stat:1,mgraph:1,proj:1,circmov:1,fronts:1,refr:1,coaster:1,pendulum:1,fluid:1,efield:1,magnet:1,wirefield:1,orbit:1,earth:1,frame:1,optlens:1,optmirror:1,point:1,text:1,axes:1,charge:1,polygon:'poly',wire:'poly',angle:3,npn:1,bboard:1,bbnpn:1,bbpot:1,bbbat:1,bbmeter:1};
 const HINTS={
  image:'',
  select:'Clic para seleccionar · arrastra para mover · arrastra en un espacio vacío para seleccionar varios · Alt desactiva el ajuste',
@@ -636,19 +672,27 @@ const HINTS={
  eraser:'Pasa la goma sobre los trazos a mano para borrarlos · los diagramas se borran seleccionándolos',
  text:'Clic donde quieres el texto · usa v_0, x^2 o \\alpha en la etiqueta',
  axes:'Clic donde quieres el origen del plano',
- charge:'Clic para ubicar la carga'
+ charge:'Clic para ubicar la carga',
+ diode:'Arrastra de ánodo (+) a cátodo (−) · en el panel puedes convertirlo en LED',
+ npn:'Clic para ubicar el transistor NPN · arrastra sus terminales B, C y E hasta los cables',
+ bboard:'Clic para ubicar la protoboard · luego inserta componentes: sus patas se encajan en los agujeros',
+ bbwire:'Arrastra de un agujero a otro para poner un cable puente',
+ bbres:'Arrastra de un agujero a otro para poner la resistencia',bbled:'Arrastra de la pata larga (+, ánodo) a la corta (−, cátodo)',bbdio:'Arrastra del ánodo al cátodo (franja)',bbcap:'Arrastra de la pata + a la pata −',bbsw:'Arrastra de un agujero a otro · doble clic para encender o apagar',
+ bbpot:'Clic en el agujero de la primera pata · usa el panel para girar la perilla',bbnpn:'Clic en el agujero del emisor (E): las patas quedan E, B, C',
+ bbbat:'Clic para ubicar la batería · arrastra los extremos rojo (+) y negro (−) a los rieles',bbmeter:'Clic para ubicar el multímetro · arrastra las puntas a los puntos que quieres medir'
 };
-const TYPES={refl:{n:'Superficie reflectante'},emit:{n:'Emisor de ondas'},homot:{n:'Homotecia'},tales:{n:'Teorema de Tales'},euclides:{n:'Teorema de Euclides'},ink:{n:'Trazo a mano'},tbox:{n:'Cuadro de texto',fill:1},eq:{n:'Ecuación'},wphen:{n:'Fenómeno ondulatorio'},
+const TYPES={heat:{n:'Transmisión de calor'},refl:{n:'Superficie reflectante'},emit:{n:'Emisor de ondas'},homot:{n:'Homotecia'},tales:{n:'Teorema de Tales'},euclides:{n:'Teorema de Euclides'},ink:{n:'Trazo a mano'},tbox:{n:'Cuadro de texto',fill:1},eq:{n:'Ecuación'},wphen:{n:'Fenómeno ondulatorio'},
  point:{n:'Punto',lab:1},segment:{n:'Segmento',lab:1,arr:1,meas:1},line:{n:'Recta',lab:1,arr:1},ray:{n:'Rayo',lab:1,arr:1},
  vector:{n:'Vector',lab:1,arr:1,meas:1},circle:{n:'Circunferencia',lab:1,fill:1,meas:1},rect:{n:'Rectángulo',lab:1,fill:1,meas:1},
  polygon:{n:'Polígono',lab:1,fill:1,meas:1,arr:1},angle:{n:'Ángulo',lab:1,fill:1},dim:{n:'Cota',lab:1},text:{n:'Texto',lab:1},
  axes:{n:'Plano cartesiano'},image:{n:'Imagen'},ball:{n:'Esfera',lab:1,fill:1},cart:{n:'Carro',lab:1,fill:1},mover:{n:'Móvil',lab:1,fill:1},body:{n:'Objeto',lab:1,fill:1},frame:{n:'Sistema de referencia'},solid:{n:'Cuerpo geométrico',fill:1},numline:{n:'Recta numérica'},circgeo:{n:'Circunferencia y ángulos',fill:1},tree:{n:'Árbol de probabilidades'},stat:{n:'Gráfico estadístico',fill:1},mgraph:{n:'Gráfico de movimiento'},proj:{n:'Lanzamiento de proyectil'},circmov:{n:'Movimiento circular'},fronts:{n:'Frentes de onda'},refr:{n:'Refracción'},coaster:{n:'Montaña rusa (energía)'},pendulum:{n:'Péndulo'},fluid:{n:'Fluidos'},efield:{n:'Campo eléctrico'},magnet:{n:'Imán'},wirefield:{n:'Campo de una corriente'},orbit:{n:'Órbita'},earth:{n:'La Tierra'},rope:{n:'Cuerda',lab:1},block:{n:'Bloque',lab:1,fill:1},incline:{n:'Plano inclinado',lab:1,fill:1},ground:{n:'Superficie'},
  spring:{n:'Resorte',lab:1},pulley:{n:'Polea',lab:1,fill:1},wave:{n:'Onda',lab:1},lens:{n:'Lente',lab:1},optics:{n:'Óptica geométrica',lab:1},charge:{n:'Carga',lab:1,fill:1},
  resistor:{n:'Resistencia',lab:1},battery:{n:'Pila',lab:1},capacitor:{n:'Condensador',lab:1},bulb:{n:'Ampolleta',lab:1,fill:1},
- switch:{n:'Interruptor',lab:1},meter:{n:'Medidor',lab:1}
+ switch:{n:'Interruptor',lab:1},meter:{n:'Medidor',lab:1},diode:{n:'Diodo',lab:1},npn:{n:'Transistor NPN',lab:1},
+ bboard:{n:'Protoboard'},bbwire:{n:'Cable puente'},bbres:{n:'Resistencia'},bbled:{n:'LED'},bbdio:{n:'Diodo'},bbcap:{n:'Condensador electrolítico'},bbsw:{n:'Interruptor'},bbpot:{n:'Potenciómetro'},bbnpn:{n:'Transistor NPN'},bbbat:{n:'Batería'},bbmeter:{n:'Multímetro'}
 };
 const COMP=['resistor','battery','capacitor','bulb','switch','meter'];
-const TWO=['segment','line','ray','vector','dim','spring','wave','lens','ground','rope'].concat(COMP);
+const TWO=['segment','line','ray','vector','dim','spring','wave','lens','ground','rope','diode','bbres','bbled','bbdio','bbcap','bbsw','bbwire'].concat(COMP);
 
 function make(type,pts){
  const st=S.settings;
@@ -668,6 +712,7 @@ function make(type,pts){
   case 'mgraph': o.x={kind:'v',data:'0; 0\n4; 8\n10; 8\n14; 0',xl:'t (s)',yl:'',w:380,h:220,area:false,guides:true,dots:true,title:''}; o.fs=14; break;
   case 'proj': o.x={v0:20,ang:45,g:9.8,h0:0,W:420,vecs:4,comps:false,H:true,R:true,info:true}; o.fs=15; break;
   case 'circmov': o.x={r:3,n:4,dir:'anti',v:true,a:true,center:true,traj:true,rad:true,off:0}; break;
+  case 'heat': o.x={kind:'conduccion'}; o.fs=15; o.s.c='#d43c3c'; break;
   case 'refl':{const em=[...S.objs].reverse().find(q=>q.type==='emit');o.x={mat:em&&emx(em).med==='sonido'?'concreto':'espejo',showR:false};o.fs=14;break}
   case 'emit': o.x={med:'luz'}; o.s.c='#d43c3c'; o.fs=14; break;
   case 'homot': case 'tales': case 'euclides': o.x={}; o.fs=16; o.label=''; break;
@@ -706,6 +751,14 @@ function make(type,pts){
   case 'charge': o.label='q'; o.s.c='#d43c3c'; o.s.fill='#d43c3c'; o.s.fop=0.15; o.x={sign:'+',r:14}; o.pts=[pts[0]]; break;
   case 'resistor': o.label='R'; o.x={style:'zig'}; break;
   case 'meter': o.x={letter:'A'}; break;
+  case 'bulb': o.x={R:12,Pn:12}; break;
+  case 'diode': o.x={led:false,col:'rojo'}; break;
+  case 'npn': o.label='Q'; o.x={beta:200}; if(pts.length===1){const c=pts[0];o.pts=[clone(c),add(c,[-40,0]),add(c,[20,-40]),add(c,[20,40])]} break;
+  case 'bboard': o.x={}; o.pts=[[pts[0][0]-16*BBP,pts[0][1]-9*BBP]]; break;
+  case 'bbres': o.x={R:220}; break; case 'bbled': o.x={col:'rojo'}; break; case 'bbdio': o.x={}; break; case 'bbcap': o.x={C:100}; break; case 'bbsw': o.x={on:false}; break; case 'bbwire': o.x={col:'rojo'}; break;
+  case 'bbnpn': case 'bbpot': o.x=type==='bbpot'?{R:10000,pos:0.5}:{beta:200,model:'2N2222'}; if(pts.length===1){const c=pts[0];o.pts=[clone(c),add(c,[BBP,0]),add(c,[2*BBP,0])]} break;
+  case 'bbbat': o.x={V:9,r:0.1}; if(pts.length===1){const c=pts[0];o.pts=[clone(c),add(c,[56,-48]),add(c,[56,-32])]} break;
+  case 'bbmeter': o.x={mode:'V'}; if(pts.length===1){const c=pts[0];o.pts=[clone(c),add(c,[-16,96]),add(c,[16,96])]} break;
  }
  if(['point','text','eq','axes','charge','optics','frame'].includes(o.type)||COMPLEX.includes(o.type)) o.pts=[clone(pts[0])];
  if(['vector','block','ball','resistor','charge'].includes(o.type)&&o.label)o.label=autoLabel(o.label);
@@ -824,7 +877,7 @@ function labelBase(o){
   case 'body': return o.pts[0];
   case 'mover': return add(o.pts[0],rot([0,-o.x.h/2-10-o.fs*0.5],o.x.rot));
   case 'frame': return o.pts[0];
-  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'homot':case 'tales':case 'euclides':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth': return o.pts[0];
+  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'heat':case 'homot':case 'tales':case 'euclides':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth': return o.pts[0];
   case 'block': case 'cart': return o.type==='cart'?add(p[0],rot([0,-o.x.h/2-14-o.fs*0.5],o.x.rot)):p[0];
   case 'ball': {const r=dist(p[0],p[1]);return BOOK()?add(p[0],[r+10,-r*0.7]):p[0]}
   case 'image': return p[0];
@@ -941,7 +994,7 @@ function draw(o){
   case 'body':s+=drawBody(o);break;
   case 'frame':s+=drawFrame(o);break;
   case 'solid':s+=drawSolid(o);break;case 'numline':s+=drawNumline(o);break;case 'circgeo':s+=drawCircgeo(o);break;case 'tree':s+=drawTree(o);break;case 'stat':s+=drawStat(o);break;
-  case 'mgraph':s+=drawMgraph(o);break;case 'proj':s+=drawProj(o);break;case 'circmov':s+=drawCircmov(o);break;case 'fronts':s+=drawFronts(o);break;case 'wphen':s+=drawWphen(o);break;case 'homot':s+=drawHomot(o);break;case 'tales':s+=drawTales(o);break;case 'euclides':s+=drawEuclides(o);break;case 'refr':s+=drawRefr(o);break;
+  case 'mgraph':s+=drawMgraph(o);break;case 'proj':s+=drawProj(o);break;case 'circmov':s+=drawCircmov(o);break;case 'fronts':s+=drawFronts(o);break;case 'wphen':s+=drawWphen(o);break;case 'heat':s+=drawHeat(o);break;case 'homot':s+=drawHomot(o);break;case 'tales':s+=drawTales(o);break;case 'euclides':s+=drawEuclides(o);break;case 'refr':s+=drawRefr(o);break;
   case 'coaster':s+=drawCoaster(o);break;case 'pendulum':s+=drawPendulum(o);break;case 'fluid':s+=drawFluid(o);break;case 'efield':s+=drawEfield(o);break;case 'magnet':s+=drawMagnet(o);break;
   case 'wirefield':s+=drawWire(o);break;case 'orbit':s+=drawOrbit(o);break;case 'earth':s+=drawEarth(o);break;
   case 'ball':{const r=dist(p[0],p[1]);s+=sphere(o,p[0],r,o.s.fill!=='none'?o.s.fill:'#4f86d6');break}
@@ -994,6 +1047,8 @@ function draw(o){
   case 'charge':{const C=p[0],r=o.x.r,bk=BOOK();s+=bk?sphere(o,C,r,o.s.fill==='#d43c3c'||o.s.fill==='none'?(o.x.sign==='+'?'#e0483e':'#3a6fd8'):o.s.fill):CIRC(C,r,sa(o,true));const k=r*0.5,w=Math.max(1.5,o.s.w*0.9);
    s+=`<path d="M${P([C[0]-k,C[1]])}H${r2(C[0]+k)}${o.x.sign==='+'?`M${P([C[0],C[1]-k])}V${r2(C[1]+k)}`:''}" stroke="${bk?'#ffffff':c}" stroke-width="${w}" stroke-linecap="round" fill="none"/>`;break}
   case 'resistor':case 'battery':case 'capacitor':case 'bulb':case 'switch':case 'meter':s+=drawComp(o);break;
+  case 'diode':s+=drawDiodeSym(o);break;case 'npn':s+=drawNpnSym(o);break;case 'bboard':s+=drawBoard(o);break;
+  case 'bbwire':case 'bbres':case 'bbled':case 'bbdio':case 'bbcap':case 'bbsw':case 'bbpot':case 'bbnpn':case 'bbbat':case 'bbmeter':s+=drawBB(o);break;
   case 'optics':s+=drawOptics(o);break;
  }
  if(o.x&&o.x.ap&&['polygon','rect','circle'].includes(o.type)&&!(o.type==='polygon'&&!o.x.closed)){const cp=o.type==='polygon'?centroid(p):o.type==='rect'?mid(p[0],p[1]):p[0];s+=txt(apText(o),add(cp,[0,o.label?fs*1.1:(o.type==='circle'?fs*1.2:0)]),o,{it:false,fs:fs*0.8})}
@@ -1136,7 +1191,7 @@ function drawFrame(o){
 
 /* ---------- utilidades compartidas de los objetos nuevos ---------- */
 const BBC=new Map();
-const COMPLEX=['homot','tales','euclides','wphen','solid','numline','circgeo','tree','stat','mgraph','proj','circmov','fronts','refr','coaster','pendulum','fluid','efield','magnet','wirefield','orbit','earth'];
+const COMPLEX=['heat','homot','tales','euclides','wphen','solid','numline','circgeo','tree','stat','mgraph','proj','circmov','fronts','refr','coaster','pendulum','fluid','efield','magnet','wirefield','orbit','earth'];
 function arrowV(a,b,col,w=2){if(dist(a,b)<2)return '';const f={s:{w,c:col}},k=head(b,a,f);return `<path d="M${P(a)}L${P(k.back)}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`+k.svg}
 const lbl=(t,p,fs,col,it,anchor,bold)=>mtext(t,p[0],p[1],{fs,c:col||'#1f1f1f',it:!!it,anchor,bold});
 const dline=(a,b,col,w=1.2,da='5 4')=>`<path d="M${P(a)}L${P(b)}" stroke="${col||'#555'}" stroke-width="${w}" stroke-dasharray="${da}" fill="none"/>`;
@@ -1569,7 +1624,7 @@ function openBodies(){
  openModal('m-bodies')}
 
 /* ---------- giro universal ---------- */
-const BAKE=['refl','emit','ink','point','segment','line','ray','vector','polygon','angle','dim','spring','wave','rope','ground','lens','resistor','battery','capacitor','bulb','switch','meter','circle','ball'];
+const BAKE=['diode','npn','bboard','bbwire','bbres','bbled','bbdio','bbcap','bbsw','bbpot','bbnpn','bbbat','bbmeter','refl','emit','ink','point','segment','line','ray','vector','polygon','angle','dim','spring','wave','rope','ground','lens','resistor','battery','capacitor','bulb','switch','meter','circle','ball'];
 const OWNROT=['block','cart','mover','body','frame','magnet'];
 const isTR=o=>!BAKE.includes(o.type)&&!OWNROT.includes(o.type)&&o.type!=='pulley'&&o.type!=='rect';
 const normA=a=>{a=((a%360)+540)%360-180;return Math.round(a*10)/10};
@@ -1613,11 +1668,185 @@ function drawComp(o){
   case 'bulb':case 'meter':{const R=o.type==='bulb'?13:14;s+=ln(a,sub(m,mul(u,R)),o)+ln(add(m,mul(u,R)),b,o)+`<circle cx="${r2(m[0])}" cy="${r2(m[1])}" r="${R}" ${o.type==='bulb'?sa(o,true):sa(o,false).replace('fill="none"','fill="#ffffff"')}/>`;
    if(o.type==='bulb'){const d1=mul(unit(add(u,n)),R),d2=mul(unit(sub(u,n)),R);s+=ln(sub(m,d1),add(m,d1),o)+ln(sub(m,d2),add(m,d2),o)}
    else s+=mtext(o.x.letter||'A',m[0],m[1],{fs:15,c,it:false,bold:true});break}
-  case 'switch':{const dir=unit(add(mul(u,Math.cos(0.5)),mul(up,Math.sin(0.5))));s+=ln(a,p1,o)+ln(p2,b,o)+ln(p1,add(p1,mul(dir,B*0.98)),o);
+  case 'switch':{const dir=o.x.on?u:unit(add(mul(u,Math.cos(0.5)),mul(up,Math.sin(0.5))));s+=ln(a,p1,o)+ln(p2,b,o)+ln(p1,add(p1,mul(dir,B*0.98)),o);
    s+=[p1,p2].map(q=>`<circle cx="${r2(q[0])}" cy="${r2(q[1])}" r="3" fill="#ffffff" stroke="${c}" stroke-width="${o.s.w*0.8}"/>`).join('');break}
  }
  return s;
 }
+
+/* ---------- circuitos: protoboard, red de nodos y simulación (análisis nodal con Newton) ---------- */
+const BBP=16,BBCOLS=30,BBROWS={1:'TP',2:'TN',4:'T',5:'T',6:'T',7:'T',8:'T',10:'B',11:'B',12:'B',13:'B',14:'B',16:'BP',17:'BN'};
+const BBTYPES=['bbres','bbled','bbdio','bbcap','bbsw','bbnpn','bbpot','bbbat','bbwire','bbmeter'];
+const SCH2=['resistor','battery','capacitor','bulb','switch','meter','diode'];
+const LEDC={rojo:['Rojo','#ff2a2a',1.8],naranjo:['Naranjo','#ff8a1a',2.0],amarillo:['Amarillo','#ffd21a',2.1],verde:['Verde','#2bdc4a',2.2],azul:['Azul','#2a7bff',3.0],blanco:['Blanco','#f4f8ff',3.1]};
+const WCOL_={rojo:'#d62828',negro:'#222',azul:'#1e5bd8',verde:'#1e9e4a',amarillo:'#e8b800',naranjo:'#f08c00',blanco:'#e8e8e8',morado:'#7b3fd1'};
+function bbHole(p,excl){for(const b of S.objs){if(b.type!=='bboard'||(excl&&excl.has(b.id)))continue;const x0=b.pts[0][0],y0=b.pts[0][1],c=Math.round((p[0]-x0)/BBP)-1,r=Math.round((p[1]-y0)/BBP);
+  if(c<1||c>BBCOLS||!BBROWS[r])continue;const hp=[x0+(c+1)*BBP,y0+r*BBP];if(dist(hp,p)<BBP*0.48){const g=BBROWS[r];return {p:hp,key:b.id+':'+(g==='T'||g==='B'?g+c:g),b}}}return null}
+const VT=0.025852,lexp=(x,c=40)=>x<c?Math.exp(x):Math.exp(c)*(1+x-c);
+const CSTATE=new Map();let CRES=null,CTIME=0;
+function compTerms(o){const p=o.pts;switch(o.type){
+ case 'npn':return [p[1],p[2],p[3]];case 'bbnpn':return [p[1],p[2],p[0]];case 'bbpot':return [p[0],p[1],p[2]];case 'bbbat':case 'bbmeter':return [p[1],p[2]];
+ default:return [p[0],p[1]]}}
+function isCirc(o){return SCH2.includes(o.type)||o.type==='npn'||BBTYPES.includes(o.type)}
+function isWire(o){return (o.type==='polygon'&&o.x&&o.x.closed===false)}
+function circuitSolve(dt){const comps=S.objs.filter(isCirc);if(!comps.length)return null;
+ const par=new Map(),find=k=>{while(par.get(k)!==k){par.set(k,par.get(par.get(k)));k=par.get(k)}return k},uni=(a,b)=>{a=find(a);b=find(b);if(a!==b)par.set(a,b)},mk=k=>{if(!par.has(k))par.set(k,k);return k};
+ const keyOf=p=>{const h=bbHole(p);return mk(h?h.key:'p'+Math.round(p[0])+','+Math.round(p[1]))};
+ const terms=[];comps.forEach(o=>compTerms(o).forEach(p=>terms.push(p)));
+ const wires=S.objs.filter(isWire),wsegs=[],allP=terms.concat(...wires.map(w=>w.pts));
+ wires.forEach(w=>{for(let i=0;i<w.pts.length-1;i++){const a=w.pts[i],b=w.pts[i+1];const inner=allP.filter(q=>dist(q,a)>2.5&&dist(q,b)>2.5&&segDist(q,a,b)<2.5).sort((q1,q2)=>dist(q1,a)-dist(q2,a));const chain=[a,...inner,b];for(let j=0;j<chain.length-1;j++)wsegs.push({o:w,a:chain[j],b:chain[j+1],ka:keyOf(chain[j]),kb:keyOf(chain[j+1])})}});
+ const els=comps.map(o=>({o,k:compTerms(o).map(keyOf)}));
+ const roots=[...new Set([...par.keys()].map(find))],idx=new Map();
+ let gnd=null;for(const e of els){if(e.o.type==='battery'){gnd=find(e.k[1]);break}if(e.o.type==='bbbat'){gnd=find(e.k[1]);break}}if(gnd==null)gnd=roots[0];
+ roots.filter(r=>r!==gnd).forEach((r,i)=>idx.set(r,i));const N=idx.size,ni=k=>{const r=find(k);return r===gnd?-1:idx.get(r)};
+ if(!N)return null;
+ let V=new Float64Array(N);const prev=CRES&&CRES.V;if(prev&&CRES.N===N)V=Float64Array.from(prev);
+ const res=new Map();let ok=false,it=0;
+ for(it=0;it<120;it++){const G=Array.from({length:N},()=>new Float64Array(N)),I=new Float64Array(N);
+  const vn=i=>i<0?0:V[i],addG=(a,b,g)=>{if(a>=0)G[a][a]+=g;if(b>=0)G[b][b]+=g;if(a>=0&&b>=0){G[a][b]-=g;G[b][a]-=g}},addI=(a,cur)=>{if(a>=0)I[a]+=cur};
+  for(let i=0;i<N;i++)G[i][i]+=1e-9;
+  wsegs.forEach(s=>addG(ni(s.ka),ni(s.kb),1e3));
+  for(const e of els){const o=e.o,x=o.x||{},n=e.k.map(ni);
+   switch(o.type){
+    case 'resistor':case 'bbres':addG(n[0],n[1],1/Math.max(1e-3,x.R??(o.type==='bbres'?220:100)));break;
+    case 'bulb':addG(n[0],n[1],1/Math.max(0.1,x.R??12));break;
+    case 'bbwire':addG(n[0],n[1],1e3);break;
+    case 'switch':case 'bbsw':if(x.on)addG(n[0],n[1],1e2);break;
+    case 'meter':addG(n[0],n[1],(x.letter||'A')==='V'?1e-7:1e2);break;
+    case 'bbmeter':addG(n[0],n[1],(x.mode||'V')==='V'?1e-7:1e2);break;
+    case 'battery':case 'bbbat':{const Vs=x.V??9,r=Math.max(1e-3,x.r??0.1);addG(n[0],n[1],1/r);addI(n[0],Vs/r);addI(n[1],-Vs/r);break}
+    case 'capacitor':case 'bbcap':{const C=Math.max(1e-12,(x.C??100)*1e-6),h=dt>0?dt:1e-5,g=C/h,vp=(CSTATE.get(o.id)||0);addG(n[0],n[1],g);addI(n[0],g*vp);addI(n[1],-g*vp);break}
+    case 'bbpot':{const R=Math.max(1,x.R??10000),pos=clamp(x.pos??0.5,0,1);addG(n[0],n[1],1/Math.max(0.5,R*pos));addG(n[1],n[2],1/Math.max(0.5,R*(1-pos)));break}
+    case 'diode':case 'bbled':case 'bbdio':{const led=o.type==='bbled'||(o.type==='diode'&&x.led),Vf=led?(LEDC[x.col||'rojo']||LEDC.rojo)[2]:0.62,nn=led?2:1.8,Is=led?0.02/Math.exp(Vf/(nn*VT)):7e-9;if(x.burnt)break;
+     const xc=Math.max(40,(Vf+0.6)/(nn*VT)),vd=vn(n[0])-vn(n[1]),ex=lexp(vd/(nn*VT),xc),Id=Is*(ex-1),gd=Math.max(1e-12,Is*(vd/(nn*VT)<xc?ex:Math.exp(xc))/(nn*VT));addG(n[0],n[1],gd);const ieq=Id-gd*vd;addI(n[0],-ieq);addI(n[1],ieq);break}
+    case 'npn':case 'bbnpn':{const bF=x.beta??200,bR=2,Is=1e-14,[nb,nc,ne]=n,vbe=vn(nb)-vn(ne),vbc=vn(nb)-vn(nc),ef=Is*lexp(vbe/VT),er=Is*lexp(vbc/VT),gf=Is*(vbe/VT<40?Math.exp(vbe/VT):Math.exp(40))/VT+1e-12,gr=Is*(vbc/VT<40?Math.exp(vbc/VT):Math.exp(40))/VT+1e-12;
+     const If=ef-Is,Ir=er-Is,Ic=If-Ir*(1+1/bR),Ib=If/bF+Ir/bR;
+     const J={c:{b:gf-gr*(1+1/bR),c:gr*(1+1/bR),e:-gf},b:{b:gf/bF+gr/bR,c:-gr/bR,e:-gf/bF}};J.e={b:-(J.c.b+J.b.b),c:-(J.c.c+J.b.c),e:-(J.c.e+J.b.e)};
+     const cur={b:Ib,c:Ic,e:-(Ib+Ic)},nd={b:nb,c:nc,e:ne};
+     for(const r of ['b','c','e']){const rn=nd[r];if(rn<0)continue;let lin=cur[r];for(const q of ['b','c','e']){const qn=nd[q];if(qn>=0)G[rn][qn]+=J[r][q];lin-=J[r][q]*vn(qn)}I[rn]-=lin}break}}}
+  // resolver
+  const A=G.map((row,i)=>{const r=Array.from(row);r.push(I[i]);return r});let sing=false;
+  for(let c=0;c<N;c++){let pv=c;for(let r=c+1;r<N;r++)if(Math.abs(A[r][c])>Math.abs(A[pv][c]))pv=r;if(Math.abs(A[pv][c])<1e-18){sing=true;continue}if(pv!==c){const t=A[pv];A[pv]=A[c];A[c]=t}
+   for(let r=0;r<N;r++){if(r===c)continue;const f=A[r][c]/A[c][c];if(f)for(let k=c;k<=N;k++)A[r][k]-=f*A[c][k]}}
+  const Vn=new Float64Array(N);for(let i=0;i<N;i++)Vn[i]=Math.abs(A[i][i])>1e-18?A[i][N]/A[i][i]:0;
+  let mx=0;for(let i=0;i<N;i++)mx=Math.max(mx,Math.abs(Vn[i]-V[i]));const damp=mx>0.6?0.6/mx:1;for(let i=0;i<N;i++)V[i]=V[i]+(Vn[i]-V[i])*damp;
+  if(mx<1e-7){ok=true;break}}
+ const vk=k=>{const i=ni(k);return i<0?0:V[i]};
+ for(const e of els){const o=e.o,x=o.x||{},v=e.k.map(vk);let I=0,Vd=v[0]-v[1],extra={};
+  switch(o.type){
+   case 'resistor':case 'bbres':I=Vd/Math.max(1e-3,x.R??(o.type==='bbres'?220:100));break;case 'bulb':I=Vd/Math.max(0.1,x.R??12);break;case 'bbwire':I=Vd*1e3;break;
+   case 'switch':case 'bbsw':I=x.on?Vd*1e2:0;break;case 'meter':I=Vd*((x.letter||'A')==='V'?1e-7:1e2);break;case 'bbmeter':I=Vd*((x.mode||'V')==='V'?1e-7:1e2);break;
+   case 'battery':case 'bbbat':{const Vs=x.V??9,r=Math.max(1e-3,x.r??0.1);I=(Vs-Vd)/r;break}
+   case 'capacitor':case 'bbcap':{const C=Math.max(1e-12,(x.C??100)*1e-6),h=dt>0?dt:1e-5;I=C/h*(Vd-(CSTATE.get(o.id)||0));extra.vc=Vd;break}
+   case 'bbpot':{const R=Math.max(1,x.R??10000),pos=clamp(x.pos??0.5,0,1);I=(v[0]-v[1])/Math.max(0.5,R*pos);extra.vw=v[1];break}
+   case 'diode':case 'bbled':case 'bbdio':{const led=o.type==='bbled'||(o.type==='diode'&&x.led),Vf=led?(LEDC[x.col||'rojo']||LEDC.rojo)[2]:0.62,nn=led?2:1.8,Is=led?0.02/Math.exp(Vf/(nn*VT)):7e-9;I=x.burnt?0:Is*(lexp(Vd/(nn*VT),Math.max(40,(Vf+0.6)/(nn*VT)))-1);break}
+   case 'npn':case 'bbnpn':{const bF=x.beta??200,bR=2,Is=1e-14,vbe=v[0]-v[2],vbc=v[0]-v[1],If=Is*(lexp(vbe/VT)-1),Ir=Is*(lexp(vbc/VT)-1);const Ic=If-Ir*(1+1/bR),Ib=If/bF+Ir/bR,vce=v[1]-v[2];
+    extra={Ib,Ic,Ie:Ib+Ic,vbe,vce,reg:vbe<0.5||Ic<1e-6?'corte':vce<0.25?'saturación':'activa'};I=Ic;Vd=vce;break}}
+  res.set(o.id,{I,V:Vd,P:Math.abs(I*Vd),v,...extra})}
+ const wres=wsegs.map(s=>({o:s.o,a:s.a,b:s.b,I:(vk(s.ka)-vk(s.kb))*1e3}));
+ return {res,wres,V,N,ok,it,vk,keyOf}}
+/* avance en el tiempo (condensadores) y animación de la corriente */
+let CRAF=null,CLAST=0,CRT=0;
+function circOn(){return S.objs.some(o=>BBTYPES.includes(o.type))||(!!S.settings.csim&&S.objs.some(isCirc))}
+function circAnim(){return (!!S.settings.csim&&S.objs.some(o=>SCH2.includes(o.type)||o.type==='npn'))||S.objs.some(o=>o.type==='bbcap'||(o.type==='capacitor'&&S.settings.csim))}
+function circTick(ts){const dtw=CLAST?Math.min(0.1,(ts-CLAST)/1000):0;CLAST=ts;if(!circAnim()){CRAF=null;CLAST=0;return}
+ const caps=S.objs.filter(o=>o.type==='bbcap'||(o.type==='capacitor'&&S.settings.csim));if(caps.length&&dtw>0){const r=circuitSolve(dtw*(S.settings.cspd||1));if(r)caps.forEach(o=>{const q=r.res.get(o.id);if(q)CSTATE.set(o.id,q.vc)})}
+ CTIME+=dtw;if(ts-CRT>45&&mode!=='pinch'){CRT=ts;render()}CRAF=requestAnimationFrame(circTick)}
+function circStart(){if(!CRAF&&circAnim()){CLAST=0;CRAF=requestAnimationFrame(circTick)}}
+function circPre(){CRES=circOn()?circuitSolve(0):null;if(CRES&&CRES.ok){for(const o of S.objs)if(o.type==='bbled'&&!o.x.burnt){const q=CRES.res.get(o.id);if(q&&q.I>0.045){o.x.burnt=true;toast('¡El LED se quemó! Pasó demasiada corriente ('+fA(q.I)+'). Usa una resistencia en serie.');CRES=circuitSolve(0)}}}if(!CRAF)circStart()}
+function circRead(o){const q=CRES&&CRES.res.get(o.id);if(!q)return S.objs.some(b=>BBTYPES.includes(b.type))||S.settings.csim?'<p class="tip">Sin datos: conecta el componente al circuito.</p>':'<p class="tip">Activa «Simular» (grupo Electricidad) para ver corrientes y voltajes.</p>';
+ const L=[];const t=o.type;
+ if(t==='npn'||t==='bbnpn'){L.push(['Región',q.reg],['I<sub>B</sub>',fA(q.Ib)],['I<sub>C</sub>',fA(q.Ic)],['I<sub>E</sub>',fA(q.Ie)],['V<sub>BE</sub>',fV(q.vbe)],['V<sub>CE</sub>',fV(q.vce)]);if(q.Ib>1e-7)L.push(['I<sub>C</sub> / I<sub>B</sub>',fnum(q.Ic/q.Ib,0)])}
+ else if(t==='battery'||t==='bbbat'){L.push(['Corriente entregada',fA(q.I)],['Voltaje en bornes',fV(q.V)],['Potencia',fnum(Math.abs(q.I*q.V),3)+' W'])}
+ else if(t==='capacitor'||t==='bbcap'){const C=(o.x.C??100)*1e-6;L.push(['Voltaje',fV(q.vc||0)],['Carga Q = C·V',fnum(C*(q.vc||0)*1e6,1)+' µC'],['Corriente',fA(q.I)])}
+ else if(t==='meter'||t==='bbmeter'){const v=(o.x.letter||o.x.mode||'A')==='V';L.push([v?'Lectura (voltaje)':'Lectura (corriente)',v?fV(q.V):fA(q.I)])}
+ else{L.push(['Corriente I',fA(Math.abs(q.I))],['Voltaje V',fV(Math.abs(q.V))],['Potencia P',(q.P>=1?fnum(q.P,2)+' W':fnum(q.P*1e3,1)+' mW')])}
+ if(t==='bbpot')L.push(['Voltaje en el cursor',fV(q.vw||0)]);
+ return '<table class="ctab">'+L.map(([a,b])=>`<tr><td>${a}</td><td><b>${esc(b)}</b></td></tr>`).join('')+'</table>'}
+const fA=I=>{const a=Math.abs(I);return a>=1?fnum(I,2)+' A':a>=1e-3?fnum(I*1e3,a>=0.1?0:1)+' mA':a>=1e-6?fnum(I*1e6,0)+' µA':'0 A'};
+const fV=v=>fnum(v,Math.abs(v)>=10?1:2)+' V';
+const fR=R=>R>=1e6?fnum(R/1e6,R%1e6?1:0)+' MΩ':R>=1e3?fnum(R/1e3,R%1e3?1:0)+' kΩ':fnum(R,R%1?1:0)+' Ω';
+function circOverlay(){const r=CRES;if(!r)return '';let s='';const z=view.z,fs=12;const sch=!!S.settings.csim;
+ // corriente animada en cables
+ for(const w of r.wres){if(!sch&&!(w.o&&BBTYPES.includes(w.o.type)))continue;const a=Math.abs(w.I);if(a<1e-5)continue;const L=dist(w.a,w.b);if(L<4)continue;const u=unit(sub(w.b,w.a)),sp=25*Math.log10(1+a*1e4),sg=w.I>0?1:-1,ph=((CTIME*sp*sg)%18+18)%18;for(let t=ph;t<L;t+=18)s+=CIRC(add(w.a,mul(u,t)),2.2/Math.sqrt(z)+1,'fill="#ffb300" stroke="#a36a00" stroke-width="0.6"')}
+ for(const o of S.objs){const q=r.res.get(o.id);if(!q)continue;const x=o.x||{};
+  if(BBTYPES.includes(o.type))continue;if(!sch)continue;const [a,b]=o.type==='npn'?[o.pts[0],o.pts[0]]:[o.pts[0],o.pts[1]],m=mid(a,b),u=dist(a,b)>1?unit(sub(b,a)):[1,0],n=upN(u),d=mul(n,-1),off=({bulb:22,meter:22,battery:20,diode:20,capacitor:18}[o.type]||14)+8,lp=add(m,mul(d,off)),anc=d[0]>0.5?'start':d[0]<-0.5?'end':'middle',dy=d[1]>0.5?fs*0.8:d[1]<-0.5?-2:fs*0.35;
+  const tag=(t,col)=>`<text x="${r2(lp[0])}" y="${r2(lp[1]+dy)}" text-anchor="${anc}" font-size="${fs}" font-family="${FONT}" font-weight="700" fill="${col||'#6C4EE3'}" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(t)}</text>`;
+  switch(o.type){
+   case 'resistor':s+=tag(fA(Math.abs(q.I))+' · '+fV(Math.abs(q.V)));break;
+   case 'bulb':{const Pn=x.Pn??12,f=clamp(q.P/Pn,0,2);if(f>0.01)s+=`<circle cx="${r2(m[0])}" cy="${r2(m[1])}" r="${r2(14+14*Math.min(1,f))}" fill="#ffd54a" fill-opacity="${r2(0.15+0.5*Math.min(1,f))}"/>`;s+=tag(fA(Math.abs(q.I))+' · '+fnum(q.P,2)+' W'+(f>1.2?' ¡se quema!':''),f>1.2?'#d43c3c':null);break}
+   case 'battery':{s+=tag(fA(q.I)+(Math.abs(q.I)>20?' ¡cortocircuito!':''),Math.abs(q.I)>20?'#d43c3c':null);break}
+   case 'meter':s+=tag(((x.letter||'A')==='V'?fV(q.V):fA(q.I)),'#1e5bd8');break;
+   case 'capacitor':s+=tag('V = '+fV(q.vc||0));break;
+   case 'switch':s+=tag(x.on?'cerrado · '+fA(Math.abs(q.I)):'abierto');break;
+   case 'diode':if(x.led){const f=clamp(q.I/0.02,0,1.4);if(f>0.02)s+=`<circle cx="${r2(m[0])}" cy="${r2(m[1])}" r="${r2(10+16*Math.min(1,f))}" fill="${(LEDC[x.col||'rojo']||LEDC.rojo)[1]}" fill-opacity="${r2(0.15+0.55*Math.min(1,f))}"/>`}s+=tag(fA(q.I)+(q.I>0.04&&x.led?' ¡se quema!':''),q.I>0.04&&x.led?'#d43c3c':null);break;
+   case 'npn':{const c0=o.pts[0];s+=`<g transform="translate(${P(add(c0,[26,-4]))})"><text font-size="${fs}" font-family="${FONT}" font-weight="700" fill="#6C4EE3" stroke="#fff" stroke-width="3" paint-order="stroke"><tspan x="0" dy="0">base: ${esc(fA(q.Ib))}</tspan><tspan x="0" dy="${r2(fs*1.2)}">colector: ${esc(fA(q.Ic))}</tspan><tspan x="0" dy="${r2(fs*1.2)}">${esc(q.reg)}</tspan></text></g>`;break}}}
+ return s}
+/* ---------- dibujo: esquemático nuevo ---------- */
+function drawDiodeSym(o){const [a,b]=o.pts,L=dist(a,b);if(L<1)return '';const u=unit(sub(b,a)),n=perp(u),m=mid(a,b),c=o.s.c,w=o.s.w,k=11,p1=sub(m,mul(u,k)),p2=add(m,mul(u,k));
+ let s=sline(a,p1,c,w)+sline(p2,b,c,w)+`<path d="M${P(add(p1,mul(n,k)))}L${P(sub(p1,mul(n,k)))}L${P(p2)}Z" fill="${o.x.led?'#fff':c}" stroke="${c}" stroke-width="${w}" stroke-linejoin="round"/>`+sline(add(p2,mul(n,k)),sub(p2,mul(n,k)),c,w);
+ if(o.x.led){const up=upN(u);[0,1].forEach(i=>{const q=add(add(m,mul(up,k+3)),mul(u,-4+i*8));s+=arrowV(q,add(q,add(mul(up,10),mul(u,6))),c,1.2)})}return s}
+function drawNpnSym(o){const [c0,B,C,E]=o.pts,w=o.s.w,col=o.s.c,ub=unit(sub(c0,B)),R=18;let s=`<circle cx="${r2(c0[0])}" cy="${r2(c0[1])}" r="${R}" fill="#fff" stroke="${col}" stroke-width="${w}"/>`;
+ const bar=sub(c0,mul(ub,7)),nb=perp(ub);s+=sline(B,bar,col,w)+sline(add(bar,mul(nb,9)),sub(bar,mul(nb,9)),col,w+1);
+ const toC=unit(sub(C,c0)),toE=unit(sub(E,c0));const jc=add(bar,mul(nb,dot(sub(C,c0),nb)>0?4.5:-4.5)),je=add(bar,mul(nb,dot(sub(E,c0),nb)>0?4.5:-4.5));const ce=add(c0,mul(toC,R)),ee=add(c0,mul(toE,R));
+ s+=sline(jc,ce,col,w)+sline(ce,C,col,w)+sline(je,ee,col,w)+sline(ee,E,col,w)+head(ee,je,{s:{w:Math.min(2,w),c:col}}).svg;
+ s+=wl('B',add(B,[0,-9]),11,'#666',false)+wl('C',add(C,[9,0]),11,'#666',false,'start')+wl('E',add(E,[9,0]),11,'#666',false,'start');return s}
+/* ---------- dibujo: protoboard y componentes realistas ---------- */
+function drawBoard(o){const [x0,y0]=o.pts[0],W=(BBCOLS+3)*BBP,H=18*BBP;let s=`<rect x="${r2(x0)}" y="${r2(y0)}" width="${r2(W)}" height="${r2(H)}" rx="8" fill="#f5f2ea" stroke="#c9c2b0" stroke-width="1.5"/><rect x="${r2(x0+BBP)}" y="${r2(y0+8.6*BBP)}" width="${r2(W-2*BBP)}" height="${r2(0.8*BBP)}" fill="#e3ddcf"/>`;
+ const rail=(y,col)=>`<path d="M${r2(x0+1.4*BBP)} ${r2(y)}H${r2(x0+W-1.4*BBP)}" stroke="${col}" stroke-width="1.6"/>`;s+=rail(y0+0.45*BBP,'#d62828')+rail(y0+2.55*BBP,'#1e5bd8')+rail(y0+15.45*BBP,'#d62828')+rail(y0+17.55*BBP,'#1e5bd8');
+ let d='';for(const rk of Object.keys(BBROWS)){const r=+rk;for(let c=1;c<=BBCOLS;c++){const hx=x0+(c+1)*BBP,hy=y0+r*BBP;d+=`M${r2(hx-2.6)} ${r2(hy-2.6)}h5.2v5.2h-5.2z`}}s+=`<path d="${d}" fill="#3b3a36"/>`;
+ const t=(txt,x,y,col)=>`<text x="${r2(x)}" y="${r2(y)}" text-anchor="middle" font-size="8" font-family="${FONT}" fill="${col||'#9a917c'}">${txt}</text>`;
+ for(let c=1;c<=BBCOLS;c++)if(c===1||c%5===0){s+=t(c,x0+(c+1)*BBP,y0+3.45*BBP);s+=t(c,x0+(c+1)*BBP,y0+15*BBP+2)}
+ 'abcde'.split('').forEach((ch,i)=>{s+=t(ch,x0+0.9*BBP,y0+(4+i)*BBP+3)+t(ch,x0+W-0.9*BBP,y0+(4+i)*BBP+3)});'fghij'.split('').forEach((ch,i)=>{s+=t(ch,x0+0.9*BBP,y0+(10+i)*BBP+3)+t(ch,x0+W-0.9*BBP,y0+(10+i)*BBP+3)});
+ s+=t('+',x0+0.9*BBP,y0+1*BBP+3,'#d62828')+t('−',x0+0.9*BBP,y0+2*BBP+3,'#1e5bd8')+t('+',x0+0.9*BBP,y0+16*BBP+3,'#d62828')+t('−',x0+0.9*BBP,y0+17*BBP+3,'#1e5bd8');return s}
+const BANDC=['#1a1a1a','#7a4a1e','#d62828','#f08c00','#f2d21a','#1e9e4a','#1e5bd8','#7b3fd1','#8a8a8a','#f4f4f4'];
+function resBands(R){R=Math.max(1,Math.round(R));let e=Math.floor(Math.log10(R))-1;if(e<-1)e=-1;let d=Math.round(R/Math.pow(10,e));if(d>=100){d=Math.round(d/10);e++}const d1=Math.floor(d/10),d2=d%10,mul_=e<0?'#d4af37':BANDC[clamp(e,0,9)];return [BANDC[d1],BANDC[d2],mul_,'#d4af37']}
+const leg=(a,b)=>`<path d="M${P(a)}L${P(b)}" stroke="#9aa3ad" stroke-width="2" stroke-linecap="round"/>`+CIRC(a,2.4,'fill="#7d858e"')+CIRC(b,2.4,'fill="#7d858e"');
+function bodyOn(a,b,len,wid,fill,stroke,extra=''){const m=mid(a,b),u=dist(a,b)>1?unit(sub(b,a)):[1,0],ang=Math.atan2(u[1],u[0])*180/Math.PI;return `<g transform="translate(${P(m)}) rotate(${r2(ang)})"><rect x="${r2(-len/2)}" y="${r2(-wid/2)}" width="${r2(len)}" height="${r2(wid)}" rx="${r2(wid/2)}" fill="${fill}" stroke="${stroke}" stroke-width="1"/>${extra}</g>`}
+function drawBB(o){const x=o.x||{},q=CRES&&CRES.res.get(o.id),p=o.pts;let s='';
+ switch(o.type){
+  case 'bbwire':{const [a,b]=p,col=WCOL_[x.col||'rojo']||'#d62828',m=mid(a,b),L=dist(a,b),n=L>1?perp(unit(sub(b,a))):[0,-1],cp=add(m,mul(n,-Math.min(18,L*0.18)));return `<path d="M${P(a)}Q${P(cp)} ${P(b)}" stroke="#00000033" stroke-width="5.5" fill="none" transform="translate(1.2 1.6)"/><path d="M${P(a)}Q${P(cp)} ${P(b)}" stroke="${col}" stroke-width="4.2" fill="none" stroke-linecap="round"/>`+CIRC(a,2.6,'fill="#b9c0c7" stroke="#666" stroke-width=".6"')+CIRC(b,2.6,'fill="#b9c0c7" stroke="#666" stroke-width=".6"')}
+  case 'bbres':{const [a,b]=p,L=dist(a,b),bl=Math.min(36,Math.max(14,L-10)),bc=resBands(x.R??220);let ex='';[-0.32,-0.15,0.02,0.3].forEach((f,i)=>{ex+=`<rect x="${r2(f*bl-1.6)}" y="${r2(-4.5)}" width="3.2" height="9" fill="${bc[i]}"/>`});return leg(a,b)+bodyOn(a,b,bl,9,'#e8d3a6','#b89a63',ex)}
+  case 'bbdio':{const [a,b]=p,L=dist(a,b),bl=Math.min(22,Math.max(12,L-10));return leg(a,b)+bodyOn(a,b,bl,7,'#222','#000',`<rect x="${r2(bl/2-5)}" y="-3.5" width="3" height="7" fill="#d9d9d9"/>`)}
+  case 'bbled':{const [a,b]=p,m=mid(a,b),col=(LEDC[x.col||'rojo']||LEDC.rojo)[1],I=q?q.I:0,burn=I>0.04||x.burnt,f=burn?0:clamp(I/0.02,0,1.3);
+   s+=leg(a,b);if(f>0.02)s+=`<circle cx="${r2(m[0])}" cy="${r2(m[1])}" r="${r2(10+20*Math.min(1,f))}" fill="${col}" fill-opacity="${r2(0.12+0.45*Math.min(1,f))}"/>`;
+   s+=`<circle cx="${r2(m[0])}" cy="${r2(m[1])}" r="8.5" fill="${burn?'#6b6b6b':col}" fill-opacity="${burn?1:r2(0.45+0.55*Math.min(1,f))}" stroke="${burn?'#333':'#00000055'}" stroke-width="1.2"/><circle cx="${r2(m[0]-2.6)}" cy="${r2(m[1]-2.8)}" r="2.4" fill="#fff" fill-opacity=".6"/>`;
+   if(burn)s+=`<path d="M${r2(m[0]-5)} ${r2(m[1]-5)}l10 10M${r2(m[0]+5)} ${r2(m[1]-5)}l-10 10" stroke="#d43c3c" stroke-width="2"/>`+wl('¡se quemó!',[m[0],m[1]-16],11,'#d43c3c',false,'middle',true);
+   const u=dist(a,b)>1?unit(sub(b,a)):[1,0];s+=wl('+',add(a,add(mul(perp(u),-9),mul(u,-2))),10,'#d43c3c',false,'middle',true);return s}
+  case 'bbcap':{const [a,b]=p,m=mid(a,b);return leg(a,b)+`<circle cx="${r2(m[0])}" cy="${r2(m[1])}" r="9.5" fill="#2350a8" stroke="#163a7a" stroke-width="1.2"/><path d="M${r2(m[0]+3)} ${r2(m[1]-8.5)}a9.5 9.5 0 0 1 0 17" stroke="#c9d6ee" stroke-width="3" fill="none"/>`+wl(fnum(x.C??100,0)+' µF',[m[0],m[1]-14],9,'#333',false)}
+  case 'bbsw':{const [a,b]=p,m=mid(a,b),u=dist(a,b)>1?unit(sub(b,a)):[1,0],ang=Math.atan2(u[1],u[0])*180/Math.PI;return leg(a,b)+`<g transform="translate(${P(m)}) rotate(${r2(ang)})"><rect x="-12" y="-7" width="24" height="14" rx="2" fill="#2b2f36" stroke="#111"/><rect x="${x.on?1:-9}" y="-4" width="8" height="8" rx="1.5" fill="#e8e8e8"/></g>`+wl(x.on?'encendido':'apagado',[m[0],m[1]-13],9,'#333',false)}
+  case 'bbnpn':{const [e,bb,c]=p,m=centroid(p),u=dist(e,c)>1?unit(sub(c,e)):[1,0],nn=perp(u),cen=add(m,mul(nn,-11)),ang=Math.atan2(u[1],u[0])*180/Math.PI;
+   s+=leg(e,add(cen,mul(sub(e,cen),0.4)))+leg(bb,add(cen,mul(sub(bb,cen),0.3)))+leg(c,add(cen,mul(sub(c,cen),0.4)));
+   s+=`<g transform="translate(${P(cen)}) rotate(${r2(ang)})"><path d="M-12 4H12V-2A12 10 0 0 0 -12 -2Z" fill="#222" stroke="#000"/><text y="0" text-anchor="middle" font-size="5.5" fill="#ddd" font-family="${FONT}">${esc(x.model||'2N2222')}</text></g>`;
+   [[e,'E'],[bb,'B'],[c,'C']].forEach(([pt,t])=>{s+=`<text x="${r2(pt[0]+nn[0]*10)}" y="${r2(pt[1]+nn[1]*10+3)}" text-anchor="middle" font-size="8" font-family="${FONT}" font-weight="700" fill="#555">${t}</text>`});
+   if(q&&x.info!==false)s+=wl(q.reg,add(cen,mul(nn,-14)),10,q.reg==='saturación'?'#1e9e4a':q.reg==='activa'?'#f08c00':'#777',false);return s}
+  case 'bbpot':{const [a,w,b]=p,m=centroid(p),u=dist(a,b)>1?unit(sub(b,a)):[1,0],nn=perp(u),cen=add(m,mul(nn,-16)),ang=(-135+270*clamp(x.pos??0.5,0,1))*Math.PI/180;
+   s+=leg(a,add(cen,mul(sub(a,cen),0.55)))+leg(w,add(cen,mul(sub(w,cen),0.55)))+leg(b,add(cen,mul(sub(b,cen),0.55)));
+   s+=`<rect x="${r2(cen[0]-14)}" y="${r2(cen[1]-12)}" width="28" height="24" rx="3" fill="#2f6fde" stroke="#163a7a"/>`+CIRC(cen,8,'fill="#ddd" stroke="#888"')+`<path d="M${P(cen)}L${P(add(cen,[7*Math.sin(ang),-7*Math.cos(ang)]))}" stroke="#333" stroke-width="2"/>`+wl(fR(x.R??10000),add(cen,mul(nn,-17)),9,'#333',false);return s}
+  case 'bbbat':{const [c0,pp,pn]=p,tp=add(c0,[-8,-30]),tn=add(c0,[8,-30]);s+=`<rect x="${r2(c0[0]-20)}" y="${r2(c0[1]-28)}" width="40" height="58" rx="4" fill="#1d1d1d"/><rect x="${r2(c0[0]-20)}" y="${r2(c0[1]-28)}" width="40" height="22" rx="4" fill="#e8b800"/><text x="${r2(c0[0])}" y="${r2(c0[1]+12)}" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="${FONT}">${fnum(x.V??9,1)} V</text>`;
+   s+=`<path d="M${P(tp)}C${r2(tp[0])} ${r2(tp[1]-30)} ${r2(pp[0])} ${r2(pp[1]-30)} ${P(pp)}" stroke="#d62828" stroke-width="3" fill="none"/><path d="M${P(tn)}C${r2(tn[0])} ${r2(tn[1]-24)} ${r2(pn[0])} ${r2(pn[1]-30)} ${P(pn)}" stroke="#222" stroke-width="3" fill="none"/>`+CIRC(pp,2.8,'fill="#b9c0c7" stroke="#666"')+CIRC(pn,2.8,'fill="#b9c0c7" stroke="#666"')+wl('+',add(c0,[-8,-38]),11,'#d62828',false,'middle',true)+wl('−',add(c0,[8,-38]),11,'#222',false,'middle',true);return s}
+  case 'bbmeter':{const [c0,pr,pk]=p,md=x.mode||'V',val=q?(md==='V'?fnum(q.V,2)+' V':fA(q.I)):'---';s+=`<rect x="${r2(c0[0]-34)}" y="${r2(c0[1]-46)}" width="68" height="92" rx="8" fill="#f2c200" stroke="#9a7c00" stroke-width="1.5"/><rect x="${r2(c0[0]-27)}" y="${r2(c0[1]-38)}" width="54" height="24" rx="3" fill="#bfd3b0" stroke="#4d5f40"/><text x="${r2(c0[0]+24)}" y="${r2(c0[1]-21)}" text-anchor="end" font-size="13" font-weight="700" font-family="ui-monospace,monospace" fill="#1d2a14">${esc(val)}</text>`;
+   s+=CIRC(add(c0,[0,8]),13,'fill="#2b2b2b"')+`<text x="${r2(c0[0])}" y="${r2(c0[1]+12)}" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="${FONT}">${md}</text><text x="${r2(c0[0])}" y="${r2(c0[1]+38)}" text-anchor="middle" font-size="8" fill="#333" font-family="${FONT}">${md==='V'?'voltímetro':'amperímetro'}</text>`;
+   const jr=add(c0,[-14,44]),jk=add(c0,[14,44]);s+=`<path d="M${P(jr)}C${r2(jr[0])} ${r2(jr[1]+40)} ${r2(pr[0])} ${r2(pr[1]+40)} ${P(pr)}" stroke="#d62828" stroke-width="2.6" fill="none"/><path d="M${P(jk)}C${r2(jk[0])} ${r2(jk[1]+34)} ${r2(pk[0])} ${r2(pk[1]+40)} ${P(pk)}" stroke="#222" stroke-width="2.6" fill="none"/>`+CIRC(pr,3,'fill="#d62828"')+CIRC(pk,3,'fill="#222"');return s}}
+ return s}
+function bbOutline(o){const p=o.pts;if(o.type==='bbbat'){const c0=p[0];return {d:`M${r2(c0[0]-20)} ${r2(c0[1]-28)}h40v58h-40ZM${P(p[1])}l0.1 0M${P(p[2])}l0.1 0`,area:1}}
+ if(o.type==='bbmeter'){const c0=p[0];return {d:`M${r2(c0[0]-34)} ${r2(c0[1]-46)}h68v92h-68ZM${P(p[1])}l0.1 0M${P(p[2])}l0.1 0`,area:1}}
+ return {d:'M'+p.map(P).join('L')+(p.length>2?'':''),area:0}}
+/* ejemplos */
+const CEX={
+ ledres:['LED con resistencia (protoboard)',(c)=>{const b=[c[0]-17*BBP,c[1]-9*BBP],hx=(col,row)=>[b[0]+(col+1)*BBP,b[1]+row*BBP];return [['bboard',[b],{}],['bbbat',[[b[0]-70,b[1]+5*BBP],hx(1,1),hx(1,2)],{V:9}],['bbwire',[hx(3,1),hx(3,4)],{col:'rojo'}],['bbres',[hx(3,6),hx(8,6)],{R:330}],['bbled',[hx(8,7),hx(10,7)],{col:'rojo'}],['bbwire',[hx(10,5),hx(10,2)],{col:'negro'}]]}],
+ transistor:['Transistor como interruptor (protoboard)',(c)=>{const b=[c[0]-17*BBP,c[1]-9*BBP],hx=(col,row)=>[b[0]+(col+1)*BBP,b[1]+row*BBP];return [['bboard',[b],{}],['bbbat',[[b[0]-70,b[1]+5*BBP],hx(1,1),hx(1,2)],{V:9}],['bbwire',[hx(4,1),hx(4,4)],{col:'rojo'}],['bbres',[hx(4,5),hx(10,5)],{R:470}],['bbled',[hx(10,6),hx(14,6)],{col:'verde'}],['bbnpn',[hx(16,8),hx(15,8),hx(14,8)],{}],['bbwire',[hx(16,7),hx(16,2)],{col:'negro'}],['bbsw',[hx(20,4),hx(22,4)],{on:true}],['bbwire',[hx(20,5),hx(20,1)],{col:'rojo'}],['bbres',[hx(22,6),hx(15,6)],{R:10000}]]}],
+ pot:['Brillo de un LED con potenciómetro (protoboard)',(c)=>{const b=[c[0]-17*BBP,c[1]-9*BBP],hx=(col,row)=>[b[0]+(col+1)*BBP,b[1]+row*BBP];return [['bboard',[b],{}],['bbbat',[[b[0]-70,b[1]+5*BBP],hx(1,1),hx(1,2)],{V:9}],['bbwire',[hx(5,1),hx(5,4)],{col:'rojo'}],['bbpot',[hx(5,6),hx(6,6),hx(7,6)],{R:10000,pos:0.4}],['bbres',[hx(6,8),hx(12,8)],{R:220}],['bbled',[hx(12,7),hx(15,7)],{col:'azul'}],['bbwire',[hx(15,5),hx(15,2)],{col:'negro'}],['bbmeter',[[b[0]+38*BBP,b[1]+6*BBP],hx(12,4),hx(15,4)],{mode:'V'}]]}],
+ rc:['Carga de un condensador (protoboard)',(c)=>{const b=[c[0]-17*BBP,c[1]-9*BBP],hx=(col,row)=>[b[0]+(col+1)*BBP,b[1]+row*BBP];return [['bboard',[b],{}],['bbbat',[[b[0]-70,b[1]+5*BBP],hx(1,1),hx(1,2)],{V:9}],['bbwire',[hx(4,1),hx(4,5)],{col:'rojo'}],['bbsw',[hx(4,4),hx(6,4)],{on:false}],['bbres',[hx(6,6),hx(12,6)],{R:10000}],['bbcap',[hx(12,7),hx(14,7)],{C:470}],['bbwire',[hx(14,5),hx(14,2)],{col:'negro'}],['bbmeter',[[b[0]+38*BBP,b[1]+6*BBP],hx(12,4),hx(14,4)],{mode:'V'}]]}],
+ serie:['Ampolletas en serie (esquema)',(c)=>{const U=GRID,L=c[0]-4*U,R=c[0]+4*U,T=c[1]-2*U,B=c[1]+2*U;return [['battery',[[L,T+1*U],[L,B-1*U]],{V:12}],['bulb',[[c[0]-2.5*U,T],[c[0]-0.5*U,T]],{R:12,Pn:12}],['bulb',[[c[0]+0.5*U,T],[c[0]+2.5*U,T]],{R:12,Pn:12}],['switch',[[c[0]-1*U,B],[c[0]+1*U,B]],{on:true}],['meter',[[R,T+1*U],[R,B-1*U]],{letter:'A'}],['wire',[[L,T+1*U],[L,T],[c[0]-2.5*U,T]],{}],['wire',[[c[0]-0.5*U,T],[c[0]+0.5*U,T]],{}],['wire',[[c[0]+2.5*U,T],[R,T],[R,T+1*U]],{}],['wire',[[R,B-1*U],[R,B],[c[0]+1*U,B]],{}],['wire',[[c[0]-1*U,B],[L,B],[L,B-1*U]],{}]]}],
+ paralelo:['Ampolletas en paralelo (esquema)',(c)=>{const U=GRID,L=c[0]-4*U,R=c[0]+4*U,T=c[1]-2*U,B=c[1]+2*U,M=c[0];return [['battery',[[L,T+1*U],[L,B-1*U]],{V:12}],['bulb',[[M,T+0.2*U],[M,c[1]+0.6*U]],{R:12,Pn:12}],['bulb',[[R,T+0.2*U],[R,c[1]+0.6*U]],{R:12,Pn:12}],['meter',[[c[0]-2.6*U,T],[c[0]-1.2*U,T]],{letter:'A'}],['meter',[[R+1.8*U,T+0.2*U],[R+1.8*U,c[1]+0.6*U]],{letter:'V'}],
+  ['wire',[[L,T+1*U],[L,T],[c[0]-2.6*U,T]],{}],['wire',[[c[0]-1.2*U,T],[M,T],[M,T+0.2*U]],{}],['wire',[[M,T],[R,T],[R,T+0.2*U]],{}],['wire',[[M,c[1]+0.6*U],[M,B],[R,B],[R,c[1]+0.6*U]],{}],['wire',[[M,B],[L,B],[L,B-1*U]],{}],['wire',[[R,T+0.2*U],[R+1.8*U,T+0.2*U]],{}],['wire',[[R,c[1]+0.6*U],[R+1.8*U,c[1]+0.6*U]],{}]]}],
+ npnsch:['Transistor con LED (esquema)',(c)=>{const U=GRID,cx=c[0]+1*U,cy=c[1]+0.5*U,B=[cx-1*U,cy],C=[cx+0.6*U,cy-1*U],E=[cx+0.6*U,cy+1*U],L=c[0]-4*U,T=c[1]-3*U,Bt=c[1]+3*U;return [['battery',[[L,T+1*U],[L,Bt-1*U]],{V:9}],['npn',[[cx,cy],B,C,E],{beta:200}],['diode',[[C[0],T+0.4*U],[C[0],T+1.6*U]],{led:true,col:'verde'}],['resistor',[[C[0],C[1]],[C[0],T+1.6*U]],{R:470,_l:'R_C'}],['resistor',[[c[0]-2.5*U,cy],B],{R:10000,_l:'R_B'}],['switch',[[c[0]-2.5*U,T+1.2*U],[c[0]-2.5*U,cy]],{on:true}],
+  ['wire',[[L,T+1*U],[L,T],[C[0],T],[C[0],T+0.4*U]],{}],['wire',[[c[0]-2.5*U,T],[c[0]-2.5*U,T+1.2*U]],{}],['wire',[E,[E[0],Bt],[L,Bt],[L,Bt-1*U]],{}]]}]};
+function insertCircEx(k){const ex=CEX[k];if(!ex)return;const vc=[(svg.clientWidth/2-view.tx)/view.z,(svg.clientHeight/2-view.ty)/view.z],st=GRID*S.settings.step,c=[Math.round(vc[0]/st)*st,Math.round(vc[1]/st)*st];
+ const list=ex[1](c).map(([t,pts,x])=>{const o=make(t,pts);o.pts=clone(pts);Object.assign(o.x,x);if(x._l){o.label=x._l;delete o.x._l}if(t==='wire'){o.type='polygon';o.x={closed:false,vl:false,names:''}}return o});
+ pushHist();S.objs.push(...list);if(['serie','paralelo','npnsch'].includes(k))S.settings.csim=true;CSTATE.clear();sel=new Set();$('#m-circ').hidden=true;setTool('select');renderPanel();render();save();toast(ex[0]+' insertado'+(S.settings.csim?' · simulación activada':''))}
+function openCircEx(){$('#ce-list').innerHTML=Object.entries(CEX).map(([k,[n]])=>`<button class="btn" data-ce="${k}" style="justify-content:flex-start;text-align:left">${esc(n)}</button>`).join('');openModal('m-circ')}
 
 /* ---------- contornos para selección ---------- */
 function circD(c,r){return `M${r2(c[0]-r)} ${r2(c[1])}a${r2(r)} ${r2(r)} 0 1 0 ${r2(2*r)} 0a${r2(r)} ${r2(r)} 0 1 0 ${r2(-2*r)} 0`}
@@ -1633,13 +1862,17 @@ function outline(o){
   case 'polygon': return {d:`M${p.map(P).join('L')}${o.x.closed?'Z':''}`,area:o.x.closed};
   case 'angle': return {d:`M${p.map(P).join('L')}`,area:0};
   case 'block': case 'cart': case 'mover': case 'body': return {d:`M${blockCorners(o).map(P).join('L')}Z`,area:1};
-  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'homot':case 'tales':case 'euclides':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth':{const b=BBC.get(o.id),c=o.pts[0];if(!b)return {d:`M${r2(c[0]-20)} ${r2(c[1]-20)}h40v40h-40Z`,area:1};return {d:`M${r2(b.x-4)} ${r2(b.y-4)}h${r2(b.width+8)}v${r2(b.height+8)}h${r2(-b.width-8)}Z`,area:1}}
+  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'heat':case 'homot':case 'tales':case 'euclides':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth':{const b=BBC.get(o.id),c=o.pts[0];if(!b)return {d:`M${r2(c[0]-20)} ${r2(c[1]-20)}h40v40h-40Z`,area:1};return {d:`M${r2(b.x-4)} ${r2(b.y-4)}h${r2(b.width+8)}v${r2(b.height+8)}h${r2(-b.width-8)}Z`,area:1}}
   case 'frame': {const c=o.pts[0],x=o.x,ux=rot([x.fx?-1:1,0],x.rot||0),uy=rot([0,x.fy?1:-1],x.rot||0);return {d:`M${P(add(c,mul(ux,x.mode==='y'?0:x.Lx*GRID)))}L${P(c)}L${P(add(c,mul(uy,x.mode==='x'?0:x.Ly*GRID)))}`,area:0}}
   case 'incline': return {d:`M${inclinePts(o).map(P).join('L')}Z`,area:1};
   case 'axes': {const {X,Y}=axesFns(o),x=o.x,ox=X(clamp(0,x.xmin,x.xmax)),oy=Y(clamp(0,x.ymin,x.ymax));return {d:`M${r2(X(x.xmin))} ${r2(oy)}H${r2(X(x.xmax)+18)}M${r2(ox)} ${r2(Y(x.ymin))}V${r2(Y(x.ymax)-18)}`,area:0}}
   case 'ink': return {d:inkD(o.pts.length>1&&dist(o.pts[0],o.pts[o.pts.length-1])+o.pts.length>2.01?o.pts:[o.pts[0],add(o.pts[0],[0.5,0])]),area:0};
   case 'refl': {const [a,b]=p,n=mul(perp(unit(sub(b,a).some(v=>v)?sub(b,a):[1,0])),7);return {d:`M${P(add(a,n))}L${P(add(b,n))}L${P(sub(b,n))}L${P(sub(a,n))}Z`,area:1}}
   case 'emit': return emitOutline(o);
+  case 'bboard': {const c=p[0];return {d:`M${P(c)}h${(BBCOLS+3)*BBP}v${18*BBP}h${-(BBCOLS+3)*BBP}Z`,area:1}}
+  case 'npn': return {d:circD(p[0],20)+`M${P(p[1])}L${P(p[0])}M${P(p[2])}L${P(p[0])}M${P(p[3])}L${P(p[0])}`,area:1};
+  case 'bbbat': case 'bbmeter': return bbOutline(o);
+  case 'bbnpn': case 'bbpot': {const m=add(centroid(p),mul(perp(unit(sub(p[2],p[0]).some(v=>v)?sub(p[2],p[0]):[1,0])),o.type==='bbpot'?-16:-11));return {d:`M${P(p[0])}L${P(p[1])}L${P(p[2])}`+circD(m,15),area:1}}
   case 'tbox': {const b=tbBox(o);return {d:`M${r2(b.x0)} ${r2(b.y0)}h${r2(b.w)}v${r2(b.h)}h${r2(-b.w)}Z`,area:1}}
   case 'eq': {const [bx,by,bw,bh]=eqBox(o);return {d:`M${r2(bx-4)} ${r2(by-4)}h${r2(bw+8)}v${r2(bh+8)}h${r2(-bw-8)}Z`,area:1}}
   case 'text': {const w=Math.max(estW(parseMath(o.label||' '),o.fs),10),h=o.fs*1.1,c=p[0];return {d:`M${r2(c[0]-w/2-3)} ${r2(c[1]-h/2-3)}h${r2(w+6)}v${r2(h+6)}h${r2(-w-6)}Z`,area:1}}
@@ -1660,6 +1893,7 @@ function handles(o){
  if(o.type==='optics'){H.push({k:'T',p:[o.pts[0][0]-toPx(Math.max(0.01,o.x.do)),o.pts[0][1]-toPx(o.x.ho)]})}
  if(o.type==='circgeo'){const pts=cgPts(o),R_=o.x.r*GRID,c=o.pts[0];Object.keys(pts).forEach(n=>{const a=pts[n]*Math.PI/180;H.push({k:'C:'+n,p:add(c,[R_*Math.cos(a),-R_*Math.sin(a)]),t:'r'})});H.push({k:'Rr',p:add(c,[R_*Math.SQRT1_2,R_*Math.SQRT1_2]),t:'r'})}
  if(o.type==='wphen')H.push(...wHandles(o));
+ if(o.type==='heat')H.push(...heatHandles(o));
  if(o.type==='refr'){const a=o.x.ang*Math.PI/180,L=o.x.L*GRID;H.push({k:'A',p:add(o.pts[0],[-L*Math.sin(a),-L*Math.cos(a)]),t:'r'})}
  if(o.type==='pendulum'){const t=o.x.ang*Math.PI/180,L=o.x.L*GRID;H.push({k:'A',p:add(o.pts[0],[L*Math.sin(t),L*Math.cos(t)]),t:'r'})}
  if(o.type==='dim'){const [a,b]=o.pts,n=perp(unit(sub(b,a)));H.push({k:'O',p:add(mid(a,b),mul(n,o.x.off)),t:'r'})}
@@ -1671,6 +1905,7 @@ function setHandle(o,k,p,e){
  if(k==='L'){o.lo=sub(p,labelBase(o));return}
  if(typeof k==='string'&&k.startsWith('W:')&&o.type==='wphen'){wSetHandle(o,k,p,e);return}
  if(typeof k==='string'&&k.startsWith('G:')){geoSetHandle(o,k,p,e);return}
+ if(typeof k==='string'&&k.startsWith('H:')&&o.type==='heat'){heatSetHandle(o,k,p);return}
  if(typeof k==='string'&&k.startsWith('C:')&&o.type==='circgeo'){const d=sub(p,o.pts[0]);let a=Math.round(Math.atan2(-d[1],d[0])*180/Math.PI);if(a<0)a+=360;if(S.settings.snap&&!(e&&e.altKey))a=Math.round(a/5)*5;const nm=k.slice(2),pts=cgPts(o);pts[nm]=a;o.x.pts=Object.entries(pts).map(([n,v])=>n+': '+v).join('; ');return}
  if(k==='Rr'&&o.type==='circgeo'){o.x.r=Math.max(0.5,Math.round(dist(p,o.pts[0])/GRID*2)/2);return}
  if(k==='A'&&o.type==='refr'){const d=sub(o.pts[0],p);let a=Math.atan2(d[0],d[1])*180/Math.PI;o.x.ang=clamp(Math.round(a),0,89);return}
@@ -1698,6 +1933,9 @@ function keyPts(o){
   case 'text': case 'eq': case 'ink': return [];
   case 'refl': return [p[0],p[1]];
   case 'emit': return [p[0]];
+  case 'bboard': return [];
+  case 'bbbat': case 'bbmeter': return [p[1],p[2],p[0]];
+  case 'npn': return [p[1],p[2],p[3]];
   case 'tbox': {const b=tbBox(o);return [[b.x0,b.y0],[b.x0+b.w,b.y0],[b.x0+b.w,b.y0+b.h],[b.x0,b.y0+b.h]]}
   case 'circle': case 'pulley': case 'ball': case 'charge': case 'axes': case 'point': return [p[0]];
   case 'optics': return [p[0]];
@@ -1706,7 +1944,7 @@ function keyPts(o){
   case 'incline': return inclinePts(o);
   case 'block': case 'cart': case 'mover': case 'body': return [p[0],...blockCorners(o)];
   case 'frame': return [p[0]];
-  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'homot':case 'tales':case 'euclides':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth': return [p[0]];
+  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'heat':case 'homot':case 'tales':case 'euclides':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth': return [p[0]];
   default: return p;
  }
 }
@@ -1718,6 +1956,7 @@ function imgSymbols(list){return list.filter(o=>o.type==='homot'&&o.x&&o.x.img).
 let imgKey='';
 function render(){
  const ik=S.objs.filter(o=>o.type==='image'||o.type==='optics'||(o.s&&o.s.timg)||(o.x&&o.x.img)).map(o=>o.id+':'+(o.x.src||o.x.osrc||o.x.img||'').length+':'+(o.s.timg||'').length+':'+(o.s.tar||'')).join('|');if(ik!==imgKey){imgKey=ik;$('#imgdefs').innerHTML=`<defs>${imgSymbols(S.objs)}</defs>`}
+ circPre();
  const W=svg.clientWidth,H=svg.clientHeight,z=view.z;
  $('#world').setAttribute('transform',`translate(${r2(view.tx)} ${r2(view.ty)}) scale(${z})`);
  const g=isBoard()?((BG[BOARD.bg]||BG.blanca).grid||'none'):S.settings.grid,gr=$('#gridrect');
@@ -1736,7 +1975,9 @@ function render(){
  if(mode==='free'&&drag&&drag.pts.length>1)ov+=`<path d="M${drag.pts.map(P).join('L')}" fill="none" style="stroke:var(--primary)" stroke-width="${r2(2.5/z)}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".8" pointer-events="none"/>`;
  if(mode==='marquee'&&drag){const a=drag.a,b=drag.b;ov+=`<rect x="${r2(Math.min(a[0],b[0]))}" y="${r2(Math.min(a[1],b[1]))}" width="${r2(Math.abs(b[0]-a[0]))}" height="${r2(Math.abs(b[1]-a[1]))}" style="fill:var(--primary);stroke:var(--primary)" fill-opacity=".08" stroke-width="${r2(1/z)}" stroke-dasharray="${r2(4/z)} ${r2(3/z)}"/>`}
  if(snapMark)ov+=`<circle cx="${r2(snapMark[0])}" cy="${r2(snapMark[1])}" r="${r2(9/z)}" fill="none" style="stroke:var(--primary)" stroke-width="${r2(2/z)}"/>`;
- $('#ovl').innerHTML=ov+rulerSvg();
+ $('#ovl').innerHTML=(CRES?`<g pointer-events="none">${circOverlay()}</g>`:'')+ov+rulerSvg();
+ {const cr=document.getElementById('circread');if(cr&&sel.size===1){const o=getObj([...sel][0]);if(o)cr.innerHTML=circRead(o)}}
+ document.querySelectorAll('.tool[data-t="csim"]').forEach(b=>b.classList.toggle('on',!!S.settings.csim));
  updBars();
  $('#zv').textContent=Math.round(z*100)+'%';
  $('#b-undo').disabled=!hist.length;$('#b-redo').disabled=!fut.length;document.querySelectorAll('.eb[data-need="sel"]').forEach(b=>b.disabled=!sel.size);document.querySelectorAll('.eb[data-eb="sel"],.eb[data-eb="pan"]').forEach(b=>b.classList.toggle('on',(b.dataset.eb==='sel'&&tool==='select')||(b.dataset.eb==='pan'&&tool==='pan')));
@@ -1755,6 +1996,7 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTi
 function toWorld(e){const r=svg.getBoundingClientRect();return [(e.clientX-r.left-view.tx)/view.z,(e.clientY-r.top-view.ty)/view.z]}
 function snapPt(p,excl,e){
  if(!S.settings.snap||(e&&e.altKey))return {p,k:false};
+ {const h=bbHole(p,excl);if(h)return {p:h.p,k:true}}
  const R=(COARSE?18:11)/view.z;let best=null,bd=R;
  for(const o of S.objs){if(excl&&excl.has(o.id))continue;for(const q of keyPts(o)){const d=dist(p,q);if(d<bd){bd=d;best=q}}}
  if(best)return {p:[best[0],best[1]],k:true};
@@ -1822,7 +2064,7 @@ svg.addEventListener('pointermove',e=>{
  if(mode==='rot'){let a=(Math.atan2(raw[1]-drag.C[1],raw[0]-drag.C[0])-drag.a0)*180/Math.PI;a=S.settings.snap&&!e.altKey?Math.round(a/15)*15:Math.round(a);if(!drag.pushed){if(!a)return;pushHist();drag.pushed=true}
   for(const [id,cp] of drag.snap){const i=S.objs.findIndex(q=>q.id===id);if(i>=0)S.objs[i]=clone(cp)}rotateObjs([...drag.snap.keys()].map(getObj).filter(Boolean),a,drag.C);$('#coord').textContent='Giro: '+normA(a)+'°';render();return}
  if(mode==='handle'){const o=getObj(drag.id);if(!o)return;if(!drag.pushed){pushHist();drag.pushed=true}
-  let q=raw;if(!['L','R','O','A','Rr'].includes(drag.k)&&!String(drag.k).startsWith('C:')&&!String(drag.k).startsWith('W:')&&!(String(drag.k).startsWith('G:')&&!/^G:(O|v\d+)$/.test(drag.k))){const sp=snapPt(raw,new Set([o.id]),e);q=sp.p;snapMark=sp.k?sp.p:null}
+  let q=raw;if(!['L','R','O','A','Rr'].includes(drag.k)&&!String(drag.k).startsWith('C:')&&!String(drag.k).startsWith('W:')&&!String(drag.k).startsWith('H:')&&!(String(drag.k).startsWith('G:')&&!/^G:(O|v\d+)$/.test(drag.k))){const sp=snapPt(raw,new Set([o.id]),e);q=sp.p;snapMark=sp.k?sp.p:null}
   if(isTR(o)&&o.r)q=rotAround(q,piv(o),-o.r);
   setHandle(o,drag.k,q,e);render();return}
  if(mode==='move'){const tgt=add(drag.ref,sub(raw,drag.start));const sp=snapPt(tgt,sel,e);const d=sub(sp.p,drag.ref);
@@ -1852,7 +2094,7 @@ function endPointer(e){
 svg.addEventListener('pointerup',endPointer);svg.addEventListener('pointercancel',endPointer);
 svg.addEventListener('dblclick',e=>{
  if(mode==='poly'&&draft){draft.pts.pop();finishDraft();return}
- if(tool==='select'){const g=e.target.closest('[data-id]');if(g){const q=getObj(g.dataset.id);if(q&&q.type==='eq'){eqOpen(q);return}focusLabel()}}
+ if(tool==='select'){const g=e.target.closest('[data-id]');if(g){const q=getObj(g.dataset.id);if(q&&q.type==='eq'){eqOpen(q);return}if(q&&(q.type==='switch'||q.type==='bbsw')){pushHist();q.x.on=!q.x.on;renderPanel();render();save();return}focusLabel()}}
 });
 svg.addEventListener('wheel',e=>{e.preventDefault();const r=svg.getBoundingClientRect();zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0015)))},{passive:false});
 function zoomAt(mx,my,k){const z=clamp(view.z*k,0.2,6),wx=(mx-view.tx)/view.z,wy=(my-view.ty)/view.z;view.z=z;view.tx=mx-wx*z;view.ty=my-wy*z;render()}
@@ -1860,7 +2102,7 @@ function bboxOf(o){const el=document.querySelector(`#objs [data-id="${o.id}"] > 
 function fit(){
  if(!S.objs.length){view={tx:svg.clientWidth/2,ty:svg.clientHeight/2,z:1};render();return}
  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;for(const o of S.objs){const b=bboxOf(o);if(!b)continue;x0=Math.min(x0,b.x);y0=Math.min(y0,b.y);x1=Math.max(x1,b.x+b.width);y1=Math.max(y1,b.y+b.height)}
- if(!isFinite(x0))return;const W=svg.clientWidth,H=svg.clientHeight,pad=isMobile()?24:60;const z=clamp(Math.min((W-2*pad)/Math.max(x1-x0,1),(H-2*pad-76)/Math.max(y1-y0,1)),0.3,2.5);
+ if(!isFinite(x0))return;if(CRES&&S.settings.csim){x0-=80;x1+=80;y1+=20}const W=svg.clientWidth,H=svg.clientHeight,pad=isMobile()?24:60;const z=clamp(Math.min((W-2*pad)/Math.max(x1-x0,1),(H-2*pad-76)/Math.max(y1-y0,1)),0.3,2.5);
  view.z=z;view.tx=W/2-(x0+x1)/2*z;view.ty=46+(H-76)/2-(y0+y1)/2*z;render();
 }
 function finishDraft(){
@@ -1902,7 +2144,8 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('keyup',e=>{if(e.key===' '){spaceDown=false;svg.classList.remove('m-pan')}});
 
 /* ---------- acciones ---------- */
-function groupOf(id){const o=getObj(id);return o&&o.g?S.objs.filter(q=>q.g===o.g).map(q=>q.id):[id]}
+function groupOf(id){const o=getObj(id);const ids=o&&o.g?S.objs.filter(q=>q.g===o.g).map(q=>q.id):[id];
+ if(o&&o.type==='bboard')S.objs.forEach(q=>{if(BBTYPES.includes(q.type)&&compTerms(q).some(t=>{const h=bbHole(t);return h&&h.b.id===o.id}))ids.push(q.id)});return [...new Set(ids)]}
 function groupSel(on){if(!sel.size)return;pushHist();const g=uid();for(const id of sel){const o=getObj(id);if(on)o.g=g;else delete o.g}renderPanel();save();toast(on?'Objetos agrupados':'Grupo deshecho')}
 function delSel(){if(!sel.size)return;closeSheet();pushHist();S.objs=S.objs.filter(o=>!sel.has(o.id));sel.clear();renderPanel();render();save()}
 function duplicate(){if(!sel.size)return;pasteObjs([...sel].map(id=>clone(getObj(id))))}
@@ -2568,6 +2811,207 @@ function openReflPresets(){const card=k=>{const pr=RPRE[k],objs=pr[1]([0,0],GRID
  $('#rp-list').innerHTML=Object.keys(RPRE).map(card).join('');openModal('m-refl')}
 
 $('#rp-list').addEventListener('click',e=>{const b=e.target.closest('button[data-rp]');if(b)insertReflPreset(b.dataset.rp)});
+/* ---------- transmisión de calor: simulaciones ---------- */
+const HMAT={cobre:['Cobre',401,8960,385],aluminio:['Aluminio',237,2700,900],hierro:['Hierro',80,7870,450],acero:['Acero',50,7850,490],vidrio:['Vidrio',0.8,2500,840],madera:['Madera',0.15,600,1700],plastico:['Plástico',0.2,1200,1500]};
+const HSUB={agua:['Agua',4186],aluminio:['Aluminio',900],hierro:['Hierro',450],cobre:['Cobre',385],vidrio:['Vidrio',840],plomo:['Plomo',128],aceite:['Aceite',1970]};
+const RCAT={negra:['Lata negra',0.95,'#222222','lata'],blanca:['Lata blanca',0.3,'#f4f4f4','lata'],brillante:['Lata de aluminio brillante',0.08,'#c9d1d9','lata'],roja:['Lata roja',0.6,'#c62828','lata'],azul:['Lata azul',0.7,'#1e5bd8','lata'],verde:['Lata verde',0.65,'#2e9d4f','lata'],ladrillo:['Ladrillo',0.9,'#b5523b','bloque'],madera:['Trozo de madera',0.85,'#c8955a','bloque'],tierra:['Tierra',0.9,'#8d6e4f','bloque'],arena:['Arena',0.75,'#e6cf98','bloque'],hielo:['Cubo de hielo',0.6,'#e6f6fd','bloque'],nieve:['Nieve',0.2,'#ffffff','bloque'],agua:['Vaso con agua',0.9,'#9fd1f0','vaso']};
+const CUPK={ceramica:['Taza de cerámica',0.06],vidrio:['Vaso de vidrio',0.08],metal:['Tazón metálico',0.12],plumavit:['Vaso de plumavit',0.025],termo:['Termo',0.006]};
+const HKINDS={mecanismos:'Los tres mecanismos',conduccion:'Conducción en una barra',comparar:'Comparar conductores (cera)',conveccion:'Convección',radiacion:'Radiación y color',equilibrio:'Equilibrio térmico (calorimetría)',enfriamiento:'Enfriamiento (ley de Newton)',curva:'Curva de calentamiento del agua'};
+const HDEF={rods:['cobre','aluminio','hierro','vidrio'],Lr:30,objs:['negra','blanca','brillante'],ds:[4,4,4],abs:[],src:'sol',pw:1,fuego:2,hon:true,Thh:60,Text:5,Tr0:12,win:'cerrada',hpos:0.08,wpos:0.15,cuchara:'metal',cup:'ceramica',cmp:false,cup2:'termo',tau:90,kind:'conduccion',t:0,play:false,spd:1,lab:true,frm:true,vals:true,mat:'cobre',L:50,T1:100,T2:0,Ta:20,end:'fijo',A:1,px:0.5,Th:100,Tm:70,
+ s1:'agua',m1:0.2,T1e:80,s2:'aluminio',m2:0.5,T2e:20,T0:90,kN:0.06,mw:1,Ti:-20,Tfin:120,var:'olla',dia:true,d:4};
+const hx=o=>({...HDEF,...o.x});
+const alphaOf=m=>m[1]/(m[2]*m[3]);
+function tcol(T,lo,hi){const f=clamp((T-lo)/((hi-lo)||1),0,1),st=[[0,[46,94,222]],[0.25,[64,172,230]],[0.5,[244,220,90]],[0.75,[245,146,42]],[1,[212,44,44]]];
+ for(let i=1;i<st.length;i++)if(f<=st[i][0]+1e-9){const [f0,c0]=st[i-1],[f1,c1]=st[i],k=(f-f0)/(f1-f0);return '#'+c0.map((v,j)=>Math.round(v+(c1[j]-v)*k).toString(16).padStart(2,'0')).join('')}return '#d42c2c'}
+const fT=T=>fnum(T,1)+' °C';
+function fTime(t){return t<120?fnum(t,0)+' s':t<7200?fnum(t/60,1)+' min':fnum(t/3600,2)+' h'}
+function hThermo(p,T,lo,hi,h,fs,lab){const w=8,top=[p[0],p[1]-h],f=clamp((T-lo)/((hi-lo)||1),0,1),col=tcol(T,lo,hi);
+ let s=`<rect x="${r2(p[0]-w/2)}" y="${r2(top[1])}" width="${w}" height="${r2(h)}" rx="${w/2}" fill="#fff" stroke="#555" stroke-width="1.2"/>`;
+ const ch=(h-8)*f;s+=`<rect x="${r2(p[0]-w/2+2)}" y="${r2(p[1]-4-ch)}" width="${w-4}" height="${r2(ch+4)}" fill="${col}"/>`+CIRC(p,7.5,`fill="${col}" stroke="#555" stroke-width="1.2"`);
+ for(let i=1;i<5;i++){const y=p[1]-4-(h-8)*i/5;s+=`<path d="M${r2(p[0]+w/2)} ${r2(y)}h4" stroke="#777" stroke-width="1"/>`}
+ if(lab!==false)s+=wl(fT(T),[p[0]+w/2+6,top[1]+fs*0.4],fs*0.82,'#222',false,'start');return s}
+function hFlame(p,s0=1){const s=s0*GRID*0.5;return `<path d="M${r2(p[0])} ${r2(p[1]-s*1.6)}C${r2(p[0]+s*0.9)} ${r2(p[1]-s*0.6)} ${r2(p[0]+s*0.7)} ${r2(p[1])} ${r2(p[0])} ${r2(p[1])}C${r2(p[0]-s*0.7)} ${r2(p[1])} ${r2(p[0]-s*0.9)} ${r2(p[1]-s*0.6)} ${r2(p[0])} ${r2(p[1]-s*1.6)}Z" fill="#f5862a" stroke="#c9481b" stroke-width="1"/><path d="M${r2(p[0])} ${r2(p[1]-s*0.95)}C${r2(p[0]+s*0.45)} ${r2(p[1]-s*0.4)} ${r2(p[0]+s*0.35)} ${r2(p[1])} ${r2(p[0])} ${r2(p[1])}C${r2(p[0]-s*0.35)} ${r2(p[1])} ${r2(p[0]-s*0.45)} ${r2(p[1]-s*0.4)} ${r2(p[0])} ${r2(p[1]-s*0.95)}Z" fill="#ffd54a"/>`}
+function hWavy(a,b,col,w=1.6,amp=4,per=12){const L=dist(a,b),u=unit(sub(b,a)),n=perp(u);if(L<8)return '';let d='';const N=Math.max(8,Math.round(L/3));for(let i=0;i<=N;i++){const t=i/N*(L-8),q=add(add(a,mul(u,t)),mul(n,amp*Math.sin(t/per*2*Math.PI)));d+=(i?'L':'M')+P(q)}
+ const tip=b,bk=add(a,mul(u,L-9));return `<path d="${d}" stroke="${col}" stroke-width="${w}" fill="none"/><path d="M${P(tip)}L${P(add(bk,mul(n,4.5)))}L${P(add(bk,mul(n,-4.5)))}Z" fill="${col}"/>`}
+function hAxes(x0,y0,W,H,xl,yl,fs,ticksX,ticksY){let s=sline([x0,y0],[x0+W+8,y0],'#444',1.3)+sline([x0,y0],[x0,y0-H-8],'#444',1.3)+`<path d="M${r2(x0+W+8)} ${r2(y0)}l-7 -3.5v7z" fill="#444"/><path d="M${r2(x0)} ${r2(y0-H-8)}l-3.5 7h7z" fill="#444"/>`;
+ s+=wl(xl,[x0+W+12,y0+fs*0.05],fs*0.8,'#333',false,'start')+wl(yl,[x0+4,y0-H-8-fs*0.2],fs*0.8,'#333',false,'start');
+ (ticksX||[]).forEach(([v,px])=>{s+=`<path d="M${r2(x0+px)} ${r2(y0)}v4" stroke="#444"/>`+wl(v,[x0+px,y0+fs*0.9],fs*0.7,'#555',false)});
+ (ticksY||[]).forEach(([v,py])=>{s+=`<path d="M${r2(x0)} ${r2(y0-py)}h-4" stroke="#444"/>`+wl(v,[x0-6,y0-py],fs*0.7,'#555',false,'end')});return s}
+/* conducción 1D con diferencias finitas (con caché para animar sin recalcular) */
+const HCACHE=new Map();
+function rodT(key,mat,Lm,N,Ta,T1,end,T2,t,lat){const a=alphaOf(mat),dx=Lm/(N-1),beta=lat?4000/(mat[2]*mat[3]):0;let dt=0.4*dx*dx/a;if(beta>0)dt=Math.min(dt,0.4/beta);
+ let c=HCACHE.get(key);if(!c||c.t>t+1e-9){const T=new Float64Array(N).fill(Ta);T[0]=T1;if(end==='fijo')T[N-1]=T2;c={t:0,T};HCACHE.set(key,c)}
+ if(HCACHE.size>80)HCACHE.clear();let steps=Math.min(120000,Math.floor((t-c.t)/dt)),T=c.T,Tn=new Float64Array(N);
+ const r=a*dt/(dx*dx);for(let s=0;s<steps;s++){Tn[0]=T1;for(let i=1;i<N-1;i++)Tn[i]=T[i]+r*(T[i+1]-2*T[i]+T[i-1])-beta*dt*(T[i]-Ta);
+  if(end==='fijo')Tn[N-1]=T2;else Tn[N-1]=Tn[N-2];const tmp=T;T=Tn;Tn=tmp}
+ c.T=T;c.t+=steps*dt;return T}
+function heatTmax(o){const x=hx(o);switch(x.kind){
+ case 'conduccion':{const m=HMAT[x.mat]||HMAT.cobre,L=x.L/100;return clamp((x.end==='fijo'?0.6:1.2)*L*L/alphaOf(m),30,1e6)}
+ case 'comparar':return 1500;case 'equilibrio':return 5*Math.max(5,x.tau||90);case 'enfriamiento':return Math.max(10,Math.round(5/Math.max(0.005,x.kN)));
+ case 'curva':return curvaSegs(x).tot;case 'radiacion':return 1200;default:return Infinity}}
+function curvaSegs(x){const m=Math.max(0.01,x.mw),T0=x.Ti,Tf=x.Tfin,seg=[];let q=0;const add_=(n,Ta,Tb,Q,f)=>{if(Q<=0)return;seg.push({n,Ta,Tb,q0:q,q1:q+Q,f});q+=Q};
+ if(T0<0)add_('hielo',T0,Math.min(0,Tf),m*2.1*(Math.min(0,Tf)-T0),'m · c_{hielo} · ΔT');if(T0<=0&&Tf>0)add_('fusión',0,0,m*334,'m · L_f');
+ if(Tf>0&&T0<100)add_('agua',Math.max(0,T0),Math.min(100,Tf),m*4.186*(Math.min(100,Tf)-Math.max(0,T0)),'m · c_{agua} · ΔT');if(T0<=100&&Tf>100)add_('ebullición',100,100,m*2260,'m · L_v');
+ if(Tf>100)add_('vapor',Math.max(100,T0),Tf,m*2.01*(Tf-Math.max(100,T0)),'m · c_{vapor} · ΔT');return {seg,tot:q}}
+function loopPath(cx,cy,w,h,rr){const r=Math.min(rr,w/2,h/2),x0=cx-w/2,y0=cy-h/2,pts=[];const arc=(ccx,ccy,a0,a1)=>{for(let i=0;i<=8;i++){const a=a0+(a1-a0)*i/8;pts.push([ccx+r*Math.cos(a),ccy+r*Math.sin(a)])}};
+ arc(x0+w-r,y0+r,-Math.PI/2,0);arc(x0+w-r,y0+h-r,0,Math.PI/2);arc(x0+r,y0+h-r,Math.PI/2,Math.PI);arc(x0+r,y0+r,Math.PI,1.5*Math.PI);return pts}
+function polyAt(pts,f){let L=0;const seg=[];for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];seg.push([a,b,dist(a,b)]);L+=dist(a,b)}let d=((f%1)+1)%1*L;for(const [a,b,l] of seg){if(d<=l)return [add(a,mul(sub(b,a),l?d/l:0)),unit(sub(b,a))];d-=l}return [pts[0],[1,0]]}
+function hLoop(pts,t,cfun,n=10,rev=false,arrows=true){let s='';const N=pts.length;for(let i=0;i<N;i++){const a=pts[i],b=pts[(i+1)%N];s+=`<path d="M${P(a)}L${P(b)}" stroke="${cfun(a)}" stroke-width="2.2" stroke-opacity=".75" fill="none" stroke-linecap="round"/>`}
+ if(arrows)for(let k=0;k<4;k++){const [p,u]=polyAt(pts,k/4+0.12),uu=rev?mul(u,-1):u;s+=head(add(p,mul(uu,6)),sub(p,mul(uu,6)),{s:{w:1.8,c:cfun(p)}}).svg}
+ for(let k=0;k<n;k++){const f=(rev?-1:1)*t+k/n,[p]=polyAt(pts,f);s+=CIRC(p,3.4,`fill="${cfun(p)}" stroke="#fff" stroke-width="1"`)}return s}
+function drawHeat(o){const x=hx(o),c=o.pts[0],fs=o.fs||15,U=GRID,t=Math.max(0,x.t||0);let s='';const F=(txt,y)=>x.frm?wl(txt,[c[0],y],fs*0.9,'#222',false):'';
+ const tLabel=(p,anchor='start')=>wl('t = '+fTime(t),p,fs*0.85,'#6C4EE3',false,anchor,true);
+ switch(x.kind){
+ case 'conduccion':{const m=HMAT[x.mat]||HMAT.cobre,N=41,Lm=x.L/100,T=rodT(o.id+'|'+[x.mat,x.L,x.T1,x.T2,x.Ta,x.end].join('|'),m,Lm,N,x.Ta,x.T1,x.end,x.T2,t,false);
+  const W=7*U,H=0.7*U,x0=c[0]-W/2,y0=c[1]-H/2,lo=Math.min(x.T2,x.Ta,x.T1),hi=Math.max(x.T1,x.T2,x.Ta);
+  for(let i=0;i<N-1;i++){const xa=x0+W*i/(N-1),wd=W/(N-1)+0.6;s+=`<rect x="${r2(xa)}" y="${r2(y0)}" width="${r2(wd)}" height="${r2(H)}" fill="${tcol((T[i]+T[i+1])/2,lo,hi)}"/>`}
+  s+=`<rect x="${r2(x0)}" y="${r2(y0)}" width="${r2(W)}" height="${r2(H)}" fill="none" stroke="#333" stroke-width="1.4"/>`;
+  s+=`<rect x="${r2(x0-1.3*U)}" y="${r2(c[1]-0.9*U)}" width="${r2(1.3*U)}" height="${r2(1.8*U)}" rx="4" fill="${tcol(x.T1,lo,hi)}" stroke="#333" stroke-width="1.2"/>`+hFlame([x0-0.65*U,c[1]+1.75*U],0.9)+wl('T_1 = '+fT(x.T1),[x0-0.65*U,c[1]-0.9*U-fs*0.6],fs*0.85,'#222',false);
+  if(x.end==='fijo'){s+=`<rect x="${r2(x0+W)}" y="${r2(c[1]-0.9*U)}" width="${r2(1.3*U)}" height="${r2(1.8*U)}" rx="4" fill="${tcol(x.T2,lo,hi)}" stroke="#333" stroke-width="1.2"/>`;for(let k=0;k<3;k++)s+=`<rect x="${r2(x0+W+0.2*U+k*0.33*U)}" y="${r2(c[1]+0.2*U-(k%2)*0.35*U)}" width="${r2(0.32*U)}" height="${r2(0.32*U)}" fill="#e3f4fc" stroke="#7fb8d8" transform="rotate(${k*12-10} ${r2(x0+W+0.36*U+k*0.33*U)} ${r2(c[1]+0.36*U)})"/>`;s+=wl('T_2 = '+fT(x.T2),[x0+W+0.65*U,c[1]-0.9*U-fs*0.6],fs*0.85,'#222',false)}
+  else s+=`<path d="M${r2(x0+W)} ${r2(y0-6)}V${r2(y0+H+6)}" stroke="#333" stroke-width="5"/>`+wl('extremo aislado',[x0+W+8,c[1]+fs*0.3],fs*0.75,'#444',false,'start');
+  if(x.lab){const q0=Math.abs(T[0]-T[1]);for(let k=0;k<4;k++){const i=Math.round((k+0.5)*(N-1)/4),g=Math.abs(T[Math.max(0,i-1)]-T[Math.min(N-1,i+1)])/2,len=clamp(g/(Math.max(q0,1e-6))*0.9*U,0.12*U,0.9*U),xx=x0+W*i/(N-1);if(g>0.05)s+=arrowV([xx-len/2,y0-0.45*U],[xx+len/2,y0-0.45*U],'#d43c3c',1.8)}s+=wl('flujo de calor',[x0+4,y0-0.85*U],fs*0.78,'#d43c3c',false,'start')}
+  const px=clamp(x.px,0,1),pi=px*(N-1),Tp=T[Math.floor(pi)]+(T[Math.min(N-1,Math.ceil(pi))]-T[Math.floor(pi)])*(pi-Math.floor(pi)),pxx=x0+W*px;
+  s+=hThermo([pxx,y0-0.2*U],Tp,lo,hi,1.5*U,fs);
+  const gy=c[1]+2.9*U,gH=1.6*U;s+=hAxes(x0,gy,W,gH,'x','T',fs,[['0',0],[fnum(x.L,0)+' cm',W]],[[fnum(lo,0),0],[fnum(hi,0),gH]]);
+  let d='';for(let i=0;i<N;i++)d+=(i?'L':'M')+P([x0+W*i/(N-1),gy-gH*(T[i]-lo)/((hi-lo)||1)]);s+=`<path d="${d}" stroke="#d43c3c" stroke-width="2" fill="none"/>`;
+  if(x.end==='fijo')s+=dline([x0,gy-gH*(x.T1-lo)/((hi-lo)||1)],[x0+W,gy-gH*(x.T2-lo)/((hi-lo)||1)],'#888',1.1,'5 4');
+  s+=dline([pxx,gy],[pxx,gy-gH*(Tp-lo)/((hi-lo)||1)],'#6C4EE3',1,'3 3');
+  s+=tLabel([x0-1.3*U,c[1]-2.6*U])+wl(m[0]+'  ·  k = '+fnum(m[1],m[1]<1?2:0)+' W/(m·K)',[x0+W+1.3*U,c[1]-2.6*U],fs*0.8,'#333',false,'end');
+  if(x.frm&&x.end==='fijo'){const P_=m[1]*(x.A/1e4)*(x.T1-x.T2)/Lm;s+=F('Q / t = k · A · ΔT / L'+(x.vals?'  =  '+fnum(m[1],m[1]<1?2:0)+' · '+fnum(x.A/1e4,4)+' · '+fnum(x.T1-x.T2,0)+' / '+fnum(Lm,2)+'  ≈  '+fnum(P_,P_<1?3:1)+' W  (régimen estacionario)':''),gy+fs*2)}
+  break}
+ case 'comparar':{const mats=(Array.isArray(x.rods)&&x.rods.length?x.rods:['cobre']).slice(0,6),nR=mats.length,W=7*U,x0=c[0]-W/2+0.6*U,Lcm=clamp(x.Lr||30,5,100),Lm=Lcm/100,N=31,lo=x.Ta,hi=x.Th,gap=nR>1?Math.min(1.2*U,4.6*U/(nR-1)):0,ytop=c[1]-(nR-1)*gap/2,yF=ytop+(nR-1)*gap+1.05*U;
+  s+=`<rect x="${r2(x0-1.6*U)}" y="${r2(ytop-0.8*U)}" width="${r2(1.6*U)}" height="${r2((nR-1)*gap+1.6*U)}" rx="6" fill="${tcol(x.Th,lo,hi)}" stroke="#333" stroke-width="1.2"/>`+hFlame([x0-0.8*U,yF+0.75*U],1)+wl(fT(x.Th),[x0-0.8*U,ytop-0.8*U-fs*0.6],fs*0.85,'#222',false);
+  mats.forEach((k,j)=>{const m=HMAT[k]||HMAT.cobre,T=rodT(o.id+'|cmp|'+k+'|'+x.Th+'|'+x.Ta+'|'+Lcm,m,Lm,N,x.Ta,x.Th,'aislado',0,t,true),y=ytop+j*gap,H=0.32*U;
+   for(let i=0;i<N-1;i++)s+=`<rect x="${r2(x0+W*i/(N-1))}" y="${r2(y-H/2)}" width="${r2(W/(N-1)+0.6)}" height="${r2(H)}" fill="${tcol((T[i]+T[i+1])/2,lo,hi)}"/>`;
+   s+=`<rect x="${r2(x0)}" y="${r2(y-H/2)}" width="${r2(W)}" height="${r2(H)}" fill="none" stroke="#333" stroke-width="1.1"/>`+wl(m[0],[x0+W+8,y+fs*0.1],fs*0.85,'#222',false,'start');
+   let fallen=0;for(let q=1;q<=6;q++){const i=q*5,xx=x0+W*i/(N-1),down=T[i]>=x.Tm;if(down)fallen++;const yy=down?yF-((q+j)%3)*3:y+H/2+0.18*U;
+    s+=`<path d="M${r2(xx)} ${r2(yy-0.16*U)}v${r2(0.3*U)}" stroke="#555" stroke-width="1.6"/>`+CIRC([xx,yy-0.16*U],3.2,`fill="${down?'#bbb':'#f3e9b5'}" stroke="#8a7a3a" stroke-width="1"`)}
+   if(x.vals)s+=wl(fallen+' de 6 cayeron',[x0+W+8,y+fs*1.05],fs*0.72,'#666',false,'start')});
+  s+=sline([x0-1.6*U,yF+0.15*U],[x0+W+1.5*U,yF+0.15*U],'#8a7a5a',2);
+  for(let q=1;q<=6;q++){const xx=x0+W*q*5/(N-1);s+=wl(fnum(Lcm*q/6,1)+' cm',[xx,ytop-0.65*U],fs*0.65,'#666',false)}
+  s+=tLabel([x0-1.6*U,ytop-1.6*U]);if(x.lab)s+=wl('tachuelas pegadas con cera: la cera se derrite a '+fT(x.Tm),[x0+W/2,yF+0.75*U],fs*0.8,'#444',false);
+  break}
+ case 'equilibrio':{const s1=HSUB[x.s1]||HSUB.agua,s2=HSUB[x.s2]||HSUB.aluminio,C1=x.m1*s1[1],C2=x.m2*s2[1],Tf=(C1*x.T1e+C2*x.T2e)/(C1+C2),tau=Math.max(5,x.tau||90),e=Math.exp(-t/tau),Ta1=Tf+(x.T1e-Tf)*e,Ta2=Tf+(x.T2e-Tf)*e,lo=Math.min(x.T1e,x.T2e),hi=Math.max(x.T1e,x.T2e);
+  const bw=1.8*U,bh=1.6*U,x1=c[0]-4.3*U,yB=c[1]+0.6*U;
+  s+=`<rect x="${r2(x1-0.25*U)}" y="${r2(yB-bh-0.5*U)}" width="${r2(2*bw+0.5*U)}" height="${r2(bh+0.75*U)}" rx="8" fill="none" stroke="#888" stroke-width="1.4" stroke-dasharray="6 4"/>`+wl('recipiente aislado',[x1+bw,yB+0.55*U],fs*0.72,'#666',false);
+  s+=`<rect x="${r2(x1)}" y="${r2(yB-bh)}" width="${r2(bw)}" height="${r2(bh)}" rx="5" fill="${tcol(Ta1,lo,hi)}" stroke="#333" stroke-width="1.3"/><rect x="${r2(x1+bw)}" y="${r2(yB-bh)}" width="${r2(bw)}" height="${r2(bh)}" rx="5" fill="${tcol(Ta2,lo,hi)}" stroke="#333" stroke-width="1.3"/>`;
+  s+=wl(s1[0]+' · '+fnum(x.m1,2)+' kg',[x1+bw/2,yB-bh/2+fs*0.3],fs*0.75,'#111',false)+wl(s2[0]+' · '+fnum(x.m2,2)+' kg',[x1+1.5*bw,yB-bh/2+fs*0.3],fs*0.75,'#111',false);
+  if(Math.abs(Ta1-Ta2)>0.3){const hotL=Ta1>Ta2;s+=arrowV([x1+bw+(hotL?-0.45:0.45)*U,yB-bh-0.25*U],[x1+bw+(hotL?0.45:-0.45)*U,yB-bh-0.25*U],'#d43c3c',2.2)+wl('Q',[x1+bw,yB-bh-0.45*U-fs*0.3],fs*0.9,'#d43c3c',true)}
+  s+=hThermo([x1+0.35*U,yB-bh-0.1*U],Ta1,lo,hi,1.2*U,fs*0.9)+hThermo([x1+bw+0.35*U,yB-bh-0.1*U],Ta2,lo,hi,1.2*U,fs*0.9);
+  const gx0=c[0]+0.6*U,gy=c[1]+1.4*U,gW=3.6*U,gH=2.6*U,tm=5*tau,ty=v=>gy-gH*(v-lo)/((hi-lo)||1);s+=hAxes(gx0,gy,gW,gH,'t','T (°C)',fs,[['0',0],[fTime(tm),gW]],[[fnum(lo,0),0],[fnum(hi,0),gH]]);
+  [[x.T1e,'#d43c3c'],[x.T2e,'#2f6fde']].forEach(([T0,col])=>{let d='';for(let i=0;i<=60;i++){const tt=i/60*tm;d+=(i?'L':'M')+P([gx0+gW*tt/tm,ty(Tf+(T0-Tf)*Math.exp(-tt/tau))])}s+=`<path d="${d}" stroke="${col}" stroke-width="1.8" fill="none"/>`});
+  s+=dline([gx0,ty(Tf)],[gx0+gW,ty(Tf)],'#555',1,'5 4')+wl('T_f',[gx0+gW+6,ty(Tf)+fs*0.1],fs*0.8,'#333',true,'start');const cx_=gx0+gW*Math.min(t,tm)/tm;s+=dline([cx_,gy],[cx_,gy-gH],'#6C4EE3',1,'3 3');
+  s+=tLabel([x1-0.25*U,c[1]-2.9*U]);
+  s+=F('Q_{cedido} = Q_{absorbido}     m_1 c_1 (T_1 − T_f) = m_2 c_2 (T_f − T_2)',c[1]+2.3*U);if(x.frm&&x.vals)s+=wl('T_f = (m_1c_1T_1 + m_2c_2T_2) / (m_1c_1 + m_2c_2) = '+fT(Tf),[c[0],c[1]+2.3*U+fs*1.4],fs*0.82,'#444',false);
+  break}
+ case 'enfriamiento':{const tm=heatTmax(o),Tn=tt=>x.Ta+(x.T0-x.Ta)*Math.exp(-x.kN*tt),lo=Math.min(x.Ta,x.T0),hi=Math.max(x.Ta,x.T0),Tc=Tn(t);
+  const cx_=c[0]-3.6*U,cy=c[1]+0.8*U;s+=`<path d="M${r2(cx_-0.8*U)} ${r2(cy-1.3*U)}L${r2(cx_-0.65*U)} ${r2(cy)}H${r2(cx_+0.65*U)}L${r2(cx_+0.8*U)} ${r2(cy-1.3*U)}Z" fill="${tcol(Tc,lo,hi)}" stroke="#333" stroke-width="1.4"/><path d="M${r2(cx_+0.75*U)} ${r2(cy-1.05*U)}c${r2(0.6*U)} 0 ${r2(0.6*U)} ${r2(0.75*U)} 0 ${r2(0.75*U)}" stroke="#333" stroke-width="1.6" fill="none"/>`;
+  const st=clamp((Tc-x.Ta)/((x.T0-x.Ta)||1),0,1);for(let k=0;k<3;k++){const xx=cx_-0.35*U+k*0.35*U;s+=`<path d="M${r2(xx)} ${r2(cy-1.45*U)}c-6 -8 6 -14 0 -22" stroke="#999" stroke-width="1.5" fill="none" opacity="${r2(st)}"/>`}
+  s+=hThermo([cx_+1.6*U,cy],Tc,lo,hi,1.6*U,fs)+wl('ambiente: '+fT(x.Ta),[cx_,cy+fs*1.2],fs*0.78,'#555',false);
+  const gx0=c[0]-1.2*U,gy=c[1]+1.5*U,gW=4.8*U,gH=2.8*U,ty=v=>gy-gH*(v-lo)/((hi-lo)||1),tx=tt=>gx0+gW*tt/tm;s+=hAxes(gx0,gy,gW,gH,'t (min)','T (°C)',fs,[['0',0],[fnum(tm,0),gW]],[[fnum(lo,0),0],[fnum(hi,0),gH]]);
+  let d='';for(let i=0;i<=80;i++){const tt=i/80*tm;d+=(i?'L':'M')+P([tx(tt),ty(Tn(tt))])}s+=`<path d="${d}" stroke="#d43c3c" stroke-width="2" fill="none"/>`+dline([gx0,ty(x.Ta)],[gx0+gW,ty(x.Ta)],'#888',1,'5 4');
+  if(x.cmp){const k2=(CUPK[x.cup2]||CUPK.termo)[1],T2=tt=>x.Ta+(x.T0-x.Ta)*Math.exp(-k2*tt);let d2='';for(let i=0;i<=80;i++){const tt=i/80*tm;d2+=(i?'L':'M')+P([tx(tt),ty(T2(tt))])}s+=`<path d="${d2}" stroke="#2f6fde" stroke-width="2" stroke-dasharray="7 4" fill="none"/>`+CIRC([tx(Math.min(t,tm)),ty(T2(Math.min(t,tm)))],4,'fill="#2f6fde"');
+   const ly=gy+fs*3.4;s+=sline([gx0,ly],[gx0+0.4*U,ly],'#d43c3c',2)+wl((CUPK[x.cup]||['Recipiente'])[0]+' · '+fT(Tc),[gx0+0.5*U,ly],fs*0.75,'#333',false,'start')+dline([gx0+2.6*U,ly],[gx0+3*U,ly],'#2f6fde',2,'7 4')+wl((CUPK[x.cup2]||['Recipiente'])[0]+' · '+fT(T2(Math.min(t,tm))),[gx0+3.1*U,ly],fs*0.75,'#333',false,'start')}
+  const tt=Math.min(t,tm);s+=dline([tx(tt),gy],[tx(tt),ty(Tn(tt))],'#6C4EE3',1,'3 3')+dline([gx0,ty(Tn(tt))],[tx(tt),ty(Tn(tt))],'#6C4EE3',1,'3 3')+CIRC([tx(tt),ty(Tn(tt))],4.5,'fill="#6C4EE3"');
+  s+=wl('t = '+fnum(tt,1)+' min   T = '+fT(Tc),[gx0+gW,gy-gH-fs*0.4],fs*0.85,'#6C4EE3',false,'end',true);
+  s+=F('T(t) = T_a + (T_0 − T_a) · e^{−k·t}'+(x.vals?'     k = '+fnum(x.kN,3)+' 1/min':''),gy+fs*2.1);break}
+ case 'curva':{const {seg,tot}=curvaSegs(x);if(!seg.length)return wl('Revisa las temperaturas inicial y final',c,fs,'#d43c3c');const lo=Math.min(x.Ti,0)-5,hi=Math.max(x.Tfin,100)+5,gx0=c[0]-4*U,gy=c[1]+2*U,gW=8*U,gH=4*U,tx=q=>gx0+gW*q/tot,ty=v=>gy-gH*(v-lo)/(hi-lo);
+  s+=hAxes(gx0,gy,gW,gH,'Q (kJ)','T (°C)',fs,[['0',0],[fnum(tot,0),gW]],[[fnum(lo+5,0),gH*5/(hi-lo)],['0',gH*(0-lo)/(hi-lo)],['100',gH*(100-lo)/(hi-lo)]]);
+  const cols={hielo:'#4aa3df',fusión:'#7b3fd1','agua':'#2f6fde','ebullición':'#7b3fd1',vapor:'#d43c3c'};let d='';
+  seg.forEach((g,i)=>{d+=(i?'L':'M')+P([tx(g.q0),ty(g.Ta)])+'L'+P([tx(g.q1),ty(g.Tb)]);const m=[tx((g.q0+g.q1)/2),ty((g.Ta+g.Tb)/2)];
+   const wpx=tx(g.q1)-tx(g.q0);if(x.lab)s+=wl(g.n+(g.Ta===g.Tb?' ('+fnum(g.Ta,0)+' °C)':''),add(m,[g.Ta===g.Tb?0:-fs*0.4,-fs*0.9]),fs*0.8,cols[g.n]||'#333',false,g.Ta===g.Tb?'middle':'end');
+   if(x.vals&&wpx>70)s+=wl('Q = '+g.f+' = '+fnum(g.q1-g.q0,1)+' kJ',add(m,[g.Ta===g.Tb?0:fs*0.4,fs*1.1]),fs*0.68,'#555',false,g.Ta===g.Tb?'middle':'start')});
+  s+=`<path d="${d}" stroke="#222" stroke-width="2.2" fill="none" stroke-linejoin="round"/>`;
+  const q=Math.min(t,tot),g=seg.find(z=>q<=z.q1+1e-9)||seg[seg.length-1],Tq=g.Ta+(g.Tb-g.Ta)*((q-g.q0)/((g.q1-g.q0)||1)),pm=[tx(q),ty(Tq)];s+=CIRC(pm,5.5,'fill="#6C4EE3" stroke="#fff" stroke-width="1.5"')+wl('Q = '+fnum(q,1)+' kJ · '+fT(Tq)+' · '+g.n,[gx0,gy-gH-fs*2.2],fs*0.85,'#6C4EE3',false,'start',true);
+  const bx=gx0+gW+1.6*U,by=gy-gH+0.6*U,fr=g.n==='fusión'?(q-g.q0)/(g.q1-g.q0):g.n==='hielo'?0:1,boil=g.n==='ebullición'||g.n==='vapor';
+  s+=`<path d="M${r2(bx-0.6*U)} ${r2(by)}V${r2(by+1.3*U)}H${r2(bx+0.6*U)}V${r2(by)}" stroke="#333" stroke-width="1.6" fill="none"/>`;if(g.n!=='vapor')s+=`<rect x="${r2(bx-0.57*U)}" y="${r2(by+0.35*U)}" width="${r2(1.14*U)}" height="${r2(0.93*U)}" fill="#9fd1f0" fill-opacity="${r2(0.25+0.6*fr)}"/>`;
+  if(g.n==='hielo'||g.n==='fusión')for(let k=0;k<3;k++)if(k>=Math.round(fr*3))s+=`<rect x="${r2(bx-0.45*U+k*0.32*U)}" y="${r2(by+0.75*U-(k%2)*0.25*U)}" width="${r2(0.28*U)}" height="${r2(0.28*U)}" fill="#eaf7ff" stroke="#7fb8d8"/>`;
+  if(boil)for(let k=0;k<5;k++)s+=CIRC([bx-0.4*U+k*0.2*U,by+0.5*U+((k*7)%3)*0.2*U],2.5,'fill="none" stroke="#fff" stroke-width="1.1"');if(g.n==='vapor'||g.n==='ebullición')for(let k=0;k<3;k++)s+=`<path d="M${r2(bx-0.3*U+k*0.3*U)} ${r2(by-0.1*U)}c-5 -7 5 -12 0 -19" stroke="#aaa" stroke-width="1.4" fill="none"/>`;
+  s+=hFlame([bx,by+1.9*U],0.7);s+=F('Q = m · c · ΔT  (cambia la temperatura)        Q = m · L  (cambio de fase, T constante)',gy+fs*2.1);break}
+ case 'conveccion':{const fu=clamp(Math.round(x.fuego??2),0,3);if(x.var==='olla'){const W=4.4*U,H=2.8*U,x0=c[0]-W/2,y0=c[1]-H/2;s+=`<rect x="${r2(x0)}" y="${r2(y0+0.3*U)}" width="${r2(W)}" height="${r2(H-0.3*U)}" fill="${fu?'#cfe8f7':'#dceef8'}" fill-opacity=".7"/><path d="M${r2(x0)} ${r2(y0)}V${r2(y0+H)}H${r2(x0+W)}V${r2(y0)}" stroke="#444" stroke-width="3" fill="none"/>`;
+   for(let k=0;k<fu;k++)s+=hFlame([c[0]+(k-(fu-1)/2)*0.7*U,c[1]+H/2+1.1*U],0.55+0.15*fu);
+   if(fu){const cf=p=>tcol(100-80*clamp((p[1]-y0)/H,0,1)+30*(1-Math.abs(p[0]-c[0])/(W/2))-15,20,100),ph=t*fu/2;
+    s+=hLoop(loopPath(c[0]-W/4,c[1]+0.15*U,W/2-0.4*U,H-0.9*U,0.6*U),ph,cf,8,true)+hLoop(loopPath(c[0]+W/4,c[1]+0.15*U,W/2-0.4*U,H-0.9*U,0.6*U),ph,cf,8,false);
+    if(x.lab)s+=wl('el agua caliente sube (menos densa)',[c[0],y0-fs*0.6],fs*0.8,'#d43c3c',false)+wl('el agua fría baja (más densa)',[x0+W+8,c[1]],fs*0.8,'#2f6fde',false,'start')}
+   else if(x.lab)s+=wl('sin fuego: el agua está quieta, no hay corrientes de convección',[c[0],y0-fs*0.6],fs*0.8,'#555',false)}
+  else if(x.var==='habitacion'){const W=7*U,H=4*U,x0=c[0]-W/2,y0=c[1]-H/2,hp=clamp(x.hpos??0.08,0.03,0.85),wp=clamp(x.wpos??0.15,0.04,0.55),open=x.win==='abierta',hon=x.hon!==false,Th=x.Thh??60,Te=x.Text??5,wy0=y0+wp*H,wy1=wy0+1.6*U;
+   const gh=hon?1:0,gw=open?1.4:0.15,g0=0.12,Teq=(gh*Th*0.5+(gw+g0)*Te)/(gh+gw+g0),Tr=Teq+((x.Tr0??12)-Teq)*Math.exp(-t/600);
+   s+=`<path d="M${r2(x0+W)} ${r2(wy0)}V${r2(y0)}H${r2(x0)}V${r2(y0+H)}H${r2(x0+W)}V${r2(wy1)}" fill="none" stroke="#555" stroke-width="4"/><rect x="${r2(x0)}" y="${r2(y0)}" width="${r2(W)}" height="${r2(H)}" fill="${tcol(Tr,0,35)}" fill-opacity=".12"/>`;
+   if(open){s+=`<path d="M${r2(x0+W)} ${r2(wy0)}l${r2(0.9*U)} ${r2(-0.3*U)}" stroke="#5a9cc8" stroke-width="3"/>`;s+=arrowV([x0+W+0.9*U,wy1-0.3*U],[x0+W-0.6*U,wy1-0.3*U],'#2f6fde',2)+arrowV([x0+W-0.6*U,wy0+0.3*U],[x0+W+0.9*U,wy0+0.3*U],'#d43c3c',2);if(x.lab)s+=wl('entra aire frío',[x0+W+0.95*U,wy1+fs*0.5],fs*0.72,'#2f6fde',false,'start')+wl('sale aire tibio',[x0+W+0.95*U,wy0-fs*0.2],fs*0.72,'#d43c3c',false,'start')}
+   else s+=`<rect x="${r2(x0+W-0.15*U)}" y="${r2(wy0)}" width="${r2(0.3*U)}" height="${r2(1.6*U)}" fill="#d6eefc" stroke="#5a9cc8"/>`;
+   s+=wl('exterior: '+fT(Te),[x0+W+0.3*U,wy0-fs*1.4],fs*0.75,'#2f6fde',false,'start');
+   const hx_=x0+hp*W;s+=`<rect x="${r2(hx_)}" y="${r2(y0+H-1.2*U)}" width="${r2(0.9*U)}" height="${r2(1*U)}" rx="4" fill="${hon?'#e66a3a':'#9a9a9a'}" stroke="${hon?'#933':'#555'}"/>`;for(let k=0;k<4;k++)s+=`<path d="M${r2(hx_+0.15*U+k*0.2*U)} ${r2(y0+H-1.1*U)}v${r2(0.8*U)}" stroke="${hon?'#933':'#555'}" stroke-width="1.2"/>`;
+   s+=hThermo([c[0]+0.4*U,c[1]+0.9*U],Tr,0,35,1.4*U,fs*0.9);
+   const warmLeft=hon?(hp<0.5):false,rev=hon?!warmLeft:false,k=(hon?Math.max(0.1,(Th-Tr)/40):0)+(open?0.7:0.05),ph=t*k/400;
+   if(hon||open){const cf=p=>{const f=clamp((p[0]-x0)/W,0,1),wf=warmLeft?f:1-f;return tcol(hon?32-14*wf:Te+6,10,34)};s+=hLoop(loopPath(c[0],c[1],W-1.4*U,H-1.2*U,1*U),ph,cf,12,rev)}
+   if(x.lab)s+=wl(hon?'estufa encendida':'estufa apagada',[hx_+0.45*U,y0+H+fs*1.1],fs*0.8,hon?'#933':'#555',false)+wl(open?'ventana abierta':'ventana cerrada',[x0+W-0.2*U,wy1+fs*1.2],fs*0.75,'#2f6fde',false,'end');
+   s+=tLabel([x0,y0-fs*0.7]);break}
+  else{const W=8*U,y0=c[1]+1.4*U,dia=x.dia;s+=`<rect x="${r2(c[0]-W/2)}" y="${r2(y0)}" width="${r2(W/2)}" height="${r2(0.9*U)}" fill="#a07d52"/><rect x="${r2(c[0])}" y="${r2(y0+0.15*U)}" width="${r2(W/2)}" height="${r2(0.75*U)}" fill="#4f9fd8"/>`;
+   s+=dia?CIRC([c[0]-W/2+0.8*U,c[1]-2.4*U],0.45*U,'fill="#ffd54a" stroke="#e0a100"'):`<path d="M${r2(c[0]-W/2+0.9*U)} ${r2(c[1]-2.85*U)}a${r2(0.45*U)} ${r2(0.45*U)} 0 1 0 ${r2(0.3*U)} ${r2(0.85*U)}a${r2(0.36*U)} ${r2(0.36*U)} 0 1 1 -${r2(0.3*U)} -${r2(0.85*U)}z" fill="#e8e8f0" stroke="#999"/>`;
+   const cf=p=>{const land=p[0]<c[0];return (dia?land:!land)?'#e8642c':'#2f6fde'};s+=hLoop(loopPath(c[0],c[1]-0.2*U,W-2*U,2.6*U,0.9*U),t,cf,12,!dia);
+   if(x.lab)s+=lbl('tierra',[c[0]-W/4,y0+0.5*U],fs*0.85,'#fff',false,'middle',true)+lbl('mar',[c[0]+W/4,y0+0.5*U],fs*0.85,'#fff',false,'middle',true)+wl(dia?'Día: brisa marina (del mar a la tierra)':'Noche: brisa terrestre (de la tierra al mar)',[c[0],c[1]-2.4*U],fs*0.9,'#222',false,'middle',true)+wl(dia?'la tierra se calienta más rápido':'la tierra se enfría más rápido',[c[0],c[1]-1.95*U],fs*0.75,'#555',false)}
+  break}
+ case 'radiacion':{const objs=(Array.isArray(x.objs)&&x.objs.length?x.objs:['negra']).slice(0,5),ds=Array.isArray(x.ds)?x.ds:[],ab=Array.isArray(x.abs)?x.abs:[],sx=c[0]-2.5*U,src=[sx,c[1]],tau=300,pw=clamp(x.pw??1,0.1,5),n=objs.length,gap=n>1?Math.min(1.6*U,5.2*U/(n-1)):0,y0=c[1]-(n-1)*gap/2;
+  if(x.src==='estufa'){s+=`<rect x="${r2(sx-0.5*U)}" y="${r2(c[1]-1*U)}" width="${r2(1*U)}" height="${r2(2*U)}" rx="5" fill="#5a5f6b" stroke="#333"/>`;for(let k=0;k<5;k++)s+=`<path d="M${r2(sx-0.35*U)} ${r2(c[1]-0.8*U+k*0.4*U)}h${r2(0.7*U)}" stroke="#ff6a2a" stroke-width="3" stroke-linecap="round"/>`}
+  else if(x.src==='ampolleta'){s+=CIRC([sx,c[1]-0.15*U],0.5*U,'fill="#fff3b0" stroke="#c9a400" stroke-width="1.5"')+`<rect x="${r2(sx-0.22*U)}" y="${r2(c[1]+0.3*U)}" width="${r2(0.44*U)}" height="${r2(0.45*U)}" fill="#999" stroke="#555"/>`}
+  else{s+=CIRC(src,0.55*U,'fill="#ffb300" stroke="#e07a00" stroke-width="1.5"');for(let k=0;k<10;k++){const a=k*Math.PI/5;s+=sline(add(src,[0.68*U*Math.cos(a),0.68*U*Math.sin(a)]),add(src,[0.9*U*Math.cos(a),0.9*U*Math.sin(a)]),'#e07a00',2)}}
+  if(x.lab)s+=wl({sol:'Sol',estufa:'estufa',ampolleta:'ampolleta'}[x.src]||'fuente',[sx,c[1]+1.35*U],fs*0.8,'#a35b00',false)+wl('radiación infrarroja',[sx,c[1]+1.35*U+fs],fs*0.7,'#a35b00',false);
+  objs.forEach((k,j)=>{const it=RCAT[k]||RCAT.negra,a=clamp(ab[j]??it[1],0,1),d=clamp(ds[j]??x.d??4,1.5,10),p=[sx+d*U,y0+j*gap],ice=k==='hielo'||k==='nieve',gain=40*pw*a*(4/d)**2*(1-Math.exp(-t/tau)),melt=ice?clamp(gain/60,0,1):0,T=ice?Math.min(0,x.Ta):x.Ta+gain;
+   s+=hWavy(add(src,mul(unit(sub(p,src)),0.95*U)),[p[0]-0.55*U,p[1]],'#e8642c',1.5,3.5,11);
+   if(it[3]==='vaso')s+=`<path d="M${r2(p[0]-0.45*U)} ${r2(p[1]-0.55*U)}L${r2(p[0]-0.38*U)} ${r2(p[1]+0.55*U)}H${r2(p[0]+0.38*U)}L${r2(p[0]+0.45*U)} ${r2(p[1]-0.55*U)}" fill="none" stroke="#555" stroke-width="1.4"/><path d="M${r2(p[0]-0.42*U)} ${r2(p[1]-0.2*U)}L${r2(p[0]-0.38*U)} ${r2(p[1]+0.55*U)}H${r2(p[0]+0.38*U)}L${r2(p[0]+0.42*U)} ${r2(p[1]-0.2*U)}Z" fill="${it[2]}"/>`;
+   else if(ice){const sz=0.9*U*Math.sqrt(1-0.85*melt);s+=`<ellipse cx="${r2(p[0])}" cy="${r2(p[1]+0.42*U)}" rx="${r2(0.25*U+0.4*U*melt)}" ry="${r2(0.06*U+0.05*U*melt)}" fill="#9fd1f0" opacity="${r2(0.3+0.6*melt)}"/><rect x="${r2(p[0]-sz/2)}" y="${r2(p[1]+0.4*U-sz)}" width="${r2(sz)}" height="${r2(sz)}" rx="3" fill="${it[2]}" stroke="#7fb8d8" stroke-width="1.2"/>`}
+   else s+=`<rect x="${r2(p[0]-0.45*U)}" y="${r2(p[1]-(it[3]==='bloque'?0.4:0.55)*U)}" width="${r2(0.9*U)}" height="${r2((it[3]==='bloque'?0.8:1.1)*U)}" rx="${it[3]==='bloque'?2:5}" fill="${it[2]}" stroke="#333" stroke-width="1.2"/>`;
+   if(a<0.5)s+=hWavy([p[0]-0.55*U,p[1]-0.15*U],[p[0]-1.4*U,p[1]-0.6*U],'#e8a07a',1.1,2.5,10);
+   s+=hThermo([p[0]+0.9*U,p[1]+0.5*U],T,x.Ta,x.Ta+40*Math.max(1,pw),1.1*U,fs*0.85)+wl(it[0]+(ice&&melt>0.03?' · se derrite ('+Math.round(melt*100)+' %)':'')+(x.vals?' · absorbe '+Math.round(a*100)+' % · d = '+fnum(d,1):''),[p[0]+1.35*U,p[1]+fs*0.95],fs*0.75,'#333',false,'start')});
+  s+=tLabel([sx-0.9*U,y0-1.2*U]);s+=F('la radiación viaja sin necesitar un medio · lo oscuro absorbe más · intensidad ∝ 1 / d^2',y0+(n-1)*gap+1.6*U);break}
+ case 'mecanismos':{const W=3.6*U,H=2*U,x0=c[0]-W/2,y0=c[1]-H/2,fu=clamp(Math.round(x.fuego??2),0,3),cu=x.cuchara||'metal';s+=`<rect x="${r2(x0)}" y="${r2(y0+0.25*U)}" width="${r2(W)}" height="${r2(H-0.25*U)}" fill="#cfe8f7" fill-opacity=".7"/><path d="M${r2(x0)} ${r2(y0)}V${r2(y0+H)}H${r2(x0+W)}V${r2(y0)}" stroke="#444" stroke-width="3" fill="none"/>`;
+  for(let k=0;k<fu;k++)s+=hFlame([c[0]+(k-(fu-1)/2)*0.6*U,c[1]+H/2+0.95*U],0.5+0.12*fu);const cf=p=>tcol(100-70*clamp((p[1]-y0)/H,0,1),20,100);
+  if(fu)s+=hLoop(loopPath(c[0]-W/4,c[1]+0.15*U,W/2-0.35*U,H-0.7*U,0.45*U),t*fu/2,cf,6,true)+hLoop(loopPath(c[0]+W/4,c[1]+0.15*U,W/2-0.35*U,H-0.7*U,0.45*U),t*fu/2,cf,6,false);
+  const sa=[x0+W*0.78,y0+H*0.75],sb=[x0+W+1.6*U,y0-1.6*U],N=12;for(let i=0;i<N;i++){const a=add(sa,mul(sub(sb,sa),i/N)),b=add(sa,mul(sub(sb,sa),(i+1)/N));const Ts=fu?(cu==='metal'?95-75*i/N:20+75*Math.exp(-i/N/0.12)):20;s+=`<path d="M${P(a)}L${P(b)}" stroke="${tcol(Ts,20,100)}" stroke-width="5" stroke-linecap="round"/>`}
+  const hand=[x0-2.3*U,c[1]+0.9*U];if(fu)s+=hWavy([x0-0.6*U,c[1]+H/2+0.6*U],hand,'#e8642c',1.6)+hWavy([x0-0.6*U,c[1]+H/2+0.95*U],add(hand,[0,0.5*U]),'#e8642c',1.6);
+  s+=`<path d="M${r2(hand[0]-0.9*U)} ${r2(hand[1]-0.1*U)}h${r2(0.6*U)}c4 -6 14 -8 16 0v${r2(0.55*U)}c-6 6 -14 4 -16 0h-${r2(0.6*U)}z" fill="#f2d3b5" stroke="#9a6b4a"/>`;
+  if(x.lab){s+=wl('Conducción',[sb[0]+0.2*U,sb[1]-fs*0.3],fs*0.95,'#d43c3c',false,'start',true)+wl(cu==='metal'?'la cuchara de metal se calienta entera':cu==='madera'?'la cuchara de madera conduce poco':'la cuchara de plástico conduce poco',[sb[0]+0.2*U,sb[1]+fs*0.9],fs*0.75,'#555',false,'start');
+   s+=wl('Convección',[c[0],y0-fs*1.6],fs*0.95,'#2f6fde',false,'middle',true)+wl('corrientes en el agua',[c[0],y0-fs*0.5],fs*0.75,'#555',false);
+   s+=wl('Radiación',[hand[0]-0.3*U,hand[1]-1.1*U],fs*0.95,'#e8642c',false,'middle',true)+wl('calor que llega a la mano',[hand[0]-0.3*U,hand[1]+1.1*U],fs*0.75,'#555',false)}
+  break}}
+ return s}
+/* puntos de arrastre */
+function heatHandles(o){const x=hx(o),c=o.pts[0],U=GRID,H=[];const hp=(k,p)=>H.push({k:'H:'+k,p,t:'r'});
+ if(x.kind==='conduccion')hp('px',[c[0]-3.5*U+7*U*clamp(x.px,0,1),c[1]-0.35*U-1.5*U]);
+ if(x.kind==='enfriamiento'){const tm=heatTmax(o),tt=Math.min(x.t,tm),Tn=x.Ta+(x.T0-x.Ta)*Math.exp(-x.kN*tt),lo=Math.min(x.Ta,x.T0),hi=Math.max(x.Ta,x.T0);hp('t',[c[0]-1.2*U+4.8*U*tt/tm,c[1]+1.5*U-2.8*U*(Tn-lo)/((hi-lo)||1)])}
+ if(x.kind==='curva'){const {tot}=curvaSegs(x);if(tot>0)hp('t',[c[0]-4*U+8*U*Math.min(x.t,tot)/tot,c[1]+2*U])}
+ if(x.kind==='radiacion'){const objs=(Array.isArray(x.objs)&&x.objs.length?x.objs:['negra']).slice(0,5),n=objs.length,gap=n>1?Math.min(1.6*U,5.2*U/(n-1)):0,y0=c[1]-(n-1)*gap/2,ds=Array.isArray(x.ds)?x.ds:[];objs.forEach((k,j)=>hp('o'+j,[c[0]-2.5*U+clamp(ds[j]??x.d??4,1.5,10)*U,y0+j*gap-0.75*U]))}
+ if(x.kind==='conveccion'&&x.var==='habitacion'){const W=7*U,H=4*U,x0=c[0]-W/2,y0=c[1]-H/2;hp('hp',[x0+clamp(x.hpos??0.08,0.03,0.85)*W+0.45*U,y0+H-1.2*U]);hp('wp',[x0+W,y0+clamp(x.wpos??0.15,0.04,0.55)*H+0.8*U])}
+ if(x.kind==='equilibrio'){const tm=5*Math.max(5,x.tau||90);hp('t',[c[0]+0.6*U+3.6*U*Math.min(x.t,tm)/tm,c[1]+1.4*U])}
+ return H}
+function heatSetHandle(o,k,p){const x=hx(o),c=o.pts[0],U=GRID;k=k.slice(2);o.x.play=false;
+ if(k==='px')o.x.px=clamp(Math.round((p[0]-(c[0]-3.5*U))/(7*U)*40)/40,0,1);
+ if(k==='t'){if(x.kind==='enfriamiento'){const tm=heatTmax(o);o.x.t=clamp(Math.round((p[0]-(c[0]-1.2*U))/(4.8*U)*tm*10)/10,0,tm)}
+  if(x.kind==='curva'){const {tot}=curvaSegs(x);o.x.t=clamp((p[0]-(c[0]-4*U))/(8*U)*tot,0,tot)}
+  if(x.kind==='equilibrio'){const tm=5*Math.max(5,x.tau||90);o.x.t=clamp(Math.round((p[0]-(c[0]+0.6*U))/(3.6*U)*tm),0,tm)}}
+ if(k==='d')o.x.d=clamp(Math.round((c[0]-p[0])/U*4)/4,1.5,8);
+ if(k[0]==='o'&&x.kind==='radiacion'){const j=+k.slice(1),ds=[...(Array.isArray(x.ds)?x.ds:[])];while(ds.length<=j)ds.push(x.d||4);ds[j]=clamp(Math.round((p[0]-(c[0]-2.5*U))/U*4)/4,1.5,10);o.x.ds=ds}
+ if(k==='hp'){const W=7*U;o.x.hpos=clamp(Math.round((p[0]-0.45*U-(c[0]-W/2))/W*100)/100,0.03,0.85)}
+ if(k==='wp'){const H=4*U;o.x.wpos=clamp(Math.round((p[1]-0.8*U-(c[1]-H/2))/H*100)/100,0.04,0.55)}}
+/* animación */
+let SIMRAF=null,SIMLAST=0;
+function heatSpeed(o){const x=hx(o),tm=heatTmax(o);if(x.kind==='conveccion'&&x.var==='habitacion')return 60;return isFinite(tm)?tm/12:0.18}
+function simLoop(ts){const dtw=SIMLAST?Math.min(0.1,(ts-SIMLAST)/1000):0;SIMLAST=ts;let any=false;
+ for(const o of S.objs){if(o.type!=='heat'||!o.x.play)continue;any=true;const tm=heatTmax(o);let t=(o.x.t||0)+dtw*heatSpeed(o)*(o.x.spd||1);if(isFinite(tm)&&t>=tm){t=tm;o.x.play=false}o.x.t=t}
+ render();const el=$('#simt');if(el){const o=getObj([...sel][0]);if(o&&o.type==='heat')el.textContent=simTimeText(o)}
+ if(any)SIMRAF=requestAnimationFrame(simLoop);else{SIMRAF=null;SIMLAST=0;save();renderPanel()}}
+function simStart(){if(!SIMRAF){SIMLAST=0;SIMRAF=requestAnimationFrame(simLoop)}}
+function simTimeText(o){const x=hx(o);if(x.kind==='curva')return 'Q = '+fnum(x.t||0,1)+' kJ';if(x.kind==='enfriamiento')return 't = '+fnum(x.t||0,1)+' min';if(x.kind==='conveccion'||x.kind==='mecanismos')return x.play?'en movimiento':'detenido';return 't = '+fTime(x.t||0)}
+/* galería */
+const HPICK=[['mecanismos',{}],['conduccion',{}],['conduccion',{mat:'madera',L:5,end:'fijo'},'Conducción en madera'],['comparar',{}],['conveccion',{var:'olla'},'Convección en una olla'],['conveccion',{var:'habitacion'},'Convección en una habitación'],['conveccion',{var:'brisa',dia:true},'Brisa marina (día)'],['conveccion',{var:'brisa',dia:false},'Brisa terrestre (noche)'],['radiacion',{}],['equilibrio',{}],['enfriamiento',{}],['curva',{}]];
+function openHeat(){const card=([k,ex,nm],i)=>{const o={id:'th'+i,type:'heat',pts:[[0,0]],fs:15,s:{c:'#d43c3c',w:2},x:{kind:k,lab:false,frm:false,vals:false,...ex}};o.x.t=isFinite(heatTmax(o))?heatTmax(o)*0.5:0.2;
+  return `<button data-hk="${k}" data-hx='${esc(JSON.stringify(ex))}'><svg viewBox="-260 -170 520 340" aria-hidden="true"><g>${drawHeat(o)}</g></svg>${esc(nm||HKINDS[k])}</button>`};
+ $('#hp-list').innerHTML=HPICK.map(card).join('');openModal('m-heat');requestAnimationFrame(()=>document.querySelectorAll('#hp-list svg').forEach(sv=>{try{const b=sv.firstElementChild.getBBox(),pd=8;sv.setAttribute('viewBox',`${r2(b.x-pd)} ${r2(b.y-pd)} ${r2(b.width+2*pd)} ${r2(b.height+2*pd)}`)}catch(e){}}))}
+
+$('#ce-list').addEventListener('click',e=>{const b=e.target.closest('button[data-ce]');if(b)insertCircEx(b.dataset.ce)});
+$('#hp-list').addEventListener('click',e=>{const b=e.target.closest('button[data-hk]');if(!b)return;let ex={};try{ex=JSON.parse(b.dataset.hx||'{}')}catch(err){}
+ const st=GRID*S.settings.step,vc=[(svg.clientWidth/2-view.tx)/view.z,(svg.clientHeight/2-view.ty)/view.z],c=[Math.round(vc[0]/st)*st,Math.round(vc[1]/st)*st];
+ const o=make('heat',[c]);o.pts=[c];o.x={kind:b.dataset.hk,...ex,t:0,play:false};$('#m-heat').hidden=true;setTool('select');commitNew(o);toast((HKINDS[b.dataset.hk]||'Simulación')+' insertada · presiona Reproducir en el panel')});
 /* ---------- editor de ecuaciones ---------- */
 const EQ_PAL={
  'Estructuras':[['a/b','(‸)/()','Fracción'],['xⁿ','^(‸)','Potencia'],['xₙ','_(‸)','Subíndice'],['√x','√(‸)','Raíz cuadrada'],['ⁿ√x','√(‸&)','Raíz n-ésima: índice & radicando'],['( )','(‸)','Paréntesis'],['[ ]','[‸]','Corchetes'],['|x|','abs(‸)','Valor absoluto'],['Vector','vec(‸)','Vector con flecha: vec(F)'],['Barra','bar(‸)','Barra encima (promedio, segmento)'],['∫','int_(‸)^() ','Integral'],['∑','sum_(‸)^() ','Sumatoria'],['lim','lim_(‸->) ','Límite'],['(▦)','(mat(‸&@&))','Matriz 2×2'],['{ ⋮','cases(‸@)','Sistema de ecuaciones'],['(n k)','binom(‸&)','Combinatoria'],['Texto','"‸"','Texto normal (sin cursiva)'],['x°','°','Grados']],
@@ -2830,6 +3274,9 @@ function setTool(t){
  if(t==='bodies'){openBodies();return}
  if(t==='wphen'){openWphen();return}
  if(t==='reflx'){openReflPresets();return}
+ if(t==='heat'){openHeat();return}
+ if(t==='circex'){openCircEx();return}
+ if(t==='csim'){S.settings.csim=!S.settings.csim;CSTATE.clear();render();save();toast(S.settings.csim?'Simulación de circuitos activada: verás corrientes y voltajes en el esquema':'Simulación de circuitos desactivada');return}
  if(draft){draft=null;mode=null}tool=t;snapMark=null;
  document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
  svg.className.baseVal=t==='select'?'m-select':t==='pan'?'m-pan':t==='ink'?'m-ink':t==='eraser'?'m-eraser':'';updHint();render();updPolybar();updSmartbar();updPenbar();if(t!=='eraser')erCursor(null);
@@ -2851,7 +3298,7 @@ const F={
 const row=(...a)=>`<div class="row">${a.join('')}</div>`;
 const LABHINT='<p class="tip">Subíndice <code>v_0</code> · exponente <code>x^2</code> · griegas <code>\\alpha</code> <code>\\theta</code> <code>\\Delta</code> · <code>\\cdot</code> da ·</p>';
 function extraFields(o){
- const x=o.x;
+ const x=o.x,CR='<div class="sec"><b>Mediciones</b><div id="circread"></div></div>';
  switch(o.type){
   case 'segment':return F.sel('Marcas de congruencia','x.ticks',x.ticks,[[0,'Ninguna'],[1,'|'],[2,'||'],[3,'|||']],1)+F.bool('Puntos en los extremos','x.dots',x.dots);
   case 'line':case 'ray':return F.num('Prolongación','x.ext',x.ext,10,0,400);
@@ -2918,6 +3365,24 @@ function extraFields(o){
   case 'angle':return F.bool('Mostrar medida','x.val',x.val)+row(F.num('Radio del arco','x.r',x.r,2,6,200),F.sel('Arcos','x.arcs',x.arcs,[[1,'1'],[2,'2'],[3,'3']],1))+F.bool('Marca de ángulo recto (90°)','x.sq',x.sq)+F.bool('Dibujar los lados','x.arms',x.arms)+F.bool('Medir el ángulo exterior','x.reflex',x.reflex);
   case 'dim':return F.num('Separación de la cota','x.off',x.off,2,-300,300)+'<p class="tip">Si dejas la etiqueta vacía, la cota muestra la medida.</p>';
   case 'text':return F.bool('Flecha de vector encima','x.over',x.over);
+  case 'heat':{const w=hx(o),k=w.kind;let h=F.sel('Simulación','x.kind',k,Object.entries(HKINDS));
+   h+=`<div class="simbar"><button class="btn pri" data-act="simplay">${w.play?'⏸ Pausa':'▶ Reproducir'}</button><button class="btn" data-act="simreset">↺ Reiniciar</button><span id="simt">${simTimeText(o)}</span></div>`+F.sel('Velocidad','x.spd',w.spd,[[0.25,'× 0,25'],[0.5,'× 0,5'],[1,'× 1'],[2,'× 2'],[4,'× 4']],1);
+   const N=(l,p,st,mn,mx)=>F.num(l,'x.'+p,w[p],st,mn,mx),B=(l,p)=>F.bool(l,'x.'+p,w[p]);
+   switch(k){
+    case 'conduccion':h+=F.sel('Material','x.mat',w.mat,Object.entries(HMAT).map(([a,b])=>[a,b[0]+' (k = '+b[1]+' W/m·K)']))+row(N('Largo L (cm)','L',1,1,200),N('Sección A (cm²)','A',0.5,0.1,100))+row(N('T₁ caliente (°C)','T1',1,-50,1000),N('T₂ (°C)','T2',1,-50,1000))+F.sel('Extremo derecho','x.end',w.end,[['fijo','A temperatura fija T₂'],['aislado','Aislado (no pierde calor)']])+N('Temperatura inicial de la barra (°C)','Ta',1,-50,1000)+'<p class="tip">Arrastra el termómetro a lo largo de la barra. La barra está aislada por los costados.</p>';break;
+    case 'comparar':{const rods=Array.isArray(w.rods)?w.rods:[];h+=rods.map((r,i)=>`<div class="lrow">${F.sel('Barra '+(i+1),'x.rods.'+i,r,Object.entries(HMAT).map(([a,b])=>[a,b[0]]))}<button class="btn sm" data-act="hlist" data-key="rods" data-op="del" data-i="${i}" title="Quitar">✕</button></div>`).join('')+(rods.length<6?'<div class="acts"><button class="btn" data-act="hlist" data-key="rods" data-op="add">＋ Agregar barra</button></div>':'')+row(N('Largo de las barras (cm)','Lr',5,5,100),N('Fuente caliente (°C)','Th',1,30,500))+row(N('Cera se derrite a (°C)','Tm',1,25,300),N('Ambiente (°C)','Ta',1,-20,50))+'<p class="tip">Tachuelas pegadas con cera repartidas a lo largo de cada barra. Las barras pierden calor al aire por los costados.</p>';break}
+    case 'conveccion':h+=F.sel('Situación','x.var',w.var,[['olla','Agua en una olla'],['habitacion','Aire en una habitación'],['brisa','Brisas costeras']]);
+     if(w.var==='olla')h+=F.sel('Fuego','x.fuego',w.fuego,[[0,'Apagado'],[1,'Bajo'],[2,'Medio'],[3,'Alto']],1);
+     else if(w.var==='habitacion')h+=B('Estufa encendida','hon')+row(N('T de la estufa (°C)','Thh',1,20,300),N('T exterior (°C)','Text',1,-30,40))+F.sel('Ventana','x.win',w.win,[['cerrada','Cerrada'],['abierta','Abierta']])+N('T inicial de la habitación (°C)','Tr0',1,-20,40)+'<p class="tip">Arrastra la estufa por el piso y la ventana por la pared. La temperatura de la habitación cambia con el tiempo.</p>';
+     else h+=B('Día (desactívalo para la noche)','dia');break;
+    case 'radiacion':{const ob=Array.isArray(w.objs)?w.objs:[],ab=Array.isArray(w.abs)?w.abs:[];h+=F.sel('Fuente','x.src',w.src,[['sol','Sol'],['estufa','Estufa'],['ampolleta','Ampolleta']])+N('Potencia de la fuente (× normal)','pw',0.25,0.25,5);
+     h+=ob.map((k,i)=>`<div class="lsec"><div class="lrow">${F.sel('Objeto '+(i+1),'x.objs.'+i,k,Object.entries(RCAT).map(([a,b])=>[a,b[0]]))}<button class="btn sm" data-act="hlist" data-key="objs" data-op="del" data-i="${i}" title="Quitar">✕</button></div>${row(F.num('Absorbe (0 a 1)','x.abs.'+i,ab[i]??(RCAT[k]||RCAT.negra)[1],0.05,0,1),F.num('Distancia (cuadros)','x.ds.'+i,(w.ds||[])[i]??4,0.25,1.5,10))}</div>`).join('')+(ob.length<5?'<div class="acts"><button class="btn" data-act="hlist" data-key="objs" data-op="add">＋ Agregar objeto</button></div>':'')+N('Temperatura ambiente (°C)','Ta',1,-20,50)+'<p class="tip">Arrastra cada objeto para acercarlo o alejarlo de la fuente: la intensidad varía como 1/d².</p>';break}
+    case 'mecanismos':h+=F.sel('Cuchara','x.cuchara',w.cuchara,[['metal','Metal'],['madera','Madera'],['plastico','Plástico']])+F.sel('Fuego','x.fuego',w.fuego,[[0,'Apagado'],[1,'Bajo'],[2,'Medio'],[3,'Alto']],1);break;
+    case 'equilibrio':{const so=Object.entries(HSUB).map(([a,b])=>[a,b[0]+' (c = '+b[1]+')']);h+=row(F.sel('Cuerpo 1','x.s1',w.s1,so),N('m₁ (kg)','m1',0.05,0.01,100))+N('T₁ (°C)','T1e',1,-50,1000)+row(F.sel('Cuerpo 2','x.s2',w.s2,so),N('m₂ (kg)','m2',0.05,0.01,100))+N('T₂ (°C)','T2e',1,-50,1000)+N('Rapidez del intercambio τ (s)','tau',5,5,3600)+'<p class="tip">c en J/(kg·°C). Un τ mayor significa un contacto que conduce peor. Arrastra el cursor del gráfico para ver otro instante.</p>';break}
+    case 'enfriamiento':h+=F.sel('Recipiente','x.cup',w.cup,Object.entries(CUPK).map(([a,b])=>[a,b[0]+' (k ≈ '+b[1]+')']))+row(N('T₀ inicial (°C)','T0',1,-50,1000),N('T ambiente (°C)','Ta',1,-50,100))+N('Constante de enfriamiento k (1/min)','kN',0.005,0.001,1)+B('Comparar con otro recipiente','cmp')+(w.cmp?F.sel('Segundo recipiente','x.cup2',w.cup2,Object.entries(CUPK).map(([a,b])=>[a,b[0]])):'')+'<p class="tip">Arrastra el punto morado sobre la curva para ver la temperatura en otro instante.</p>';break;
+    case 'curva':h+=N('Masa de agua (kg)','mw',0.1,0.01,100)+row(N('T inicial (°C)','Ti',1,-100,99),N('T final (°C)','Tfin',1,-99,300))+'<p class="tip">c hielo = 2,1 · c agua = 4,186 · c vapor = 2,01 kJ/(kg·°C) · L fusión = 334 · L vaporización = 2260 kJ/kg. Arrastra el punto para recorrer la curva.</p>';break;}
+   if(k!=='conveccion'&&k!=='mecanismos')h+=F.num(k==='curva'?'Calor entregado Q (kJ)':k==='enfriamiento'?'Tiempo t (min)':'Tiempo t (s)','x.t',Math.round((w.t||0)*10)/10,1,0);
+   return h+B('Rótulos','lab')+B('Fórmulas','frm')+B('Valores','vals')}
   case 'refl':{const m=matOf(o);return F.sel('Material','x.mat',o.x.mat||'concreto',Object.entries(MATS).map(([k,v])=>[k,(v[0]==='sonido'?'Sonido · ':v[0]==='luz'?'Luz · ':'')+v[1]+(k==='personal'?'':' ('+Math.round(v[2]*100)+' %)')]))+F.num('Proporción que se refleja R (0 a 1)','x.R',reflR(o),0.05,0,1)+F.bool('Mostrar R junto a la superficie','x.showR',o.x.showR)+`<p class="tip">${m[3]?'Esta superficie además difunde parte de lo reflejado en muchas direcciones (líneas punteadas).':m[4]?'Esta superficie refleja poco y deja pasar el resto de la onda.':'La onda reflejada sale con el mismo ángulo con que llega (θᵢ = θᵣ) y con R veces su intensidad.'} Ambas caras reflejan. Une los extremos de varias superficies para formar cajas o salas.</p>`}
   case 'emit':{const g=emx(o);return F.sel('Tipo de onda','x.med',g.med,[['luz','Luz (electromagnética)'],['sonido','Sonido (mecánica)']])+F.sel('Forma','x.mode',g.mode,[['rayo','Un rayo'],['haz','Haz de rayos paralelos'],['abanico','Abanico (fuente puntual)']])+(g.mode!=='rayo'?row(F.num('Cantidad de rayos','x.n',g.n,1,2,40),g.mode==='haz'?F.num('Ancho del haz (cuadros)','x.w',g.w,0.25,0.25,20):F.num('Apertura (°)','x.spread',g.spread,5,5,360)):'')+row(F.num('Máximo de reflexiones','x.maxb',g.maxb,1,0,80),F.num('Recorrido total (cuadros)','x.len',g.len,5,2,400))+F.num('Largo del rayo que escapa (cuadros)','x.esc',g.esc,0.5,1,60)+F.bool('Flechas de dirección','x.arrows',g.arrows)+F.bool('Intensidad en cada tramo (%)','x.pct',g.pct)+F.bool('Ángulos en las reflexiones','x.angs',g.angs)+(g.med==='sonido'?F.bool('Frentes de onda','x.fr',g.fr):'')+'<p class="tip">Arrastra el círculo de la fuente para moverla y el otro para cambiar la dirección. El grosor y la opacidad del rayo muestran cuánta onda queda después de cada reflexión.</p>'}
   case 'homot':{const g=gx(o);return F.num('Razón k','x.k',g.k,0.25,-5,5)+'<p class="tip">k &gt; 1 amplía · 0 &lt; k &lt; 1 reduce · k negativo: homotecia inversa (la imagen queda al otro lado de O).</p>'+(()=>{const fig=g.fig==='img'?'img':String(g.P.length);return F.sel('Figura','x.fig',fig,[['3','Triángulo'],['4','Cuadrilátero'],['5','Pentágono'],['img','Imagen propia…']])+(fig==='img'?`<div class="acts"><button class="btn pri" data-act="homimg">${g.img?'Cambiar imagen':'Elegir imagen'}</button></div><p class="tip">Arrastra la esquina superior izquierda para mover la imagen y la inferior derecha para cambiar su tamaño.</p>`:'')})()+F.bool('Homotecia vectorial (OA′ = k · OA)','x.vec',g.vec)+F.bool('Coordenadas de los puntos','x.coords',g.coords)+'<p class="tip">Las coordenadas se miden desde el origen del plano cartesiano si hay uno en la hoja; si no, desde el origen de la cuadrícula.</p>'+F.text('Nombres de los vértices','x.names',g.names)+F.color('Color de la imagen','x.c2',g.c2)+(g.vec?'':F.bool('Rayos desde el centro O','x.rays',g.rays))+F.bool('Razón y relación','x.info',g.info)+F.bool('Medidas','x.vals',g.vals)+'<p class="tip">Arrastra O, los vértices de la figura o el vértice A′ de la imagen (cambia k).</p>'}
@@ -2940,8 +3405,25 @@ function extraFields(o){
   case 'wave':return row(F.num('Ciclos','x.cyc',x.cyc,0.25,0.25,30),F.num('Amplitud','x.amp',x.amp,2,0,300))+F.num('Desfase (°)','x.phase',x.phase,15)+F.bool('Línea de equilibrio','x.axis',x.axis);
   case 'lens':return F.sel('Tipo','x.kind',x.kind,[['conv','Convergente'],['div','Divergente']])+F.num('Distancia focal (cuadros, 0 = ocultar)','x.f',x.f,0.5,0,40)+F.bool('Eje óptico','x.ax',x.ax);
   case 'charge':return row(F.sel('Signo','x.sign',x.sign,[['+','Positiva (+)'],['-','Negativa (−)']]),F.num('Radio','x.r',x.r,1,6,60));
-  case 'resistor':return F.sel('Símbolo','x.style',x.style,[['zig','Zigzag'],['rect','Rectángulo']]);
-  case 'meter':return F.sel('Tipo','x.letter',x.letter,[['A','Amperímetro (A)'],['V','Voltímetro (V)'],['G','Galvanómetro (G)']]);
+  case 'resistor':return F.sel('Símbolo','x.style',x.style,[['zig','Zigzag'],['rect','Rectángulo']])+F.num('Resistencia R (Ω)','x.R',x.R??100,1,0.1)+CR;
+  case 'meter':return F.sel('Tipo','x.letter',x.letter,[['A','Amperímetro (A)'],['V','Voltímetro (V)'],['G','Galvanómetro (G)']])+CR;
+  case 'battery':return row(F.num('Voltaje (V)','x.V',x.V??9,0.5,0,1000),F.num('Resist. interna (Ω)','x.r',x.r??0.1,0.1,0.001))+'<p class="tip">El polo + es la línea larga.</p>'+CR;
+  case 'bulb':return row(F.num('Resistencia (Ω)','x.R',x.R??12,1,0.1),F.num('Potencia nominal (W)','x.Pn',x.Pn??12,0.5,0.1))+'<p class="tip">El brillo depende de la potencia que disipa (P = I·V).</p>'+CR;
+  case 'capacitor':return F.num('Capacidad C (µF)','x.C',x.C??100,10,0.001)+'<div class="acts"><button class="btn" data-act="capreset">Descargar condensador</button></div>'+CR;
+  case 'switch':return F.bool('Cerrado (deja pasar la corriente)','x.on',!!x.on)+'<p class="tip">Doble clic sobre el interruptor también lo abre o cierra.</p>'+CR;
+  case 'diode':return F.bool('Es un LED','x.led',!!x.led)+(x.led?F.sel('Color','x.col',x.col||'rojo',Object.entries(LEDC).map(([k,v])=>[k,v[0]+' ('+fnum(v[2],1)+' V)'])):'')+'<p class="tip">Conduce solo de ánodo (triángulo) a cátodo (barra).</p>'+CR;
+  case 'npn':return F.num('Ganancia β (h<sub>FE</sub>)','x.beta',x.beta??200,10,10,1000)+'<p class="tip">B = base, C = colector, E = emisor. Una pequeña corriente de base controla una corriente de colector hasta β veces mayor.</p>'+CR;
+  case 'bboard':return '<p class="tip">Cada columna de 5 agujeros (a–e y f–j) está conectada por dentro. Las filas rojas (+) y azules (−) de los bordes están conectadas a lo largo. Al mover la protoboard se mueven también sus componentes.</p><div class="acts"><button class="btn" data-act="circex">Ver ejemplos de circuitos</button></div>';
+  case 'bbwire':return F.sel('Color del cable','x.col',x.col||'rojo',Object.keys(WCOL_).map(k=>[k,k[0].toUpperCase()+k.slice(1)]))+CR;
+  case 'bbres':return F.sel('Resistencia','x.R',x.R??220,[10,47,100,220,330,470,680,1000,2200,4700,10000,22000,47000,100000,1000000].map(v=>[v,fR(v)]),1)+F.num('Otro valor (Ω)','x.R',x.R??220,1,1)+'<p class="tip">Las bandas de color cambian con el valor.</p>'+CR;
+  case 'bbled':return F.sel('Color','x.col',x.col||'rojo',Object.entries(LEDC).map(([k,v])=>[k,v[0]+' ('+fnum(v[2],1)+' V)']))+(x.burnt?'<p class="tip" style="color:#d43c3c"><b>Este LED se quemó.</b> Pon una resistencia en serie y cámbialo.</p><div class="acts"><button class="btn pri" data-act="ledfix">Cambiar por un LED nuevo</button></div>':'<p class="tip">Funciona bien con unos 20 mA; sobre 45 mA se quema.</p>')+CR;
+  case 'bbdio':return '<p class="tip">Diodo de silicio (1N4148): conduce desde unos 0,6 V, solo de ánodo a cátodo (franja).</p>'+CR;
+  case 'bbcap':return F.sel('Capacidad','x.C',x.C??100,[1,10,47,100,220,470,1000,2200].map(v=>[v,v+' µF']),1)+'<div class="acts"><button class="btn" data-act="capreset">Descargar condensador</button></div>'+F.sel('Velocidad del tiempo','g.cspd',S.settings.cspd||1,[[0.1,'× 0,1 (lento)'],[0.25,'× 0,25'],[1,'× 1 (real)'],[4,'× 4'],[10,'× 10']],1)+'<p class="tip">La pata + es la larga. τ = R·C es el tiempo de carga característico.</p>'+CR;
+  case 'bbsw':return F.bool('Encendido','x.on',!!x.on)+'<p class="tip">Doble clic sobre el interruptor también lo cambia.</p>'+CR;
+  case 'bbpot':return F.sel('Valor total','x.R',x.R??10000,[1000,5000,10000,50000,100000].map(v=>[v,fR(v)]),1)+`<label class="fld"><span>Posición de la perilla: ${Math.round((x.pos??0.5)*100)} %</span><input type="range" data-p="x.pos" data-t="n" min="0" max="1" step="0.01" value="${x.pos??0.5}"></label><p class="tip">Patas: extremo 1 – cursor (centro) – extremo 2.</p>`+CR;
+  case 'bbnpn':return F.num('Ganancia β (h<sub>FE</sub>)','x.beta',x.beta??200,10,10,1000)+F.bool('Mostrar región de trabajo','x.info',x.info!==false)+'<p class="tip">Patas (mirando la cara plana): E – B – C. En corte no conduce; en saturación actúa como interruptor cerrado.</p>'+CR;
+  case 'bbbat':return row(F.num('Voltaje (V)','x.V',x.V??9,0.5,0,60),F.num('Resist. interna (Ω)','x.r',x.r??0.1,0.1,0.001))+'<p class="tip">Arrastra los extremos de los cables rojo (+) y negro (−) a los rieles o agujeros.</p>'+CR;
+  case 'bbmeter':return F.sel('Modo','x.mode',x.mode||'V',[['V','Voltímetro (en paralelo)'],['A','Amperímetro (en serie)']])+'<p class="tip">Voltímetro: pon las puntas en los dos extremos del componente. Amperímetro: abre el circuito y pon el medidor en el camino de la corriente.</p>'+CR;
  }
  return '';
 }
@@ -2999,6 +3481,12 @@ function applyField(path,val,rerender){
   if(path==='x.kind'&&(o.type==='mover'||o.type==='body')){o.x.h=o.x.w*ASP(o);o.s.fill='none'}
   if(path==='x.w'&&(o.type==='mover'||o.type==='body')){o.x.h=o.x.w*ASP(o)}
   if(path==='x.kind'&&o.type==='vector'&&VKIND[val]&&VKIND[val][1]){o.s.c=VKIND[val][1];rerender=true}
+  if(o.type==='heat'&&path==='x.kind'){o.x.t=0;o.x.play=false;rerender=true}
+  if(['x.led','x.on','x.mode','x.letter','x.pos'].includes(path)&&isCirc(o))rerender=path!=='x.pos'?true:rerender;
+  if(o.type==='heat'&&path==='x.cup'&&CUPK[val]){o.x.kN=CUPK[val][1];rerender=true}
+  if(o.type==='heat'&&/^x\.objs\.\d+$/.test(path)){const i=+path.split('.')[2];if(Array.isArray(o.x.abs))o.x.abs[i]=null;rerender=true}
+  if(o.type==='heat'&&['x.var','x.win','x.hon','x.cmp','x.src'].includes(path))rerender=true;
+  if(o.type==='heat'&&['x.mat','x.L','x.T1','x.T2','x.end','x.Ta','x.Th','x.var'].includes(path)&&o.x.kind!=='equilibrio'&&o.x.kind!=='enfriamiento'&&o.x.kind!=='curva'){}
   if(o.type==='refl'&&path==='x.mat'){delete o.x.R;rerender=true}
   if(o.type==='emit'&&path==='x.med'){o.s.c=val==='sonido'?'#2f6fde':'#d43c3c';rerender=true}
   if(o.type==='homot'&&path==='x.fig'){if(val==='img'){if(!o.x.img){homImgId=o.id;setTimeout(()=>imgInput.click(),0)}}else{const n=+val;o.x.P=n===4?[[1.5,-0.6],[3,-0.4],[3.2,1],[1.4,1]]:n===5?[[1.6,-0.7],[2.8,-0.9],[3.5,0.3],[2.6,1.3],[1.4,0.8]]:[[1.5,-0.5],[3,0.3],[1.8,1.4]]}rerender=true}
@@ -3019,6 +3507,9 @@ panel.addEventListener('click',e=>{
  const a=b.dataset.act;if(!a)return;
  if(a==='del')delSel();else if(a==='dup')duplicate();else if(a==='front')zorder(true);else if(a==='back')zorder(false);
  else if(a==='align'){const o=getObj([...sel][0]);if(o)alignBlock(o)}
+ else if(a==='ledfix'){const o=getObj([...sel][0]);if(o){pushHist();delete o.x.burnt;renderPanel();render();save()}}
+ else if(a==='capreset'){const o=getObj([...sel][0]);if(o){CSTATE.delete(o.id);render()}}
+ else if(a==='circex')openCircEx();
  else if(a==='rotl')editRotate(-15);else if(a==='rotr')editRotate(15);else if(a==='fliph')editFlip('h');else if(a==='flipv')editFlip('v');
  else if(a==='tf'){const o=getObj([...sel][0]);if(!o)return;['a','b','c'].forEach(k=>{const el=$('#tf-'+k);if(el)TF[k]=parseFloat(String(el.value).replace(',','.'))||0});const res=applyTransform(o,TF.k,TF);pushHist();S.objs.push(...res);sel=new Set(res.map(q=>q.id));renderPanel();render();save();toast('Imagen creada · se mueve junto con sus elementos auxiliares')}
  else if(a==='group'){groupSel(true)}else if(a==='ungroup'){groupSel(false)}
@@ -3027,6 +3518,9 @@ panel.addEventListener('click',e=>{
  else if(a==='optimg'){optImgId=[...sel][0];replaceId=null;imgInput.click()}
  else if(a==='eqedit'){const q=getObj([...sel][0]);if(q)eqOpen(q)}
  else if(a==='eqword'){const q=getObj([...sel][0]);if(q&&q.x.tex)eqCopyWord(q.x.tex)}
+ else if(a==='hlist'){const q=getObj([...sel][0]);if(q&&q.type==='heat'){const w=hx(q),key=b.dataset.key,i=+b.dataset.i;pushHist();let arr=[...(Array.isArray(q.x[key])?q.x[key]:w[key])];if(b.dataset.op==='add'){arr.push(key==='rods'?'acero':'roja');if(key==='objs'){const ds=[...(q.x.ds||w.ds)];while(ds.length<arr.length)ds.push(4);q.x.ds=ds}}else if(arr.length>1){arr.splice(i,1);if(key==='objs'){['ds','abs'].forEach(kk=>{if(Array.isArray(q.x[kk]))q.x[kk]=q.x[kk].filter((_,j)=>j!==i)})}}q.x[key]=arr;render();save();renderPanel()}}
+ else if(a==='simplay'){const q=getObj([...sel][0]);if(q&&q.type==='heat'){const tm=heatTmax(q);q.x.play=!q.x.play;if(q.x.play&&isFinite(tm)&&(q.x.t||0)>=tm-1e-6)q.x.t=0;if(q.x.play)simStart();else save();renderPanel()}}
+ else if(a==='simreset'){const q=getObj([...sel][0]);if(q&&q.type==='heat'){pushHist();q.x.t=0;q.x.play=false;render();save();renderPanel()}}
  else if(a==='homimg'){homImgId=[...sel][0];replaceId=null;optImgId=null;texImgId=null;imgInput.click()}
  else if(a==='teximg'){texImgId=[...sel][0];replaceId=null;optImgId=null;imgInput.click()}
  else if(a==='imgratio'){const o=getObj([...sel][0]);if(o){pushHist();const w=Math.abs(o.pts[1][0]-o.pts[0][0]);o.pts[1]=[o.pts[0][0]+w,o.pts[0][1]+w/o.x.ar];render();save()}}
