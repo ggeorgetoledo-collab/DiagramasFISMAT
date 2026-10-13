@@ -75,7 +75,7 @@ button{font-family:inherit}
 .themes button.on i{border-color:var(--fg);box-shadow:inset 0 0 0 2px var(--surface)}
 
 /* Zona principal */
-main{flex:1;min-height:0;display:grid;grid-template-columns:214px minmax(0,1fr) 296px}
+main{flex:1;min-height:0;display:grid;--tw:214px;--pw:296px;grid-template-columns:var(--tw) minmax(0,1fr) var(--pw)}
 .tools{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:6px 10px 16px}
 .tg h4{margin:12px 4px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
 .tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
@@ -155,6 +155,15 @@ body.board .polybar{top:118px}
 #cv.m-ink{cursor:crosshair}#cv.m-eraser{cursor:cell}
 @media (max-width:1500px){.penbar .pbg:first-child button span{display:none}.penbar button{min-width:32px}}
 @media (max-width:760px){.modesw button span{display:none}.modesw button{padding:6px 9px}.penbar{top:auto;bottom:10px}.penbar button span{display:none}.penbar button{min-width:32px;padding:6px}}
+.tg h4[data-fold]{display:flex;align-items:center;justify-content:space-between;cursor:pointer;border-radius:6px;padding:3px 4px;margin:10px 0 4px;user-select:none}
+.tg h4[data-fold]:hover{background:var(--primary-weak);color:var(--primary)}
+.tg h4 i{font-style:normal;font-size:12px;transition:transform .15s}
+.tg.fold h4 i{transform:rotate(-90deg)}.tg.fold .tgrid{display:none}
+.tfold{display:flex;gap:4px;padding:6px 0 0}.tfold button{flex:1;border:1px solid var(--border);background:var(--surface);color:var(--muted);font:inherit;font-size:11px;font-weight:700;border-radius:999px;padding:4px 6px;cursor:pointer}.tfold button:hover{color:var(--primary);border-color:var(--primary)}
+.sidetab{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:18px;height:56px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-weight:900;font-size:15px;cursor:pointer;padding:0;box-shadow:var(--shadow)}
+.sidetab:hover{color:var(--primary)}.sidetab.l{left:0;border-left:0;border-radius:0 10px 10px 0}.sidetab.r{right:0;border-right:0;border-radius:10px 0 0 10px}
+@media (min-width:761px){body.notools main{--tw:0px}body.notools .tools{visibility:hidden;padding:0;border:0;overflow:hidden;min-width:0}body.nopanel main{--pw:0px}body.nopanel .panel{visibility:hidden;padding:0;border:0;overflow:hidden;min-width:0}}
+@media (max-width:760px){.sidetab,.tfold{display:none}.tg h4[data-fold]{display:none}.tg.fold .tgrid{display:grid}}
 /* Ventanas */
 .eqbox{width:min(760px,100%)}
 .eqpal{margin-bottom:10px}
@@ -235,7 +244,7 @@ body.board .polybar{top:118px}
 .drawbar button{border:1px solid var(--border);background:var(--surface);color:var(--fg);font-weight:800;border-radius:999px;padding:7px 14px;cursor:pointer;font-size:13px;box-shadow:var(--shadow);pointer-events:auto}
 .drawbar button.pri{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
 @media (max-width:1000px) and (min-width:761px){
-  main{grid-template-columns:190px minmax(0,1fr) 260px}
+  main{--tw:190px;--pw:260px}
   .hbtn .lbl{display:none}
 }
 /* Versión móvil: lienzo a pantalla completa, herramientas abajo por categoría y propiedades en una hoja deslizable */
@@ -335,6 +344,8 @@ body.board .polybar{top:118px}
     </svg>
     <div class="selbar" id="selbar" hidden></div>
     <button class="drivewarn" id="drivewarn" hidden></button>
+    <button class="sidetab l" id="st-tools" title="Ocultar o mostrar las herramientas" aria-label="Ocultar o mostrar las herramientas">‹</button>
+    <button class="sidetab r" id="st-panel" title="Ocultar o mostrar el panel de propiedades" aria-label="Ocultar o mostrar el panel">›</button>
     <div class="penbar" id="penbar" hidden></div>
     <div class="polybar" id="smartbar" hidden>
       <div class="seg"><button data-sm="rec" class="on">Reconocer figuras</button><button data-sm="free">Trazo libre</button></div>
@@ -516,7 +527,7 @@ let hist=[], fut=[], editing=false, spaceDown=false;
 const pointers=new Map(); let pinch=null;
 const COARSE=matchMedia('(pointer: coarse)').matches;
 const isMobile=()=>matchMedia('(max-width:760px)').matches;
-let cat='Geometría';
+let cat='Geometría';let FOLD=new Set();try{FOLD=new Set(JSON.parse(localStorage.getItem('diagramas.plegados')||'[]'))}catch(e){}
 
 /* ---------- herramientas ---------- */
 const I={
@@ -534,6 +545,9 @@ const I={
  angle:'<path d="M4 19h16M4 19L15 5"/><path d="M11 19a7 7 0 0 0-2.4-5.3"/>',
  dim:'<path d="M4 7v11M20 7v11M4 12.5h16M4 12.5l3-2.3M4 12.5l3 2.3M20 12.5l-3-2.3M20 12.5l-3 2.3"/>',
  text:'<path d="M5 6h14M12 6v13M9 19h6"/>',
+ homot:'<path d="M3 18l6-4 2 4z"/><path d="M3 18l15-9 4 9z" opacity=".55"/><circle cx="3" cy="18" r="1.4"/>',
+ tales:'<path d="M3 20L21 6M3 20l18 0"/><path d="M9 15.3V20M15 10.6V20"/>',
+ euclides:'<path d="M2 19h20L8 7z"/><path d="M8 7v12"/><path d="M8 16h2v3"/>',
  tbox:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 12h10M7 15h6"/>',
  eq:'<path d="M2.5 13.5l2-1 3 6.5 4-14.5h10"/><path d="M14 10l5 6M19 10l-5 6"/>',
  vector:'<path d="M4 19L19 5M19 5h-7M19 5v7"/>',
@@ -583,14 +597,14 @@ const I={
  axes:'<path d="M5 21V3M3 19h18M5 3L3.2 5.6M5 3l1.8 2.6M21 19l-2.6-1.8M21 19l-2.6 1.8"/><path d="M7 17c4-1 7-6 12-12"/>'
 };
 const TOOLS=[
- {g:'Geometría',items:[['point','Punto'],['segment','Segmento'],['line','Recta'],['ray','Rayo'],['circle','Circunfer.'],['rect','Rectángulo'],['smart','A mano'],['polygon','Polígono'],['shapes','Biblioteca'],['angle','Ángulo'],['dim','Cota'],['text','Texto'],['tbox','Cuadro texto']]},
+ {g:'Geometría',items:[['point','Punto'],['segment','Segmento'],['line','Recta'],['ray','Rayo'],['circle','Circunfer.'],['rect','Rectángulo'],['smart','A mano'],['polygon','Polígono'],['shapes','Biblioteca'],['angle','Ángulo'],['dim','Cota'],['text','Texto'],['tbox','Cuadro texto'],['homot','Homotecia'],['tales','Tales'],['euclides','Euclides']]},
  {g:'Matemática',items:[['eq','Ecuación'],['solid','Cuerpos 3D'],['numline','Recta num.'],['circgeo','Circ. y ángulos'],['axes','Plano cart.'],['tree','Árbol prob.'],['stat','Estadística']]},
  {g:'Mecánica',items:[['vector','Vector'],['frame','Sist. ref.'],['block','Bloque'],['cart','Carro'],['movers','Móviles'],['bodies','Objetos'],['ball','Esfera'],['incline','Plano incl.'],['rope','Cuerda'],['ground','Superficie'],['spring','Resorte'],['pulley','Polea'],['mgraph','Gráf. mov.'],['proj','Proyectil'],['circmov','Mov. circular'],['coaster','Montaña rusa'],['pendulum','Péndulo'],['fluid','Fluidos']]},
  {g:'Ondas y luz',items:[['wphen','Fenómenos'],['wave','Onda'],['fronts','Frentes'],['refr','Refracción'],['optlens','Lente'],['optmirror','Espejo']]},
  {g:'Electricidad',items:[['charge','Carga'],['efield','Campo eléctr.'],['magnet','Imán'],['wirefield','Corriente'],['wire','Cable'],['battery','Pila'],['resistor','Resistencia'],['bulb','Ampolleta'],['capacitor','Condensador'],['switch','Interruptor'],['meter','Medidor']]},
  {g:'Universo',items:[['orbit','Órbita'],['earth','Tierra']]}
 ];
-const CLICKS={eq:1,solid:1,numline:1,circgeo:1,tree:1,stat:1,mgraph:1,proj:1,circmov:1,fronts:1,refr:1,coaster:1,pendulum:1,fluid:1,efield:1,magnet:1,wirefield:1,orbit:1,earth:1,frame:1,optlens:1,optmirror:1,point:1,text:1,axes:1,charge:1,polygon:'poly',wire:'poly',angle:3};
+const CLICKS={homot:1,tales:1,euclides:1,eq:1,solid:1,numline:1,circgeo:1,tree:1,stat:1,mgraph:1,proj:1,circmov:1,fronts:1,refr:1,coaster:1,pendulum:1,fluid:1,efield:1,magnet:1,wirefield:1,orbit:1,earth:1,frame:1,optlens:1,optmirror:1,point:1,text:1,axes:1,charge:1,polygon:'poly',wire:'poly',angle:3};
 const HINTS={
  image:'',
  select:'Clic para seleccionar · arrastra para mover · arrastra en un espacio vacío para seleccionar varios · Alt desactiva el ajuste',
@@ -601,6 +615,9 @@ const HINTS={
  wire:'Clic en cada esquina del cable · doble clic o Enter para terminar',
  angle:'Clic en un punto del primer lado, luego en el vértice y luego en el segundo lado',
  eq:'Toca donde quieres la ecuación y escríbela como en Word: (a+b)/2, x^2, v_0, √(x), vec(F)…',
+ homot:'Haz clic para insertar una homotecia · arrastra O, los vértices y A′ para cambiar el centro, la figura y la razón k',
+ tales:'Haz clic para insertar el teorema de Tales · arrastra A, B, las rectas y las paralelas',
+ euclides:'Haz clic para insertar el teorema de Euclides · arrastra C para mover la altura y B para cambiar la hipotenusa',
  tbox:'Arrastra para dibujar el cuadro (o haz clic una vez) y escribe el texto en el panel',
  ink:'Dibuja con el mouse, el dedo o el lápiz · con dos dedos mueves y haces zoom',
  eraser:'Pasa la goma sobre los trazos a mano para borrarlos · los diagramas se borran seleccionándolos',
@@ -608,7 +625,7 @@ const HINTS={
  axes:'Clic donde quieres el origen del plano',
  charge:'Clic para ubicar la carga'
 };
-const TYPES={ink:{n:'Trazo a mano'},tbox:{n:'Cuadro de texto',fill:1},eq:{n:'Ecuación'},wphen:{n:'Fenómeno ondulatorio'},
+const TYPES={homot:{n:'Homotecia'},tales:{n:'Teorema de Tales'},euclides:{n:'Teorema de Euclides'},ink:{n:'Trazo a mano'},tbox:{n:'Cuadro de texto',fill:1},eq:{n:'Ecuación'},wphen:{n:'Fenómeno ondulatorio'},
  point:{n:'Punto',lab:1},segment:{n:'Segmento',lab:1,arr:1,meas:1},line:{n:'Recta',lab:1,arr:1},ray:{n:'Rayo',lab:1,arr:1},
  vector:{n:'Vector',lab:1,arr:1,meas:1},circle:{n:'Circunferencia',lab:1,fill:1,meas:1},rect:{n:'Rectángulo',lab:1,fill:1,meas:1},
  polygon:{n:'Polígono',lab:1,fill:1,meas:1,arr:1},angle:{n:'Ángulo',lab:1,fill:1},dim:{n:'Cota',lab:1},text:{n:'Texto',lab:1},
@@ -638,6 +655,7 @@ function make(type,pts){
   case 'mgraph': o.x={kind:'v',data:'0; 0\n4; 8\n10; 8\n14; 0',xl:'t (s)',yl:'',w:380,h:220,area:false,guides:true,dots:true,title:''}; o.fs=14; break;
   case 'proj': o.x={v0:20,ang:45,g:9.8,h0:0,W:420,vecs:4,comps:false,H:true,R:true,info:true}; o.fs=15; break;
   case 'circmov': o.x={r:3,n:4,dir:'anti',v:true,a:true,center:true,traj:true,rad:true,off:0}; break;
+  case 'homot': case 'tales': case 'euclides': o.x={}; o.fs=16; o.label=''; break;
   case 'wphen': o.x={kind:'reflexion',med:'sonido'}; o.fs=15; o.s.c='#2f6fde'; o.s.w=2; break;
   case 'fronts': o.x={kind:'circ',n:5,sp:1,len:6,rays:true,lam:true}; o.s.c='#2f6fde'; o.s.w=1.6; break;
   case 'refr': o.x={n1:1,n2:1.5,ang:40,L:4,refl:true,lab1:'aire',lab2:'vidrio',vals:true,info:true}; o.fs=16; break;
@@ -791,7 +809,7 @@ function labelBase(o){
   case 'body': return o.pts[0];
   case 'mover': return add(o.pts[0],rot([0,-o.x.h/2-10-o.fs*0.5],o.x.rot));
   case 'frame': return o.pts[0];
-  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth': return o.pts[0];
+  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'homot':case 'tales':case 'euclides':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth': return o.pts[0];
   case 'block': case 'cart': return o.type==='cart'?add(p[0],rot([0,-o.x.h/2-14-o.fs*0.5],o.x.rot)):p[0];
   case 'ball': {const r=dist(p[0],p[1]);return BOOK()?add(p[0],[r+10,-r*0.7]):p[0]}
   case 'image': return p[0];
@@ -906,7 +924,7 @@ function draw(o){
   case 'body':s+=drawBody(o);break;
   case 'frame':s+=drawFrame(o);break;
   case 'solid':s+=drawSolid(o);break;case 'numline':s+=drawNumline(o);break;case 'circgeo':s+=drawCircgeo(o);break;case 'tree':s+=drawTree(o);break;case 'stat':s+=drawStat(o);break;
-  case 'mgraph':s+=drawMgraph(o);break;case 'proj':s+=drawProj(o);break;case 'circmov':s+=drawCircmov(o);break;case 'fronts':s+=drawFronts(o);break;case 'wphen':s+=drawWphen(o);break;case 'refr':s+=drawRefr(o);break;
+  case 'mgraph':s+=drawMgraph(o);break;case 'proj':s+=drawProj(o);break;case 'circmov':s+=drawCircmov(o);break;case 'fronts':s+=drawFronts(o);break;case 'wphen':s+=drawWphen(o);break;case 'homot':s+=drawHomot(o);break;case 'tales':s+=drawTales(o);break;case 'euclides':s+=drawEuclides(o);break;case 'refr':s+=drawRefr(o);break;
   case 'coaster':s+=drawCoaster(o);break;case 'pendulum':s+=drawPendulum(o);break;case 'fluid':s+=drawFluid(o);break;case 'efield':s+=drawEfield(o);break;case 'magnet':s+=drawMagnet(o);break;
   case 'wirefield':s+=drawWire(o);break;case 'orbit':s+=drawOrbit(o);break;case 'earth':s+=drawEarth(o);break;
   case 'ball':{const r=dist(p[0],p[1]);s+=sphere(o,p[0],r,o.s.fill!=='none'?o.s.fill:'#4f86d6');break}
@@ -1101,7 +1119,7 @@ function drawFrame(o){
 
 /* ---------- utilidades compartidas de los objetos nuevos ---------- */
 const BBC=new Map();
-const COMPLEX=['wphen','solid','numline','circgeo','tree','stat','mgraph','proj','circmov','fronts','refr','coaster','pendulum','fluid','efield','magnet','wirefield','orbit','earth'];
+const COMPLEX=['homot','tales','euclides','wphen','solid','numline','circgeo','tree','stat','mgraph','proj','circmov','fronts','refr','coaster','pendulum','fluid','efield','magnet','wirefield','orbit','earth'];
 function arrowV(a,b,col,w=2){if(dist(a,b)<2)return '';const f={s:{w,c:col}},k=head(b,a,f);return `<path d="M${P(a)}L${P(k.back)}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`+k.svg}
 const lbl=(t,p,fs,col,it,anchor,bold)=>mtext(t,p[0],p[1],{fs,c:col||'#1f1f1f',it:!!it,anchor,bold});
 const dline=(a,b,col,w=1.2,da='5 4')=>`<path d="M${P(a)}L${P(b)}" stroke="${col||'#555'}" stroke-width="${w}" stroke-dasharray="${da}" fill="none"/>`;
@@ -1598,7 +1616,7 @@ function outline(o){
   case 'polygon': return {d:`M${p.map(P).join('L')}${o.x.closed?'Z':''}`,area:o.x.closed};
   case 'angle': return {d:`M${p.map(P).join('L')}`,area:0};
   case 'block': case 'cart': case 'mover': case 'body': return {d:`M${blockCorners(o).map(P).join('L')}Z`,area:1};
-  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth':{const b=BBC.get(o.id),c=o.pts[0];if(!b)return {d:`M${r2(c[0]-20)} ${r2(c[1]-20)}h40v40h-40Z`,area:1};return {d:`M${r2(b.x-4)} ${r2(b.y-4)}h${r2(b.width+8)}v${r2(b.height+8)}h${r2(-b.width-8)}Z`,area:1}}
+  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'homot':case 'tales':case 'euclides':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth':{const b=BBC.get(o.id),c=o.pts[0];if(!b)return {d:`M${r2(c[0]-20)} ${r2(c[1]-20)}h40v40h-40Z`,area:1};return {d:`M${r2(b.x-4)} ${r2(b.y-4)}h${r2(b.width+8)}v${r2(b.height+8)}h${r2(-b.width-8)}Z`,area:1}}
   case 'frame': {const c=o.pts[0],x=o.x,ux=rot([x.fx?-1:1,0],x.rot||0),uy=rot([0,x.fy?1:-1],x.rot||0);return {d:`M${P(add(c,mul(ux,x.mode==='y'?0:x.Lx*GRID)))}L${P(c)}L${P(add(c,mul(uy,x.mode==='x'?0:x.Ly*GRID)))}`,area:0}}
   case 'incline': return {d:`M${inclinePts(o).map(P).join('L')}Z`,area:1};
   case 'axes': {const {X,Y}=axesFns(o),x=o.x,ox=X(clamp(0,x.xmin,x.xmax)),oy=Y(clamp(0,x.ymin,x.ymax));return {d:`M${r2(X(x.xmin))} ${r2(oy)}H${r2(X(x.xmax)+18)}M${r2(ox)} ${r2(Y(x.ymin))}V${r2(Y(x.ymax)-18)}`,area:0}}
@@ -1617,6 +1635,7 @@ function handles(o){
  else if(o.type==='pulley'){H.push({k:0,p:o.pts[0]},{k:1,p:o.pts[1]});if(o.x.sup){const r=dist(o.pts[0],o.pts[1]);H.push({k:'R',p:add(o.pts[0],mul(rot([0,-1],o.x.rot||0),r+(o.x.slen||30))),t:'r'})}}
  else if(o.type==='block'||o.type==='cart'||o.type==='mover'||o.type==='body'){const c=o.pts[0];H.push({k:0,p:c},{k:'S',p:add(c,rot([o.x.w/2,o.x.h/2],o.x.rot))})}
  else if(o.type==='ink'){}
+ else if(o.type==='homot'||o.type==='tales'||o.type==='euclides')H.push(...geoHandles(o));
  else if(o.type==='axes'||o.type==='text'||o.type==='eq'||o.type==='point'||o.type==='charge'||o.type==='optics'||COMPLEX.includes(o.type))H.push({k:0,p:o.pts[0]});
  else o.pts.forEach((p,i)=>H.push({k:i,p}));
  if(o.type==='optics'){H.push({k:'T',p:[o.pts[0][0]-toPx(Math.max(0.01,o.x.do)),o.pts[0][1]-toPx(o.x.ho)]})}
@@ -1632,6 +1651,7 @@ function hasLabel(o){if(o.type==='text'||o.type==='axes'||o.type==='tbox'||o.typ
 function setHandle(o,k,p,e){
  if(k==='L'){o.lo=sub(p,labelBase(o));return}
  if(typeof k==='string'&&k.startsWith('W:')&&o.type==='wphen'){wSetHandle(o,k,p,e);return}
+ if(typeof k==='string'&&k.startsWith('G:')){geoSetHandle(o,k,p,e);return}
  if(typeof k==='string'&&k.startsWith('C:')&&o.type==='circgeo'){const d=sub(p,o.pts[0]);let a=Math.round(Math.atan2(-d[1],d[0])*180/Math.PI);if(a<0)a+=360;if(S.settings.snap&&!(e&&e.altKey))a=Math.round(a/5)*5;const nm=k.slice(2),pts=cgPts(o);pts[nm]=a;o.x.pts=Object.entries(pts).map(([n,v])=>n+': '+v).join('; ');return}
  if(k==='Rr'&&o.type==='circgeo'){o.x.r=Math.max(0.5,Math.round(dist(p,o.pts[0])/GRID*2)/2);return}
  if(k==='A'&&o.type==='refr'){const d=sub(o.pts[0],p);let a=Math.atan2(d[0],d[1])*180/Math.PI;o.x.ang=clamp(Math.round(a),0,89);return}
@@ -1665,7 +1685,7 @@ function keyPts(o){
   case 'incline': return inclinePts(o);
   case 'block': case 'cart': case 'mover': case 'body': return [p[0],...blockCorners(o)];
   case 'frame': return [p[0]];
-  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth': return [p[0]];
+  case 'solid':case 'numline':case 'circgeo':case 'tree':case 'stat':case 'mgraph':case 'proj':case 'circmov':case 'fronts':case 'wphen':case 'homot':case 'tales':case 'euclides':case 'refr':case 'coaster':case 'pendulum':case 'fluid':case 'efield':case 'magnet':case 'wirefield':case 'orbit':case 'earth': return [p[0]];
   default: return p;
  }
 }
@@ -1781,7 +1801,7 @@ svg.addEventListener('pointermove',e=>{
  if(mode==='rot'){let a=(Math.atan2(raw[1]-drag.C[1],raw[0]-drag.C[0])-drag.a0)*180/Math.PI;a=S.settings.snap&&!e.altKey?Math.round(a/15)*15:Math.round(a);if(!drag.pushed){if(!a)return;pushHist();drag.pushed=true}
   for(const [id,cp] of drag.snap){const i=S.objs.findIndex(q=>q.id===id);if(i>=0)S.objs[i]=clone(cp)}rotateObjs([...drag.snap.keys()].map(getObj).filter(Boolean),a,drag.C);$('#coord').textContent='Giro: '+normA(a)+'°';render();return}
  if(mode==='handle'){const o=getObj(drag.id);if(!o)return;if(!drag.pushed){pushHist();drag.pushed=true}
-  let q=raw;if(!['L','R','O','A','Rr'].includes(drag.k)&&!String(drag.k).startsWith('C:')&&!String(drag.k).startsWith('W:')){const sp=snapPt(raw,new Set([o.id]),e);q=sp.p;snapMark=sp.k?sp.p:null}
+  let q=raw;if(!['L','R','O','A','Rr'].includes(drag.k)&&!String(drag.k).startsWith('C:')&&!String(drag.k).startsWith('W:')&&!(String(drag.k).startsWith('G:')&&!/^G:(O|v\d+)$/.test(drag.k))){const sp=snapPt(raw,new Set([o.id]),e);q=sp.p;snapMark=sp.k?sp.p:null}
   if(isTR(o)&&o.r)q=rotAround(q,piv(o),-o.r);
   setHandle(o,drag.k,q,e);render();return}
  if(mode==='move'){const tgt=add(drag.ref,sub(raw,drag.start));const sp=snapPt(tgt,sel,e);const d=sub(sp.p,drag.ref);
@@ -2345,6 +2365,89 @@ function insertObjs(list,name){if(!list||!list.length){toast('Ese diagrama está
 
 const CHALKF='<filter id="chalkf" filterUnits="userSpaceOnUse" x="-100000" y="-100000" width="200000" height="200000" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"/><feColorMatrix type="hueRotate" values="180"/></filter>';
 const chalkF=o=>boardDark()&&o.type!=='ink'&&o.type!=='image'?' filter="url(#chalkf)"':'';
+/* ---------- teoremas de geometría: homotecia, Tales y Euclides ---------- */
+const GDEF={
+ homot:{k:2,P:[[1.5,-0.5],[3,0.3],[1.8,1.4]],rays:true,info:true,vals:true,names:'A, B, C, D, E',c2:'#6C4EE3'},
+ tales:{mode:'tri',a1:-18,a2:22,tA:3,tB:6,pd:100,lens:true,info:true,vals:true,c2:'#2f6fde'},
+ euclides:{c:7,t:0.36,semi:false,lens:true,info:true,vals:true,fillT:true}};
+const gx=o=>({...GDEF[o.type],...o.x});
+const gv=px=>fnum(px/GRID*S.settings.per,S.settings.dec);
+const gdir=a=>[Math.cos(a*Math.PI/180),Math.sin(a*Math.PI/180)];
+const gDot=(p,col)=>CIRC(p,3.2,`fill="${col}"`);
+function gLab(t,p,ctr,fs,col,dist0){const u=unit(sub(p,ctr));const q=add(p,mul(u,dist0??fs*0.95));return wl(t,q,fs,col||'#1f1f1f',true)}
+function gParMark(a,b,col){const m=mid(a,b),u=unit(sub(b,a)),n=perp(u),k=6;return `<path d="M${P(add(sub(m,mul(u,k)),mul(n,k)))}L${P(m)}L${P(sub(sub(m,mul(u,k)),mul(n,k)))}" stroke="${col}" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`}
+function gSegLab(t,a,b,side,fs,col){const m=mid(a,b);let n=perp(unit(sub(b,a)));if(dot(n,sub(m,side))<0)n=mul(n,-1);return wl(t,add(m,mul(n,fs*0.95)),fs*0.85,col||'#333',true)}
+/* homotecia */
+function homotGeom(o){const x=gx(o),O=o.pts[0],U=GRID,Pd=x.P.map(d=>mul(d,U)),k=x.k;return {x,O,Pd,P:Pd.map(d=>add(O,d)),Q:Pd.map(d=>add(O,mul(d,k))),k}}
+function drawHomot(o){const {x,O,P:Pp,Q,k}=homotGeom(o),col=o.s.c,c2=x.c2,fs=o.fs,U=GRID,names=String(x.names||'').split(/[,;]\s*|\s+/).filter(Boolean);let s='';
+ const nm=i=>names[i]||String.fromCharCode(65+i);
+ if(x.rays)Pp.forEach((p,i)=>{const q=Q[i];if(k>0){const far=dist(O,p)>dist(O,q)?p:q;s+=dline(O,add(far,mul(unit(sub(far,O)),0.7*U)),'#8a8a8a',1.1,'6 4')}else{s+=dline(add(q,mul(unit(sub(q,O)),0.6*U)),add(p,mul(unit(sub(p,O)),0.6*U)),'#8a8a8a',1.1,'6 4')}});
+ const poly=(pts,cc,op)=>`<path d="M${pts.map(q=>P(q)).join('L')}Z" fill="${cc}" fill-opacity="${op}" stroke="${cc}" stroke-width="${o.s.w}" stroke-linejoin="round"/>`;
+ s+=poly(Pp,col,0.1)+poly(Q,c2,0.08);
+ const cP=centroid(Pp),cQ=centroid(Q);Pp.forEach((p,i)=>{s+=gDot(p,col)+gLab(nm(i),p,cP,fs,col)});Q.forEach((q,i)=>{s+=gDot(q,c2)+gLab(nm(i)+'′',q,cQ,fs,c2)});
+ s+=CIRC(O,4.2,`fill="#d43c3c"`)+wl('O',add(O,[-fs*0.8,-fs*0.6]),fs,'#d43c3c',true);
+ if(x.info){const yb=Math.max(...Pp.concat(Q,[O]).map(p=>p[1]))+fs*1.6,xc=(Math.min(...Pp.concat(Q,[O]).map(p=>p[0]))+Math.max(...Pp.concat(Q,[O]).map(p=>p[0])))/2;
+  const t=`k = ${fnum(k,2)}`+(x.vals?`     O${nm(0)}′ = k · O${nm(0)}`:'')+(k<0?'   (homotecia inversa)':Math.abs(k)<1?'   (reducción)':Math.abs(k)>1?'   (ampliación)':'');s+=wl(t,[xc,yb],fs*0.9,'#222',false);
+  if(x.vals){const r1=dist(O,Pp[0]),r2_=dist(O,Q[0]);s+=wl(`O${nm(0)} = ${gv(r1)}     O${nm(0)}′ = ${gv(r2_)}     ${nm(0)}′${nm(1)}′ = |k| · ${nm(0)}${nm(1)} = ${gv(dist(Q[0],Q[1]))}`,[xc,yb+fs*1.35],fs*0.8,'#444',false)}}
+ return s}
+/* Tales */
+function talesGeom(o){const x=gx(o),O=o.pts[0],U=GRID,u1=gdir(x.a1),u2=gdir(x.a2),d=gdir(x.pd),cr=x.mode==='cruz';
+ const tA=x.tA*U,tB=(cr?-Math.abs(x.tB):x.tB)*U,A=add(O,mul(u1,tA)),B=add(O,mul(u1,tB));
+ const inter=p=>{const den=u2[0]*d[1]-u2[1]*d[0];if(Math.abs(den)<0.08)return null;const w=sub(p,O);const sC=(w[0]*d[1]-w[1]*d[0])/den;return add(O,mul(u2,sC))};
+ return {x,O,u1,u2,d,A,B,A2:inter(A),B2:inter(B),cr,tA,tB}}
+function drawTales(o){const g=talesGeom(o),{x,O,u1,u2,A,B,A2,B2,cr}=g,col=o.s.c,c2=x.c2,fs=o.fs,U=GRID;let s='';
+ if(!A2||!B2)return s+wl('Las paralelas no pueden ser paralelas a una de las rectas',O,fs*0.85,'#d43c3c');
+ const ext=(p,from,k)=>add(p,mul(unit(sub(p,from)),k));
+ if(cr){s+=sline(ext(B,A,0.9*U),ext(A,B,0.9*U),col,o.s.w)+sline(ext(B2,A2,0.9*U),ext(A2,B2,0.9*U),col,o.s.w)}
+ else{const f1=dist(O,A)>dist(O,B)?A:B,f2=dist(O,A2)>dist(O,B2)?A2:B2;s+=sline(O,ext(f1,O,0.9*U),col,o.s.w)+sline(O,ext(f2,O,0.9*U),col,o.s.w)}
+ [[A,A2],[B,B2]].forEach(([p,q])=>{s+=sline(ext(p,q,0.7*U),ext(q,p,0.7*U),c2,o.s.w)+gParMark(p,q,c2)});
+ const ctr=centroid([O,A,B,A2,B2]);
+ s+=gDot(O,col)+gLab('O',O,mid(add(O,u1),add(O,u2)),fs,'#1f1f1f',-fs*1.0);
+ [[A,'A'],[B,'B']].forEach(([p,t])=>{s+=gDot(p,col);let n=perp(u1);if(dot(n,sub(p,add(O,mul(u2,dot(sub(p,O),u2)))))<0)n=mul(n,-1);s+=wl(t,add(p,mul(n,fs*0.95)),fs,'#1f1f1f',true)});
+ [[A2,'A′'],[B2,'B′']].forEach(([p,t])=>{s+=gDot(p,col);let n=perp(u2);if(dot(n,sub(p,add(O,mul(u1,dot(sub(p,O),u1)))))<0)n=mul(n,-1);s+=wl(t,add(p,mul(n,fs*0.95)),fs,'#1f1f1f',true)});
+ if(x.lens){const L=(a,b,side)=>gSegLab(gv(dist(a,b)),a,b,side,fs,'#555');
+  if(cr){s+=L(O,A,A2)+L(O,B,B2)+L(O,A2,A)+L(O,B2,B)}else{s+=L(O,A,A2)+L(A,B,B2)+L(O,A2,A)+L(A2,B2,B)}}
+ if(x.info){const ys=[O,A,B,A2,B2].map(p=>p[1]),yb=Math.max(...ys)+0.9*U+fs*0.8,xs=[O,A,B,A2,B2].map(p=>p[0]),xc=(Math.min(...xs)+Math.max(...xs))/2;
+  const t=cr?'OA / OB = OA′ / OB′ = AA′ / BB′':'OA / AB = OA′ / A′B′';s+=wl(t,[xc,yb],fs*0.9,'#222',false);
+  if(x.vals){const v=cr?`${gv(dist(O,A))} / ${gv(dist(O,B))} = ${gv(dist(O,A2))} / ${gv(dist(O,B2))} = ${fnum(dist(O,A)/dist(O,B),2)}`:`${gv(dist(O,A))} / ${gv(dist(A,B))} = ${gv(dist(O,A2))} / ${gv(dist(A2,B2))} = ${fnum(dist(O,A)/dist(A,B),2)}`;s+=wl(v,[xc,yb+fs*1.35],fs*0.8,'#444',false)}}
+ return s}
+/* Euclides */
+function eucGeom(o){const x=gx(o),A=o.pts[0],U=GRID,cL=Math.max(2,x.c)*U,t=clamp(x.t,0.06,0.94),B=add(A,[cL,0]),D=add(A,[t*cL,0]),h=Math.sqrt(t*(1-t))*cL,C=add(D,[0,-h]);return {x,A,B,C,D,cL,t,h}}
+function drawEuclides(o){const {x,A,B,C,D,cL,h}=eucGeom(o),col=o.s.c,fs=o.fs,U=GRID;let s='';
+ if(x.semi){const r=cL/2,M=mid(A,B);s+=`<path d="M${P(A)}A${r2(r)} ${r2(r)} 0 0 1 ${P(B)}" stroke="#9a9a9a" stroke-width="1.1" stroke-dasharray="5 4" fill="none"/>`+CIRC(M,2.5,'fill="#9a9a9a"')}
+ s+=`<path d="M${P(A)}L${P(B)}L${P(C)}Z" fill="${x.fillT?col:'none'}" fill-opacity=".07" stroke="${col}" stroke-width="${o.s.w}" stroke-linejoin="round"/>`;
+ s+=sline(C,D,'#d43c3c',Math.max(1.2,o.s.w*0.8));
+ const sq=(V,u1,u2,k)=>`<path d="M${P(add(V,mul(u1,k)))}L${P(add(V,add(mul(u1,k),mul(u2,k))))}L${P(add(V,mul(u2,k)))}" stroke="${col}" stroke-width="1.2" fill="none"/>`;
+ s+=sq(C,unit(sub(A,C)),unit(sub(B,C)),11)+sq(D,[1,0],[0,-1],9);
+ s+=gDot(A,col)+gDot(B,col)+gDot(C,col)+gDot(D,'#d43c3c');
+ s+=wl('A',add(A,[-fs*0.8,fs*0.2]),fs,'#1f1f1f',true)+wl('B',add(B,[fs*0.8,fs*0.2]),fs,'#1f1f1f',true)+wl('C',add(C,[0,-fs*0.85]),fs,'#1f1f1f',true)+wl('D',add(D,[fs*0.2,fs*1.0]),fs,'#d43c3c',true);
+ const ctr=centroid([A,B,C]);s+=gSegLab('a',B,C,ctr,fs*1.1,'#1f1f1f')+gSegLab('b',A,C,ctr,fs*1.1,'#1f1f1f')+wl('h',add(mid(C,D),[(x.t<0.5?-1:1)*fs*0.75,0]),fs,'#d43c3c',true);
+ const dimL=(a,b,y,t,cc)=>{const a2=[a[0],y],b2=[b[0],y];return `<path d="M${P(a2)}L${P(b2)}M${r2(a2[0])} ${r2(y-5)}v10M${r2(b2[0])} ${r2(y-5)}v10" stroke="${cc}" stroke-width="1.1" fill="none"/>`+wl(t,[(a2[0]+b2[0])/2,y+fs*0.85],fs*0.95,cc,true)};
+ const y1=A[1]+0.95*U,y2=A[1]+1.9*U;
+ s+=dimL(A,D,y1,'q'+(x.lens?' = '+gv(dist(A,D)):''),'#1e66d0')+dimL(D,B,y1,'p'+(x.lens?' = '+gv(dist(D,B)):''),'#1e66d0')+dimL(A,B,y2,'c'+(x.lens?' = '+gv(cL):''),'#333');
+ if(x.info){const yb=y2+fs*2.6,xc=mid(A,B)[0];s+=wl('h^2 = p · q          a^2 = p · c          b^2 = q · c',[xc,yb],fs*0.95,'#222',false);
+  if(x.vals){const p=dist(D,B)/GRID*S.settings.per,q=dist(A,D)/GRID*S.settings.per,c=cL/GRID*S.settings.per,dc=S.settings.dec;s+=wl(`h = ${fnum(Math.sqrt(p*q),dc)}          a = ${fnum(Math.sqrt(p*c),dc)}          b = ${fnum(Math.sqrt(q*c),dc)}`,[xc,yb+fs*1.4],fs*0.82,'#444',false)}}
+ return s}
+/* puntos de control */
+function geoHandles(o){const H=[],hp=(k,p,t)=>H.push({k:'G:'+k,p,t:t||'r'});
+ if(o.type==='homot'){const g=homotGeom(o);hp('O',g.O,'n');g.P.forEach((p,i)=>hp('v'+i,p,'n'));hp('k',g.Q[0])}
+ else if(o.type==='tales'){const g=talesGeom(o),U=GRID;H.push({k:0,p:g.O});hp('A',g.A);hp('B',g.B);hp('a1',add(g.O,mul(g.u1,(g.cr?g.tA:Math.max(g.tA,g.tB))+0.9*U)));if(g.B2)hp('a2',add(g.O,mul(unit(sub(g.cr?g.A2:(dist(g.O,g.A2)>dist(g.O,g.B2)?g.A2:g.B2),g.O)),Math.max(dist(g.O,g.A2),dist(g.O,g.B2))+0.9*U)));if(g.B2)hp('pd',add(g.B2,mul(unit(sub(g.B2,g.B)),0.7*U)))}
+ else if(o.type==='euclides'){const g=eucGeom(o);H.push({k:0,p:g.A});hp('C',g.C);hp('B',g.B)}
+ return H}
+function geoSetHandle(o,k,p,e){k=k.slice(2);const U=GRID,snap=S.settings.snap&&!(e&&e.altKey);
+ if(o.type==='homot'){const g=homotGeom(o);
+  if(k==='O'){const P_=g.P;o.pts[0]=p;o.x.P=P_.map(q=>mul(sub(q,p),1/U).map(v=>Math.round(v*1000)/1000));return}
+  if(k[0]==='v'){const i=+k.slice(1),P=clone(g.x.P);P[i]=mul(sub(p,g.O),1/U).map(v=>Math.round(v*1000)/1000);o.x.P=P;return}
+  if(k==='k'){const d=g.Pd[0],l2=dot(d,d);if(!l2)return;let kk=dot(sub(p,g.O),d)/l2;kk=snap?Math.round(kk*4)/4:Math.round(kk*20)/20;if(Math.abs(kk)<0.1)kk=kk<0?-0.1:0.1;o.x.k=clamp(kk,-5,5);return}}
+ if(o.type==='tales'){const g=talesGeom(o),v=sub(p,g.O),R=a=>snap?Math.round(a/5)*5:Math.round(a);
+  if(k==='A'){let t=dot(v,g.u1)/U;t=snap?Math.round(t*2)/2:Math.round(t*10)/10;o.x.tA=g.cr?clamp(t,0.5,20):clamp(t,0.5,Math.abs(g.x.tB)-0.5);return}
+  if(k==='B'){let t=dot(v,g.u1)/U;t=snap?Math.round(t*2)/2:Math.round(t*10)/10;o.x.tB=g.cr?clamp(-t,0.5,20):clamp(t,g.x.tA+0.5,20);return}
+  if(k==='a1'){o.x.a1=R(Math.atan2(v[1],v[0])*180/Math.PI);return}
+  if(k==='a2'){o.x.a2=R(Math.atan2(v[1],v[0])*180/Math.PI);return}
+  if(k==='pd'){const w=sub(p,g.B);o.x.pd=R(Math.atan2(w[1],w[0])*180/Math.PI);return}}
+ if(o.type==='euclides'){const g=eucGeom(o);
+  if(k==='C'){o.x.t=clamp(Math.round((p[0]-g.A[0])/g.cL*100)/100,0.06,0.94);return}
+  if(k==='B'){const c=(p[0]-g.A[0])/U;o.x.c=clamp(snap?Math.round(c*2)/2:Math.round(c*10)/10,2,20);return}}}
 /* ---------- editor de ecuaciones ---------- */
 const EQ_PAL={
  'Estructuras':[['a/b','(‸)/()','Fracción'],['xⁿ','^(‸)','Potencia'],['xₙ','_(‸)','Subíndice'],['√x','√(‸)','Raíz cuadrada'],['ⁿ√x','√(‸&)','Raíz n-ésima: índice & radicando'],['( )','(‸)','Paréntesis'],['[ ]','[‸]','Corchetes'],['|x|','abs(‸)','Valor absoluto'],['Vector','vec(‸)','Vector con flecha: vec(F)'],['Barra','bar(‸)','Barra encima (promedio, segmento)'],['∫','int_(‸)^() ','Integral'],['∑','sum_(‸)^() ','Sumatoria'],['lim','lim_(‸->) ','Límite'],['(▦)','(mat(‸&@&))','Matriz 2×2'],['{ ⋮','cases(‸@)','Sistema de ecuaciones'],['(n k)','binom(‸&)','Combinatoria'],['Texto','"‸"','Texto normal (sin cursiva)'],['x°','°','Grados']],
@@ -2693,6 +2796,9 @@ function extraFields(o){
   case 'angle':return F.bool('Mostrar medida','x.val',x.val)+row(F.num('Radio del arco','x.r',x.r,2,6,200),F.sel('Arcos','x.arcs',x.arcs,[[1,'1'],[2,'2'],[3,'3']],1))+F.bool('Marca de ángulo recto (90°)','x.sq',x.sq)+F.bool('Dibujar los lados','x.arms',x.arms)+F.bool('Medir el ángulo exterior','x.reflex',x.reflex);
   case 'dim':return F.num('Separación de la cota','x.off',x.off,2,-300,300)+'<p class="tip">Si dejas la etiqueta vacía, la cota muestra la medida.</p>';
   case 'text':return F.bool('Flecha de vector encima','x.over',x.over);
+  case 'homot':{const g=gx(o);return F.num('Razón k','x.k',g.k,0.25,-5,5)+'<p class="tip">k &gt; 1 amplía · 0 &lt; k &lt; 1 reduce · k negativo: homotecia inversa (la imagen queda al otro lado de O).</p>'+F.sel('Figura','x.nv',g.P.length,[[3,'Triángulo'],[4,'Cuadrilátero'],[5,'Pentágono']],1)+F.text('Nombres de los vértices','x.names',g.names)+F.color('Color de la imagen','x.c2',g.c2)+F.bool('Rayos desde el centro O','x.rays',g.rays)+F.bool('Razón y relación','x.info',g.info)+F.bool('Medidas','x.vals',g.vals)+'<p class="tip">Arrastra O, los vértices de la figura o el vértice A′ de la imagen (cambia k).</p>'}
+  case 'tales':{const g=gx(o);return F.sel('Configuración','x.mode',g.mode,[['tri','Rectas que se cortan en O, paralelas a un lado'],['cruz','Paralelas a ambos lados de O (en X)']])+F.color('Color de las paralelas','x.c2',g.c2)+F.bool('Medidas de los trazos','x.lens',g.lens)+F.bool('Proporción','x.info',g.info)+F.bool('Proporción con valores','x.vals',g.vals)+'<p class="tip">Arrastra A y B a lo largo de la recta, los extremos de las rectas para cambiar su ángulo y el círculo junto a B′ para girar las paralelas.</p>'}
+  case 'euclides':{const g=gx(o);return row(F.num('Hipotenusa c (cuadros)','x.c',g.c,0.5,2,20),F.num('Posición de D (q ÷ c)','x.t',g.t,0.01,0.06,0.94))+F.bool('Medidas de p, q y c','x.lens',g.lens)+F.bool('Fórmulas','x.info',g.info)+F.bool('Valores de h, a y b','x.vals',g.vals)+F.bool('Semicircunferencia (C se mueve sobre ella)','x.semi',g.semi)+F.bool('Relleno suave','x.fillT',g.fillT)+'<p class="tip">Arrastra C para mover la altura y B para cambiar la hipotenusa. Notación: p y q son las proyecciones de los catetos a y b sobre la hipotenusa.</p>'}
   case 'tbox':return row(F.sel('Alineación','x.al',x.al||'left',[['left','Izquierda'],['center','Centro'],['right','Derecha']]),F.num('Margen interior','x.pad',x.pad??10,1,0,60))+F.color('Color del texto','x.tc',x.tc||'#1f1f1f')+F.bool('Borde','x.bd',x.bd)+F.bool('Negrita','x.bold',x.bold)+F.bool('Cursiva','it',o.it)+F.num('Esquinas redondeadas','x.rad',x.rad??6,1,0,40)+'<p class="tip">El texto se ajusta solo al ancho del cuadro. Arrastra las esquinas para cambiar su tamaño.</p>';
   case 'ink':return '';
   case 'eq':return `<div class="acts"><button class="btn pri" data-act="eqedit">Editar ecuación</button><button class="btn" data-act="eqword">Copiar para Word</button></div><p class="tip">También puedes editarla con doble clic. El color se cambia en Trazo.</p>`;
@@ -2723,7 +2829,7 @@ function renderPanel(){
  const objs=[...sel].map(getObj).filter(Boolean);
  if(!objs.length){el.innerHTML=settingsPanel();return}
  if(objs.length>1){const grp=objs.every(q=>q.g&&q.g===objs[0].g);el.innerHTML=`<h3>${objs.length} objetos${grp?' (grupo)':''}</h3><p class="sub">Los cambios se aplican a todos los seleccionados.</p><div class="acts" style="margin-bottom:6px">${grp?'<button class="btn" data-act="ungroup">Desagrupar</button>':'<button class="btn pri" data-act="group">Agrupar</button>'}</div>${strokeFields(objs[0],1)}${actions()}`;return}
- const o=objs[0],T=TYPES[o.type];let h=`<h3>${T.n}</h3><p class="sub">${o.type==='eq'?'Doble clic o «Editar ecuación» para cambiarla':o.type==='wphen'?'Arrastra los círculos morados para mover la fuente y ajústalo en Opciones':o.type==='tbox'?'Doble clic para escribir · arrastra las esquinas para cambiar el tamaño':o.type==='ink'?'Trazo a mano: muévelo, gíralo o cambia su color':o.type==='polygon'&&!o.x.closed?'Línea poligonal o cable':'Arrastra los puntos para editar la forma'}</p>`;
+ const o=objs[0],T=TYPES[o.type];let h=`<h3>${T.n}</h3><p class="sub">${o.type==='eq'?'Doble clic o «Editar ecuación» para cambiarla':['homot','tales','euclides'].includes(o.type)?'Arrastra los círculos para cambiar la figura · ajústalo en Opciones':o.type==='wphen'?'Arrastra los círculos morados para mover la fuente y ajústalo en Opciones':o.type==='tbox'?'Doble clic para escribir · arrastra las esquinas para cambiar el tamaño':o.type==='ink'?'Trazo a mano: muévelo, gíralo o cambia su color':o.type==='polygon'&&!o.x.closed?'Línea poligonal o cable':'Arrastra los puntos para editar la forma'}</p>`;
  if(o.type==='tbox')h+=`<div class="sec"><b>Texto</b>${F.area('Contenido','label',o.label,'Escribe aquí')}${LABHINT}</div>`;
  if(T.lab){h+=`<div class="sec"><b>${o.type==='text'?'Texto':'Etiqueta'}</b>${F.text(o.type==='text'?'Contenido':'Etiqueta','label',o.label,o.type==='angle'?'α (opcional)':'')}${row(F.num('Tamaño de letra','fs',o.fs,1,6,96),`<div style="flex:0 0 auto;padding-bottom:8px">${F.bool('Cursiva','it',o.it)}</div>`)}${LABHINT}${hasLabel(o)?'<p class="tip">El rombo morado mueve la etiqueta.</p>':''}</div>`}
  else if(o.type!=='image'&&o.type!=='ink')h+=`<div class="sec">${row(o.type==='eq'?F.num('Tamaño de la ecuación','fs',o.fs,1,8,160):F.num('Tamaño de letra','fs',o.fs,1,6,48))}</div>`;
@@ -2769,6 +2875,7 @@ function applyField(path,val,rerender){
   if(path==='x.kind'&&(o.type==='mover'||o.type==='body')){o.x.h=o.x.w*ASP(o);o.s.fill='none'}
   if(path==='x.w'&&(o.type==='mover'||o.type==='body')){o.x.h=o.x.w*ASP(o)}
   if(path==='x.kind'&&o.type==='vector'&&VKIND[val]&&VKIND[val][1]){o.s.c=VKIND[val][1];rerender=true}
+  if(o.type==='homot'&&path==='x.nv'){const n=+val;o.x.P=n===4?[[1.5,-0.6],[3,-0.4],[3.2,1],[1.4,1]]:n===5?[[1.6,-0.7],[2.8,-0.9],[3.5,0.3],[2.6,1.3],[1.4,0.8]]:[[1.5,-0.5],[3,0.3],[1.8,1.4]];delete o.x.nv;rerender=true}
   if(o.type==='wphen'&&(path==='x.kind'||path==='x.med')){const meds=WKINDS[o.x.kind][1];if(!meds.includes(o.x.med))o.x.med=meds[0];if(Object.values(WCOL).includes(o.s.c))o.s.c=WCOL[o.x.med];if(path==='x.med')delete o.x.m2;rerender=true}}
  render();save();if(rerender)renderPanel();
  const oc=$('#optcalc');if(oc&&sel.size===1){const o=getObj([...sel][0]);if(o&&o.type==='optics')oc.innerHTML=optCalcHTML(o)}
@@ -2803,8 +2910,10 @@ $('#editbar').addEventListener('click',e=>{const b=e.target.closest('.eb');if(!b
  if(k==='sel')setTool('select');else if(k==='pan')setTool('pan');else if(k==='undo')undo();else if(k==='redo')redo();else if(k==='dup')duplicate();else if(k==='del')delSel();
  else if(k==='rotl')editRotate(-15);else if(k==='rotr')editRotate(15);else if(k==='rot90')editRotate(90);else if(k==='fliph')editFlip('h');else if(k==='flipv')editFlip('v');
  else if(k==='group')groupSel(true);else if(k==='ungroup')groupSel(false);else if(k==='front')zorder(true);else if(k==='back')zorder(false);else if(k==='image'){replaceId=null;imgInput.click()}else if(k==='props'){openSheet();updBars()}});
-$('#tools').innerHTML=`<div class="cats">${TOOLS.map(g=>`<button data-c="${g.g}" class="${g.g===cat?'on':''}">${g.g}</button>`).join('')}</div>`+TOOLS.map(g=>`<div class="tg${g.g===cat?' act':''}" data-g="${g.g}"><h4>${g.g}</h4><div class="tgrid">${g.items.map(([t,n])=>`<button class="tool${t===tool?' on':''}" data-t="${t}" title="${n}"><svg viewBox="0 0 24 24">${I[t]}</svg>${n}</button>`).join('')}</div></div>`).join('');
-$('#tools').addEventListener('click',e=>{const c=e.target.closest('.cats button');if(c){cat=c.dataset.c;document.querySelectorAll('.cats button').forEach(b=>b.classList.toggle('on',b===c));document.querySelectorAll('.tg').forEach(g=>g.classList.toggle('act',g.dataset.g===cat));return}const b=e.target.closest('.tool');if(b)setTool(b.dataset.t)});
+$('#tools').innerHTML=`<div class="cats">${TOOLS.map(g=>`<button data-c="${g.g}" class="${g.g===cat?'on':''}">${g.g}</button>`).join('')}</div>`+`<div class="tfold"><button data-fa="1">Plegar todo</button><button data-fa="0">Desplegar todo</button></div>`+TOOLS.map(g=>`<div class="tg${g.g===cat?' act':''}${FOLD.has(g.g)?' fold':''}" data-g="${g.g}"><h4 data-fold="${g.g}"><span>${g.g}</span><i>▾</i></h4><div class="tgrid">${g.items.map(([t,n])=>`<button class="tool${t===tool?' on':''}" data-t="${t}" title="${n}"><svg viewBox="0 0 24 24">${I[t]}</svg>${n}</button>`).join('')}</div></div>`).join('');
+$('#tools').addEventListener('click',e=>{const fh=e.target.closest('h4[data-fold]');if(fh){const g=fh.dataset.fold;FOLD.has(g)?FOLD.delete(g):FOLD.add(g);fh.parentElement.classList.toggle('fold',FOLD.has(g));ls.set('diagramas.plegados',JSON.stringify([...FOLD]));return}
+ const fa=e.target.closest('[data-fa]');if(fa){const on=fa.dataset.fa==='1';document.querySelectorAll('.tg').forEach(t=>{const g=t.dataset.g;on?FOLD.add(g):FOLD.delete(g);t.classList.toggle('fold',on)});ls.set('diagramas.plegados',JSON.stringify([...FOLD]));return}
+ const c=e.target.closest('.cats button');if(c){cat=c.dataset.c;document.querySelectorAll('.cats button').forEach(b=>b.classList.toggle('on',b===c));document.querySelectorAll('.tg').forEach(g=>g.classList.toggle('act',g.dataset.g===cat));return}const b=e.target.closest('.tool');if(b)setTool(b.dataset.t)});
 /* ---------- móvil: hoja de propiedades, barra de selección y barra de dibujo ---------- */
 function openSheet(){document.body.classList.add('sheet')}
 function closeSheet(){document.body.classList.remove('sheet');document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}
@@ -3021,6 +3130,11 @@ $('#b-dark').onclick=()=>{const dark=root.dataset.theme?root.dataset.theme==='da
  setTool('select');renderPanel();updLook();
  if(!loaded)loadExample(0,true);else{render();fit()}
  if(ls.get('diagramas.app.modo')==='board')switchMode('board');
+ const sideUpd=()=>{$('#st-tools').textContent=document.body.classList.contains('notools')?'›':'‹';$('#st-panel').textContent=document.body.classList.contains('nopanel')?'‹':'›'};
+ if(ls.get('diagramas.ocultos')){const v=ls.get('diagramas.ocultos');document.body.classList.toggle('notools',v.includes('t'));document.body.classList.toggle('nopanel',v.includes('p'))}sideUpd();
+ const sideTog=c=>{document.body.classList.toggle(c);ls.set('diagramas.ocultos',(document.body.classList.contains('notools')?'t':'')+(document.body.classList.contains('nopanel')?'p':''));sideUpd();requestAnimationFrame(render)};
+ $('#st-tools').onclick=()=>sideTog('notools');$('#st-panel').onclick=()=>sideTog('nopanel');
+ render();
  $('#modesw').addEventListener('click',e=>{const b=e.target.closest('button[data-m]');if(b)switchMode(b.dataset.m)});
  $('#penbar').addEventListener('click',pbClick);$('#penbar').addEventListener('change',e=>{if(e.target.id==='pb-bg'){const wasD=boardDark();BOARD.bg=e.target.value;const isD=boardDark();if(wasD!==isD){const A=isD?PAL_L:PAL_D,B=isD?PAL_D:PAL_L;BOARD.pages.forEach((pg,i)=>{(i===BOARD.cur?S.objs:pg.objs).forEach(o=>{if(o.type==='ink'&&o.x.pen!=='resaltador'){const k=A.indexOf(o.s.c);if(k>=0)o.s.c=B[k]}})})}applyBoardLook();render();saveBoard()}});
  window.addEventListener('resize',render);
