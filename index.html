@@ -134,6 +134,27 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
 .keys{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px;color:var(--muted)}
 .keys kbd{font-family:inherit;font-weight:800;color:var(--fg);background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:0 5px;font-size:11px;white-space:nowrap}
 
+.modesw{display:flex;background:rgba(255,255,255,.16);border-radius:999px;padding:3px;gap:2px;flex:none}
+.modesw button{border:0;background:none;color:inherit;font:inherit;font-weight:800;font-size:13px;padding:6px 12px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.modesw button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.modesw button.on{background:#fff;color:var(--primary)}
+.penbar{position:absolute;top:56px;left:50%;transform:translateX(-50%);z-index:4;display:flex;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:5px;max-width:calc(100% - 20px);overflow-x:auto;scrollbar-width:none}
+.penbar[hidden]{display:none!important}
+.pbg{display:flex;gap:2px;align-items:center;flex:none}.pbg+.pbg{border-left:1px solid var(--border);padding-left:6px}
+.penbar button{border:0;background:none;color:var(--fg);border-radius:10px;padding:5px 7px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;font:inherit;font-size:10.5px;font-weight:700;min-width:34px}
+.penbar button:disabled{opacity:.35;cursor:default}
+.penbar button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.penbar button.on{background:var(--primary);color:var(--on-primary)}
+.penbar button.warn{background:var(--danger);color:#fff}
+.penbar .sw{width:24px;height:24px;min-width:24px;padding:0;border-radius:50%;background:var(--c);border:2px solid var(--border)}
+.penbar .sw.on{outline:3px solid var(--primary);outline-offset:1px;background:var(--c)}
+.penbar .sz{min-width:28px;height:28px;padding:0;justify-content:center}.penbar .sz i{display:block;border-radius:50%;background:var(--fg)}.penbar .sz.on{background:var(--primary-weak)}
+.penbar select{border:1px solid var(--border);background:var(--surface);color:var(--fg);font:inherit;font-weight:700;font-size:12px;border-radius:999px;padding:5px 8px}
+.penbar .pg{font-weight:800;font-size:12px;min-width:30px;text-align:center}
+body.board .polybar{top:118px}
+#cv.m-ink{cursor:crosshair}#cv.m-eraser{cursor:cell}
+@media (max-width:1500px){.penbar .pbg:first-child button span{display:none}.penbar button{min-width:32px}}
+@media (max-width:760px){.modesw button span{display:none}.modesw button{padding:6px 9px}.penbar{top:auto;bottom:10px}.penbar button span{display:none}.penbar button{min-width:32px;padding:6px}}
 /* Ventanas */
 .eqbox{width:min(760px,100%)}
 .eqpal{margin-bottom:10px}
@@ -282,6 +303,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     <div class="logo"><svg viewBox="0 0 24 24"><path d="M3 20h18L12 4z"/><circle cx="12" cy="14" r="3"/></svg></div>
     <div><b><span class="full">Taller de </span>Diagramas</b><small>Geometría y Física para guías y pruebas</small></div>
   </div>
+  <div class="modesw" id="modesw" role="tablist" aria-label="Modo"><button data-m="diag" class="on"><svg viewBox="0 0 24 24"><path d="M3 20h18L12 4z"/></svg><span>Diagramas</span></button><button data-m="board"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M8 21l4-4 4 4M7 9c2-2 3 2 5 0s3 2 5 0"/></svg><span>Pizarra</span></button></div>
   <div class="tb">
     <button class="hbtn dk" id="b-new"><svg viewBox="0 0 24 24"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M12 11v6M9 14h6"/></svg><span class="lbl">Nuevo</span></button>
     <button class="hbtn dk" id="b-ex"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 15l5-5 4 4 3-3 4 4"/></svg><span class="lbl">Ejemplos</span></button>
@@ -302,6 +324,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     <svg id="cv" class="m-select" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <g id="imgdefs"></g>
+        <filter id="chalkf" filterUnits="userSpaceOnUse" x="-100000" y="-100000" width="200000" height="200000" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"/><feColorMatrix type="hueRotate" values="180"/></filter>
         <pattern id="gpat" patternUnits="userSpaceOnUse" width="40" height="40"><g id="gcell"></g></pattern>
       </defs>
       <g id="world">
@@ -312,6 +335,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary)
     </svg>
     <div class="selbar" id="selbar" hidden></div>
     <button class="drivewarn" id="drivewarn" hidden></button>
+    <div class="penbar" id="penbar" hidden></div>
     <div class="polybar" id="smartbar" hidden>
       <div class="seg"><button data-sm="rec" class="on">Reconocer figuras</button><button data-sm="free">Trazo libre</button></div>
       <label class="seg" style="padding:6px 12px;gap:6px;font-weight:800;font-size:13px;cursor:pointer"><input type="checkbox" id="sm-reg" checked style="accent-color:var(--primary)">Regularizar</label>
@@ -510,6 +534,7 @@ const I={
  angle:'<path d="M4 19h16M4 19L15 5"/><path d="M11 19a7 7 0 0 0-2.4-5.3"/>',
  dim:'<path d="M4 7v11M20 7v11M4 12.5h16M4 12.5l3-2.3M4 12.5l3 2.3M20 12.5l-3-2.3M20 12.5l-3 2.3"/>',
  text:'<path d="M5 6h14M12 6v13M9 19h6"/>',
+ tbox:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 12h10M7 15h6"/>',
  eq:'<path d="M2.5 13.5l2-1 3 6.5 4-14.5h10"/><path d="M14 10l5 6M19 10l-5 6"/>',
  vector:'<path d="M4 19L19 5M19 5h-7M19 5v7"/>',
  block:'<rect x="6" y="6" width="12" height="11"/><path d="M3 20h18"/>',
@@ -558,7 +583,7 @@ const I={
  axes:'<path d="M5 21V3M3 19h18M5 3L3.2 5.6M5 3l1.8 2.6M21 19l-2.6-1.8M21 19l-2.6 1.8"/><path d="M7 17c4-1 7-6 12-12"/>'
 };
 const TOOLS=[
- {g:'Geometría',items:[['point','Punto'],['segment','Segmento'],['line','Recta'],['ray','Rayo'],['circle','Circunfer.'],['rect','Rectángulo'],['smart','A mano'],['polygon','Polígono'],['shapes','Biblioteca'],['angle','Ángulo'],['dim','Cota'],['text','Texto']]},
+ {g:'Geometría',items:[['point','Punto'],['segment','Segmento'],['line','Recta'],['ray','Rayo'],['circle','Circunfer.'],['rect','Rectángulo'],['smart','A mano'],['polygon','Polígono'],['shapes','Biblioteca'],['angle','Ángulo'],['dim','Cota'],['text','Texto'],['tbox','Cuadro texto']]},
  {g:'Matemática',items:[['eq','Ecuación'],['solid','Cuerpos 3D'],['numline','Recta num.'],['circgeo','Circ. y ángulos'],['axes','Plano cart.'],['tree','Árbol prob.'],['stat','Estadística']]},
  {g:'Mecánica',items:[['vector','Vector'],['frame','Sist. ref.'],['block','Bloque'],['cart','Carro'],['movers','Móviles'],['bodies','Objetos'],['ball','Esfera'],['incline','Plano incl.'],['rope','Cuerda'],['ground','Superficie'],['spring','Resorte'],['pulley','Polea'],['mgraph','Gráf. mov.'],['proj','Proyectil'],['circmov','Mov. circular'],['coaster','Montaña rusa'],['pendulum','Péndulo'],['fluid','Fluidos']]},
  {g:'Ondas y luz',items:[['wphen','Fenómenos'],['wave','Onda'],['fronts','Frentes'],['refr','Refracción'],['optlens','Lente'],['optmirror','Espejo']]},
@@ -576,11 +601,14 @@ const HINTS={
  wire:'Clic en cada esquina del cable · doble clic o Enter para terminar',
  angle:'Clic en un punto del primer lado, luego en el vértice y luego en el segundo lado',
  eq:'Toca donde quieres la ecuación y escríbela como en Word: (a+b)/2, x^2, v_0, √(x), vec(F)…',
+ tbox:'Arrastra para dibujar el cuadro (o haz clic una vez) y escribe el texto en el panel',
+ ink:'Dibuja con el mouse, el dedo o el lápiz · con dos dedos mueves y haces zoom',
+ eraser:'Pasa la goma sobre los trazos a mano para borrarlos · los diagramas se borran seleccionándolos',
  text:'Clic donde quieres el texto · usa v_0, x^2 o \\alpha en la etiqueta',
  axes:'Clic donde quieres el origen del plano',
  charge:'Clic para ubicar la carga'
 };
-const TYPES={eq:{n:'Ecuación'},wphen:{n:'Fenómeno ondulatorio'},
+const TYPES={ink:{n:'Trazo a mano'},tbox:{n:'Cuadro de texto',fill:1},eq:{n:'Ecuación'},wphen:{n:'Fenómeno ondulatorio'},
  point:{n:'Punto',lab:1},segment:{n:'Segmento',lab:1,arr:1,meas:1},line:{n:'Recta',lab:1,arr:1},ray:{n:'Rayo',lab:1,arr:1},
  vector:{n:'Vector',lab:1,arr:1,meas:1},circle:{n:'Circunferencia',lab:1,fill:1,meas:1},rect:{n:'Rectángulo',lab:1,fill:1,meas:1},
  polygon:{n:'Polígono',lab:1,fill:1,meas:1,arr:1},angle:{n:'Ángulo',lab:1,fill:1},dim:{n:'Cota',lab:1},text:{n:'Texto',lab:1},
@@ -632,6 +660,7 @@ function make(type,pts){
   case 'angle': o.x={r:30,arcs:1,val:true,sq:true,arms:true,reflex:false}; o.s.fill='#6C4EE3'; o.s.fop=0; break;
   case 'dim': o.x={off:-28}; o.it=false; o.s.w=Math.min(st.w,1.5); o.fs=Math.round(st.fs*0.85); break;
   case 'text': o.label='Texto'; o.it=false; break;
+  case 'tbox': o.label='Escribe aquí tu texto'; o.fs=16; o.it=false; o.s.fill='#ffffff'; o.s.fop=1; o.s.w=1.4; o.s.c='#6b6b6b'; o.x={al:'left',pad:10,bd:true,bold:false,rad:6,tc:'#1f1f1f'}; break;
   case 'eq': o.x={src:'',tex:'',svg:'',vb:[0,0,0,0]}; o.fs=22; o.label=''; break;
   case 'axes': o.x={xmin:-5,xmax:5,ymin:-4,ymax:4,step:1,u:40,nums:true,lx:'x',ly:'y',funcs:'',grid:false}; o.s.w=1.6; o.fs=14; break;
   case 'block': o.x={w:80,h:60,rot:0}; o.label='m'; o.s.fill=BOOK()?'#e0a458':'#6C4EE3'; o.s.fop=0.15; break;
@@ -797,7 +826,7 @@ function drawBox(o){
  return s}
 function angleText(o){const p=o.pts;if(p.length<3)return '';const {d}=arcInfo(p[1],p[0],p[2],o.x.reflex),deg=Math.abs(d)*180/Math.PI;return o.label&&o.x.val?o.label+' = '+fDeg(deg):o.label?o.label:o.x.val?fDeg(deg):''}
 function draw(o){
- const p=o.pts,c=o.s.c,fs=o.fs;let s=(TEX_TYPES.includes(o.type)&&o.type!=='ground')?texDefs(o):'';const showLab=o.label&&o.type!=='text';
+ const p=o.pts,c=o.s.c,fs=o.fs;let s=(TEX_TYPES.includes(o.type)&&o.type!=='ground')?texDefs(o):'';const showLab=o.label&&o.type!=='text'&&o.type!=='tbox';
  switch(o.type){
   case 'point': s+=`<circle cx="${r2(p[0][0])}" cy="${r2(p[0][1])}" r="${r2(2.2+o.s.w)}" fill="${c}"/>`;break;
   case 'segment':case 'line':case 'ray':case 'vector':{
@@ -850,6 +879,8 @@ function draw(o){
    s+=arrLine(A,B,o,true,true);
    s+=txt(o.label||fLen(dist(a,b)),labelPos(o),o,{it:!!o.label&&o.it});return s}
   case 'text': s+=txt(o.label||' ',p[0],o,{over:o.x.over});break;
+  case 'ink': s+=drawInk(o);break;
+  case 'tbox': s+=drawTbox(o);break;
   case 'eq': s+=drawEq(o);break;
   case 'axes':{const x=o.x,{X,Y}=axesFns(o),u=x.u,st=x.step>0?x.step:1;const ox=X(clamp(0,x.xmin,x.xmax)),oy=Y(clamp(0,x.ymin,x.ymax));
    const gc='#cfcde0';
@@ -1503,7 +1534,7 @@ function openBodies(){
  openModal('m-bodies')}
 
 /* ---------- giro universal ---------- */
-const BAKE=['point','segment','line','ray','vector','polygon','angle','dim','spring','wave','rope','ground','lens','resistor','battery','capacitor','bulb','switch','meter','circle','ball'];
+const BAKE=['ink','point','segment','line','ray','vector','polygon','angle','dim','spring','wave','rope','ground','lens','resistor','battery','capacitor','bulb','switch','meter','circle','ball'];
 const OWNROT=['block','cart','mover','body','frame','magnet'];
 const isTR=o=>!BAKE.includes(o.type)&&!OWNROT.includes(o.type)&&o.type!=='pulley'&&o.type!=='rect';
 const normA=a=>{a=((a%360)+540)%360-180;return Math.round(a*10)/10};
@@ -1571,6 +1602,8 @@ function outline(o){
   case 'frame': {const c=o.pts[0],x=o.x,ux=rot([x.fx?-1:1,0],x.rot||0),uy=rot([0,x.fy?1:-1],x.rot||0);return {d:`M${P(add(c,mul(ux,x.mode==='y'?0:x.Lx*GRID)))}L${P(c)}L${P(add(c,mul(uy,x.mode==='x'?0:x.Ly*GRID)))}`,area:0}}
   case 'incline': return {d:`M${inclinePts(o).map(P).join('L')}Z`,area:1};
   case 'axes': {const {X,Y}=axesFns(o),x=o.x,ox=X(clamp(0,x.xmin,x.xmax)),oy=Y(clamp(0,x.ymin,x.ymax));return {d:`M${r2(X(x.xmin))} ${r2(oy)}H${r2(X(x.xmax)+18)}M${r2(ox)} ${r2(Y(x.ymin))}V${r2(Y(x.ymax)-18)}`,area:0}}
+  case 'ink': return {d:inkD(o.pts.length>1&&dist(o.pts[0],o.pts[o.pts.length-1])+o.pts.length>2.01?o.pts:[o.pts[0],add(o.pts[0],[0.5,0])]),area:0};
+  case 'tbox': {const b=tbBox(o);return {d:`M${r2(b.x0)} ${r2(b.y0)}h${r2(b.w)}v${r2(b.h)}h${r2(-b.w)}Z`,area:1}}
   case 'eq': {const [bx,by,bw,bh]=eqBox(o);return {d:`M${r2(bx-4)} ${r2(by-4)}h${r2(bw+8)}v${r2(bh+8)}h${r2(-bw-8)}Z`,area:1}}
   case 'text': {const w=Math.max(estW(parseMath(o.label||' '),o.fs),10),h=o.fs*1.1,c=p[0];return {d:`M${r2(c[0]-w/2-3)} ${r2(c[1]-h/2-3)}h${r2(w+6)}v${r2(h+6)}h${r2(-w-6)}Z`,area:1}}
   case 'dim': {const [a,b]=p,n=perp(unit(sub(b,a))),off=o.x.off;return {d:`M${P(add(a,mul(n,off)))}L${P(add(b,mul(n,off)))}`,area:0}}
@@ -1583,19 +1616,22 @@ function handles(o){
  if(o.type==='frame'){const c=o.pts[0],x=o.x;H.push({k:0,p:c});if(x.mode!=='y')H.push({k:'X',p:add(c,mul(rot([x.fx?-1:1,0],x.rot||0),x.Lx*GRID)),t:'r'});if(x.mode!=='x')H.push({k:'Y',p:add(c,mul(rot([0,x.fy?1:-1],x.rot||0),x.Ly*GRID)),t:'r'})}
  else if(o.type==='pulley'){H.push({k:0,p:o.pts[0]},{k:1,p:o.pts[1]});if(o.x.sup){const r=dist(o.pts[0],o.pts[1]);H.push({k:'R',p:add(o.pts[0],mul(rot([0,-1],o.x.rot||0),r+(o.x.slen||30))),t:'r'})}}
  else if(o.type==='block'||o.type==='cart'||o.type==='mover'||o.type==='body'){const c=o.pts[0];H.push({k:0,p:c},{k:'S',p:add(c,rot([o.x.w/2,o.x.h/2],o.x.rot))})}
+ else if(o.type==='ink'){}
  else if(o.type==='axes'||o.type==='text'||o.type==='eq'||o.type==='point'||o.type==='charge'||o.type==='optics'||COMPLEX.includes(o.type))H.push({k:0,p:o.pts[0]});
  else o.pts.forEach((p,i)=>H.push({k:i,p}));
  if(o.type==='optics'){H.push({k:'T',p:[o.pts[0][0]-toPx(Math.max(0.01,o.x.do)),o.pts[0][1]-toPx(o.x.ho)]})}
  if(o.type==='circgeo'){const pts=cgPts(o),R_=o.x.r*GRID,c=o.pts[0];Object.keys(pts).forEach(n=>{const a=pts[n]*Math.PI/180;H.push({k:'C:'+n,p:add(c,[R_*Math.cos(a),-R_*Math.sin(a)]),t:'r'})});H.push({k:'Rr',p:add(c,[R_*Math.SQRT1_2,R_*Math.SQRT1_2]),t:'r'})}
+ if(o.type==='wphen')H.push(...wHandles(o));
  if(o.type==='refr'){const a=o.x.ang*Math.PI/180,L=o.x.L*GRID;H.push({k:'A',p:add(o.pts[0],[-L*Math.sin(a),-L*Math.cos(a)]),t:'r'})}
  if(o.type==='pendulum'){const t=o.x.ang*Math.PI/180,L=o.x.L*GRID;H.push({k:'A',p:add(o.pts[0],[L*Math.sin(t),L*Math.cos(t)]),t:'r'})}
  if(o.type==='dim'){const [a,b]=o.pts,n=perp(unit(sub(b,a)));H.push({k:'O',p:add(mid(a,b),mul(n,o.x.off)),t:'r'})}
  if(hasLabel(o))H.push({k:'L',p:labelPos(o),t:'l'});
  return H;
 }
-function hasLabel(o){if(o.type==='text'||o.type==='axes')return false;if(o.type==='angle')return !!(o.label||o.x.val);if(o.type==='dim')return true;return !!o.label}
+function hasLabel(o){if(o.type==='text'||o.type==='axes'||o.type==='tbox'||o.type==='ink')return false;if(o.type==='angle')return !!(o.label||o.x.val);if(o.type==='dim')return true;return !!o.label}
 function setHandle(o,k,p,e){
  if(k==='L'){o.lo=sub(p,labelBase(o));return}
+ if(typeof k==='string'&&k.startsWith('W:')&&o.type==='wphen'){wSetHandle(o,k,p,e);return}
  if(typeof k==='string'&&k.startsWith('C:')&&o.type==='circgeo'){const d=sub(p,o.pts[0]);let a=Math.round(Math.atan2(-d[1],d[0])*180/Math.PI);if(a<0)a+=360;if(S.settings.snap&&!(e&&e.altKey))a=Math.round(a/5)*5;const nm=k.slice(2),pts=cgPts(o);pts[nm]=a;o.x.pts=Object.entries(pts).map(([n,v])=>n+': '+v).join('; ');return}
  if(k==='Rr'&&o.type==='circgeo'){o.x.r=Math.max(0.5,Math.round(dist(p,o.pts[0])/GRID*2)/2);return}
  if(k==='A'&&o.type==='refr'){const d=sub(o.pts[0],p);let a=Math.atan2(d[0],d[1])*180/Math.PI;o.x.ang=clamp(Math.round(a),0,89);return}
@@ -1620,7 +1656,8 @@ function setHandle(o,k,p,e){
 function keyPts(o){
  const p=o.pts;
  switch(o.type){
-  case 'text': case 'eq': return [];
+  case 'text': case 'eq': case 'ink': return [];
+  case 'tbox': {const b=tbBox(o);return [[b.x0,b.y0],[b.x0+b.w,b.y0],[b.x0+b.w,b.y0+b.h],[b.x0,b.y0+b.h]]}
   case 'circle': case 'pulley': case 'ball': case 'charge': case 'axes': case 'point': return [p[0]];
   case 'optics': return [p[0]];
   case 'image': return [p[0],[p[1][0],p[0][1]],p[1],[p[0][0],p[1][1]]];
@@ -1635,14 +1672,14 @@ function keyPts(o){
 
 /* ---------- render ---------- */
 const svg=$('#cv');
-function objSvg(o){const ol=outline(o),tr=rotTr(o);return `<g data-id="${o.id}"><g pointer-events="none"><g${tr}>${draw(o)}</g></g><path${tr} d="${ol.d}" fill="transparent" stroke="transparent" stroke-width="${r2((COARSE?26:14)/view.z)}" pointer-events="${ol.area?'all':'stroke'}" style="cursor:${tool==='select'?'move':'inherit'}"/></g>`}
+function objSvg(o){const ol=outline(o),tr=rotTr(o);return `<g data-id="${o.id}"><g pointer-events="none"><g${tr}${chalkF(o)}>${draw(o)}</g></g><path${tr} d="${ol.d}" fill="transparent" stroke="transparent" stroke-width="${r2((COARSE?26:14)/view.z)}" pointer-events="${ol.area?'all':'stroke'}" style="cursor:${tool==='select'?'move':'inherit'}"/></g>`}
 function imgSymbols(list){return list.filter(o=>o.s&&o.s.tex==='imagen'&&o.s.timg).map(o=>`<symbol id="ti-${o.id}" viewBox="0 0 100 ${r2(100/(o.s.tar||1))}" preserveAspectRatio="xMidYMid slice"><image href="${o.s.timg}" width="100" height="${r2(100/(o.s.tar||1))}" preserveAspectRatio="none"/></symbol>`).join('')+list.filter(o=>o.type==='image'&&o.x.src).map(o=>`<symbol id="is-${o.id}" viewBox="0 0 100 100" preserveAspectRatio="none"><image href="${o.x.src}" width="100" height="100" preserveAspectRatio="none"/></symbol>`).join('')+list.filter(o=>o.type==='optics'&&o.x.osrc).map(o=>`<symbol id="os-${o.id}" viewBox="0 0 100 100" preserveAspectRatio="none"><image href="${o.x.osrc}" width="100" height="100" preserveAspectRatio="none"/></symbol>`).join('')}
 let imgKey='';
 function render(){
  const ik=S.objs.filter(o=>o.type==='image'||o.type==='optics'||(o.s&&o.s.timg)).map(o=>o.id+':'+(o.x.src||o.x.osrc||'').length+':'+(o.s.timg||'').length+':'+(o.s.tar||'')).join('|');if(ik!==imgKey){imgKey=ik;$('#imgdefs').innerHTML=`<defs>${imgSymbols(S.objs)}</defs>`}
  const W=svg.clientWidth,H=svg.clientHeight,z=view.z;
  $('#world').setAttribute('transform',`translate(${r2(view.tx)} ${r2(view.ty)}) scale(${z})`);
- const g=S.settings.grid,gr=$('#gridrect');
+ const g=isBoard()?((BG[BOARD.bg]||BG.blanca).grid||'none'):S.settings.grid,gr=$('#gridrect');
  if(g==='none'){gr.setAttribute('width',0)}else{
   const x0=-view.tx/z,y0=-view.ty/z;gr.setAttribute('x',x0);gr.setAttribute('y',y0);gr.setAttribute('width',W/z);gr.setAttribute('height',H/z);
   $('#gcell').innerHTML=g==='dots'?`<circle cx="0" cy="0" r="${r2(1.6/z)}" style="fill:var(--muted)" fill-opacity=".55"/><circle cx="40" cy="0" r="${r2(1.6/z)}" style="fill:var(--muted)" fill-opacity=".55"/><circle cx="0" cy="40" r="${r2(1.6/z)}" style="fill:var(--muted)" fill-opacity=".55"/><circle cx="40" cy="40" r="${r2(1.6/z)}" style="fill:var(--muted)" fill-opacity=".55"/>`
@@ -1658,7 +1695,7 @@ function render(){
  if(mode==='free'&&drag&&drag.pts.length>1)ov+=`<path d="M${drag.pts.map(P).join('L')}" fill="none" style="stroke:var(--primary)" stroke-width="${r2(2.5/z)}" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".8" pointer-events="none"/>`;
  if(mode==='marquee'&&drag){const a=drag.a,b=drag.b;ov+=`<rect x="${r2(Math.min(a[0],b[0]))}" y="${r2(Math.min(a[1],b[1]))}" width="${r2(Math.abs(b[0]-a[0]))}" height="${r2(Math.abs(b[1]-a[1]))}" style="fill:var(--primary);stroke:var(--primary)" fill-opacity=".08" stroke-width="${r2(1/z)}" stroke-dasharray="${r2(4/z)} ${r2(3/z)}"/>`}
  if(snapMark)ov+=`<circle cx="${r2(snapMark[0])}" cy="${r2(snapMark[1])}" r="${r2(9/z)}" fill="none" style="stroke:var(--primary)" stroke-width="${r2(2/z)}"/>`;
- $('#ovl').innerHTML=ov;
+ $('#ovl').innerHTML=ov+rulerSvg();
  updBars();
  $('#zv').textContent=Math.round(z*100)+'%';
  $('#b-undo').disabled=!hist.length;$('#b-redo').disabled=!fut.length;document.querySelectorAll('.eb[data-need="sel"]').forEach(b=>b.disabled=!sel.size);document.querySelectorAll('.eb[data-eb="sel"],.eb[data-eb="pan"]').forEach(b=>b.classList.toggle('on',(b.dataset.eb==='sel'&&tool==='select')||(b.dataset.eb==='pan'&&tool==='pan')));
@@ -1670,7 +1707,7 @@ function pushHist(){hist.push(JSON.stringify(S.objs));if(hist.length>60)hist.shi
 function undo(){if(!hist.length)return;fut.push(JSON.stringify(S.objs));S.objs=JSON.parse(hist.pop());pruneSel();renderPanel();render();save()}
 function redo(){if(!fut.length)return;hist.push(JSON.stringify(S.objs));S.objs=JSON.parse(fut.pop());pruneSel();renderPanel();render();save()}
 function pruneSel(){sel=new Set([...sel].filter(id=>getObj(id)))}
-let saveT=null,warnedQ=false,actualT=0;function save(){actualT=Date.now();clearTimeout(saveT);saveT=setTimeout(async()=>{const data={objs:S.objs,settings:S.settings,t:actualT};driveSoon(5000);let ok=await idb.set('actual',data);if(!ok)ok=ls.set('diagramas.actual.v1',JSON.stringify(data));if(!ok&&!warnedQ&&S.objs.some(o=>o.type==='image')){warnedQ=true;toast('No queda espacio en este navegador: guarda este diagrama como archivo (.json) en Mis diagramas')}},300)}
+let saveT=null,warnedQ=false,actualT=0;function save(){if(isBoard()){saveBoard();return}actualT=Date.now();const data={objs:S.objs,settings:S.settings,t:actualT};clearTimeout(saveT);saveT=setTimeout(async()=>{driveSoon(5000);let ok=await idb.set('actual',data);if(!ok)ok=ls.set('diagramas.actual.v1',JSON.stringify(data));if(!ok&&!warnedQ&&S.objs.some(o=>o.type==='image')){warnedQ=true;toast('No queda espacio en este navegador: guarda este diagrama como archivo (.json) en Mis diagramas')}},300)}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,3200)}
 
 /* ---------- coordenadas y ajuste ---------- */
@@ -1688,11 +1725,12 @@ svg.addEventListener('pointerdown',e=>{
  if(sheetOpen()&&isMobile()){closeSheet();updBars();return}
  try{svg.setPointerCapture(e.pointerId)}catch(err){}
  pointers.set(e.pointerId,[e.clientX,e.clientY]);
- if(pointers.size===2){if(mode==='draw2'||mode==='await2'){draft=null}if(drag&&drag.pushed&&mode!=='pan'){undoSilent()}const [p1,p2]=[...pointers.values()];pinch={d:dist(p1,p2),m:mid(p1,p2),v:{...view}};mode='pinch';drag=null;render();return}
+ if(pointers.size===2){if(mode==='draw2'||mode==='await2'){draft=null}{const ip=$('#inkprev');if(ip)ip.innerHTML=''}if(drag&&drag.pushed&&mode!=='pan'){undoSilent()}const [p1,p2]=[...pointers.values()];pinch={d:dist(p1,p2),m:mid(p1,p2),v:{...view}};mode='pinch';drag=null;render();return}
  if(pointers.size>2)return;
  const raw=toWorld(e);
  if(e.button===1||tool==='pan'||spaceDown){e.preventDefault();mode='pan';drag={sx:e.clientX,sy:e.clientY,tx:view.tx,ty:view.ty};svg.style.cursor='grabbing';return}
  if(e.button!==0)return;
+ {const rh=e.target.closest('[data-ruler]');if(rh&&isBoard()&&RULER.on){rulerDown(e,raw,rh.dataset.ruler);return}}
  if(tool==='select')selDown(e,raw);else drawDown(e,raw);
 });
 function undoSilent(){if(hist.length){S.objs=JSON.parse(hist.pop())}}
@@ -1710,6 +1748,8 @@ function selDown(e,raw){
  mode='marquee';drag={a:raw,b:raw};render();
 }
 function drawDown(e,raw){
+ if(tool==='ink'){startInk(e,raw);return}
+ if(tool==='eraser'){startErase(e,raw);return}
  if(tool==='smart'){mode='free';drag={pts:[raw]};render();return}
  const sp=snapPt(raw,null,e),p=sp.p,cl=(tool==='polygon'&&polyReg)?2:(CLICKS[tool]||2);
  if(tool==='eq'){mode=null;drag=null;eqOpen(null,p);return}
@@ -1734,10 +1774,14 @@ svg.addEventListener('pointermove',e=>{
  const raw=toWorld(e);
  const st=S.settings;$('#coord').textContent='x: '+fnum(raw[0]/GRID*st.per,1)+' · y: '+fnum(-raw[1]/GRID*st.per,1);
  if(mode==='pan'){view.tx=drag.tx+e.clientX-drag.sx;view.ty=drag.ty+e.clientY-drag.sy;render();return}
+ if(mode==='ink'){inkMove(e);return}
+ if(mode==='erase'){eraseMove(raw);return}
+ if(mode==='ruler'){rulerMove(raw,e);return}
+ if(tool==='eraser'&&!mode&&e.pointerType!=='touch')erCursor(raw);
  if(mode==='rot'){let a=(Math.atan2(raw[1]-drag.C[1],raw[0]-drag.C[0])-drag.a0)*180/Math.PI;a=S.settings.snap&&!e.altKey?Math.round(a/15)*15:Math.round(a);if(!drag.pushed){if(!a)return;pushHist();drag.pushed=true}
   for(const [id,cp] of drag.snap){const i=S.objs.findIndex(q=>q.id===id);if(i>=0)S.objs[i]=clone(cp)}rotateObjs([...drag.snap.keys()].map(getObj).filter(Boolean),a,drag.C);$('#coord').textContent='Giro: '+normA(a)+'°';render();return}
  if(mode==='handle'){const o=getObj(drag.id);if(!o)return;if(!drag.pushed){pushHist();drag.pushed=true}
-  let q=raw;if(!['L','R','O','A','Rr'].includes(drag.k)&&!String(drag.k).startsWith('C:')){const sp=snapPt(raw,new Set([o.id]),e);q=sp.p;snapMark=sp.k?sp.p:null}
+  let q=raw;if(!['L','R','O','A','Rr'].includes(drag.k)&&!String(drag.k).startsWith('C:')&&!String(drag.k).startsWith('W:')){const sp=snapPt(raw,new Set([o.id]),e);q=sp.p;snapMark=sp.k?sp.p:null}
   if(isTR(o)&&o.r)q=rotAround(q,piv(o),-o.r);
   setHandle(o,drag.k,q,e);render();return}
  if(mode==='move'){const tgt=add(drag.ref,sub(raw,drag.start));const sp=snapPt(tgt,sel,e);const d=sub(sp.p,drag.ref);
@@ -1752,6 +1796,9 @@ svg.addEventListener('pointermove',e=>{
 function endPointer(e){
  pointers.delete(e.pointerId);
  if(mode==='pinch'){if(pointers.size<2){mode=null;pinch=null}return}
+ if(mode==='ink'){finishInk();return}
+ if(mode==='erase'){finishErase();return}
+ if(mode==='ruler'){mode=null;drag=null;render();return}
  if(mode==='pan'){mode=null;drag=null;svg.style.cursor='';return}
  if(mode==='rot'){const pushed=drag&&drag.pushed;mode=null;drag=null;if(pushed){save();renderPanel()}render();return}
  if(mode==='handle'||mode==='move'){const pushed=drag&&drag.pushed;mode=null;drag=null;snapMark=null;if(pushed){save();renderPanel()}render();return}
@@ -1784,7 +1831,8 @@ function finishDraft(){
  if(o.type==='cart'&&(o.x.w<10||o.x.h<10)){o.x.w=120;o.x.h=40}
  if(o.type==='mover'||o.type==='body'){o.x.w=Math.max(o.x.w,20);o.x.h=o.x.w*ASP(o)}
  if(TWO.includes(o.type)||o.type==='circle'||o.type==='pulley'||o.type==='ball'||o.type==='rect'){if(dist(o.pts[0],o.pts[1])<1){render();updHint();return}}
- commitNew(o);updHint();
+ if(o.type==='tbox'&&dist(o.pts[0],o.pts[1])<12)o.pts[1]=add(o.pts[0],[240,90]);
+ commitNew(o);updHint();if(o.type==='tbox'){setTool('select');renderPanel();focusLabel()}
 }
 function commitNew(o){pushHist();S.objs.push(o);sel=new Set([o.id]);renderPanel();render();save()}
 
@@ -1936,6 +1984,7 @@ function drawEq(o){const x=o.x,c=o.pts[0],fs=o.fs||22;
 function eqBox(o){const x=o.x,c=o.pts[0];if(!x.svg)return [c[0]-60,c[1]-18,120,36];const k=(o.fs||22)/1000,w=x.vb[2]*k,h=x.vb[3]*k;return [c[0]-w/2,c[1]-h/2,w,h]}
 /* ---------- fenómenos ondulatorios (sonido y luz) ---------- */
 const WCOL={sonido:'#2f6fde',luz:'#d43c3c'};
+const WTIP='<p class="tip">Arrastra los círculos morados para mover la fuente, la pared, las rendijas o la pantalla: el fenómeno se recalcula solo.</p>';
 const WKINDS={
  longitudinal:['Onda de sonido (compresiones)',['sonido']],
  reflexion:['Reflexión',['sonido','luz']],
@@ -1963,7 +2012,7 @@ function wArrow(a,b,col,w=1.8){return arrowV(a,b,col,w)}
 function wDbl(a,b,col,w=1.4){if(dist(a,b)<34){const u=unit(sub(b,a)),n=mul(perp(u),5);return `<path d="M${P(a)}L${P(b)}M${P(add(a,n))}L${P(sub(a,n))}M${P(add(b,n))}L${P(sub(b,n))}" stroke="${col}" stroke-width="${w}" fill="none"/>`}const m=mid(a,b);return arrowV(m,a,col,w)+arrowV(m,b,col,w)}
 function wRay(a,b,col,w=2.2){return sline(a,b,col,w)+head(mid(a,b),a,{s:{w:Math.min(2,w),c:col}}).svg}
 function wFronts(a,b,lam,half,col,w,op=1,g0=0,g1=0){const u=unit(sub(b,a)),n=perp(u),L=dist(a,b);let d='';for(let t=lam*0.7+g0;t<L-lam*0.35-g1;t+=lam){const q=add(a,mul(u,t));d+=`M${P(add(q,mul(n,half)))}L${P(add(q,mul(n,-half)))}`}return d?`<path d="${d}" stroke="${col}" stroke-width="${w}" stroke-opacity="${op}" fill="none" stroke-linecap="round"/>`:''}
-function wAng(V,A,B,R,t,fs,col){const ai=arcInfo(V,A,B,false),m=ai.a1+ai.d/2;return `<path d="${arcD(V,R,ai.a1,ai.d)}" stroke="${col}" stroke-width="1.3" fill="none"/>`+wl(t,add(V,[(R+fs*1.25)*Math.cos(m),(R+fs*1.25)*Math.sin(m)+fs*0.3]),fs*0.85,col,true)}
+function wAng(V,A,B,R,t,fs,col,mm){const ai=arcInfo(V,A,B,false),m=mm??(ai.a1+ai.d/2);return `<path d="${arcD(V,R,ai.a1,ai.d)}" stroke="${col}" stroke-width="1.3" fill="none"/>`+wl(t,add(V,[(R+fs*1.25)*Math.cos(m),(R+fs*1.25)*Math.sin(m)+fs*0.3]),fs*0.85,col,true)}
 function wSpeaker(p,ang,s=WU*0.55){const Q=q=>P(add(p,rotR(q,ang)));const bk=BOOK();
  return `<path d="M${Q([-s*0.95,-s*0.42])}L${Q([-s*0.35,-s*0.42])}L${Q([-s*0.35,s*0.42])}L${Q([-s*0.95,s*0.42])}Z" fill="${bk?'#4b4f5c':'#666'}" stroke="#2b2b33" stroke-width="1"/><path d="M${Q([-s*0.35,-s*0.42])}L${Q([s*0.35,-s*0.95])}L${Q([s*0.35,s*0.95])}L${Q([-s*0.35,s*0.42])}Z" fill="${bk?'#8d93a3':'#aaa'}" stroke="#2b2b33" stroke-width="1" stroke-linejoin="round"/>`}
 function wLamp(p,r=WU*0.22){let d='';for(let i=0;i<8;i++){const t=i*Math.PI/4,a=add(p,[Math.cos(t)*r*1.35,Math.sin(t)*r*1.35]),b=add(p,[Math.cos(t)*r*1.9,Math.sin(t)*r*1.9]);d+=`M${P(a)}L${P(b)}`}
@@ -1982,7 +2031,7 @@ function wPlate(c,w,h,ang,id,lab){const cid='wcp'+id;let d='';const L=Math.hypot
 function drawWphen(o){const x=wx(o),c=o.pts[0],fs=o.fs||15,col=o.s.c,U=WU,luz=x.med==='luz';let s='';
  const F=(t,dy)=>x.frm?wl(t,[c[0],c[1]+dy],fs*0.9,'#222',false,'middle'):'';
  switch(x.kind){
- case 'reflexion':{const th=clamp(x.ang,0,85)*Math.PI/180,L=3.4*U,W=4.4*U;
+ case 'reflexion':{const th=clamp(x.ang,-85,85)*Math.PI/180,L=3.4*U,W=4.4*U,sg=x.ang<0?-1:1;
   const S_=add(c,[-L*Math.sin(th),-L*Math.cos(th)]),R_=add(c,[L*Math.sin(th),-L*Math.cos(th)]);
   if(!x.rug){s+=wWall([c[0]-W,c[1]],[c[0]+W,c[1]],[0,1],luz?'espejo':'pared');s+=dline(c,add(c,[0,-L*1.08]),'#6b6b6b',1.1,'7 4');if(x.lab)s+=wNote('normal',[c[0]+5,c[1]-L*1.08+fs*0.3],fs,'start','#6b6b6b')}
   else{let pts=[];for(let xx=-W,i=0;xx<=W;xx+=13,i++)pts.push([c[0]+xx,c[1]+((i*7)%3-1)*5+(i%2?3:-2)]);const bk=BOOK();
@@ -1990,30 +2039,30 @@ function drawWphen(o){const x=wx(o),c=o.pts[0],fs=o.fs||15,col=o.s.c,U=WU,luz=x.
    s+=`<path d="M${pts.map(P).join('L')}" stroke="#333" stroke-width="2" fill="none" stroke-linejoin="round"/>`}
   if(x.fr&&!x.rug){s+=wFronts(S_,c,0.55*U,0.55*U,col,1.5,luz?0.5:0.9,0,1.8*U);s+=wFronts(c,R_,0.55*U,0.55*U,col,1.5,luz?0.5:0.9,1.8*U,0)}
   if(!x.rug){s+=wRay(S_,c,col,luz?2.2:1.6)+wRay(c,R_,col,luz?2.2:1.6);
-   if(x.vals||x.lab){const up=add(c,[0,-30]);s+=wAng(c,up,S_,32,'θ_i'+(x.vals?' = '+fDeg(x.ang):''),fs,col)+wAng(c,up,R_,40,'θ_r'+(x.vals?' = '+fDeg(x.ang):''),fs,col)}}
-  else{const offs=[-0.9,0,0.9],outs=[-28,12,58];offs.forEach((f,i)=>{const h=add(c,[f*U,0]),a=add(h,[-L*0.9*Math.sin(th),-L*0.9*Math.cos(th)]);s+=wRay(a,h,col,1.8);const t=outs[i]*Math.PI/180;s+=wRay(h,add(h,[L*0.75*Math.sin(t),-L*0.75*Math.cos(t)]),col,1.8)})}
+   if(x.vals||x.lab){const up=add(c,[0,-30]);const sp=Math.max(Math.abs(th)/2,0.42);s+=wAng(c,up,S_,32,'θ_i'+(x.vals?' = '+fDeg(Math.abs(x.ang)):''),fs,col,-Math.PI/2-sg*sp)+wAng(c,up,R_,40,'θ_r'+(x.vals?' = '+fDeg(Math.abs(x.ang)):''),fs,col,-Math.PI/2+sg*sp)}}
+  else{const offs=[-0.9,0,0.9],outs=[-28*sg,12*sg,58*sg];offs.forEach((f,i)=>{const h=add(c,[f*U,0]),a=add(h,[-L*0.9*Math.sin(th),-L*0.9*Math.cos(th)]);s+=wRay(a,h,col,1.8);const t=outs[i]*Math.PI/180;s+=wRay(h,add(h,[L*0.75*Math.sin(t),-L*0.75*Math.cos(t)]),col,1.8)})}
   s+=wSrc(x,add(S_,mul(unit(sub(S_,c)),U*0.45)),Math.atan2(c[1]-S_[1],c[0]-S_[0]));
-  if(x.lab){const ui=unit(sub(c,S_));let ni=perp(ui);if(ni[0]>0)ni=mul(ni,-1);const ur=unit(sub(R_,c));let nr=perp(ur);if(nr[0]<0)nr=mul(nr,-1);const off=x.rug?0.2*U:0.8*U;
-   s+=wNote(luz?'rayo incidente':'onda incidente',add(add(S_,mul(ui,L*0.45)),mul(ni,off+fs*0.4)),fs,'end');s+=wNote(x.rug?(luz?'luz reflejada en todas direcciones':'sonido reflejado en muchas direcciones'):(luz?'rayo reflejado':'onda reflejada'),x.rug?add(c,[1.2*U,-L*0.95]):add(add(c,mul(ur,L*0.55)),mul(nr,off+fs*0.4)),fs,'start');
+  if(x.lab){const ui=unit(sub(c,S_));let ni=perp(ui);if(ni[0]*sg>0)ni=mul(ni,-1);const ur=unit(sub(R_,c));let nr=perp(ur);if(nr[0]*sg<0)nr=mul(nr,-1);const off=x.rug?0.2*U:0.8*U;
+   s+=wNote(luz?'rayo incidente':'onda incidente',add(add(S_,mul(ui,L*0.45)),mul(ni,off+fs*0.4)),fs,sg>0?'end':'start');s+=wNote(x.rug?(luz?'luz reflejada en todas direcciones':'sonido reflejado en muchas direcciones'):(luz?'rayo reflejado':'onda reflejada'),x.rug?add(c,[1.2*U*sg,-L*0.95]):add(add(c,mul(ur,L*0.55)),mul(nr,off+fs*0.4)),fs,sg>0?'start':'end');
    s+=wNote(x.rug?(luz?'superficie rugosa: reflexión difusa':'superficie irregular: el sonido se dispersa'):(luz?'espejo: reflexión especular':'pared'),[c[0]+W,c[1]+fs*1.9],fs,'end')}
   if(!x.rug)s+=F('θ_i = θ_r',U*1.2+fs);break}
- case 'eco':{const Px=c[0]-3.6*U,Wx=c[0]+3.6*U,y0=c[1];
+ case 'eco':{const ew=clamp(x.ew||7.2,3,16),Px=c[0]-3.6*U,Wx=Px+ew*U,y0=c[1];
   s+=wWall([Wx,y0-1.9*U],[Wx,y0+1.6*U],[1,0],'pared')+wPerson([Px-0.55*U,y0+0.25*U])+wSpeaker([Px+0.15*U,y0-0.25*U],0,U*0.4);
-  const C0=[Px+0.3*U,y0-0.25*U];for(let k=1;k<=4;k++){const r=k*0.9*U,a=18*Math.PI/180;s+=`<path d="M${P(add(C0,[r*Math.cos(a),-r*Math.sin(a)]))}A${r2(r)} ${r2(r)} 0 0 1 ${P(add(C0,[r*Math.cos(a),r*Math.sin(a)]))}" stroke="${col}" stroke-width="1.6" fill="none" stroke-opacity="${r2(1-k*0.12)}"/>`}
-  const C1=[2*Wx-Px-0.3*U,y0+0.25*U];for(let k=1;k<=3;k++){const r=(C1[0]-Wx)+k*0.9*U,a=Math.asin(Math.min(1,1.0*U/r));s+=`<path d="M${P(add(C1,[-r*Math.cos(a),-r*Math.sin(a)]))}A${r2(r)} ${r2(r)} 0 0 0 ${P(add(C1,[-r*Math.cos(a),r*Math.sin(a)]))}" stroke="${col}" stroke-width="1.4" stroke-dasharray="5 4" fill="none" stroke-opacity="${r2(0.85-k*0.12)}"/>`}
+  const C0=[Px+0.3*U,y0-0.25*U];for(let k=1;k<=4;k++){const r=k*0.9*U,a=18*Math.PI/180;if(C0[0]+r>Wx-0.4*U)break;s+=`<path d="M${P(add(C0,[r*Math.cos(a),-r*Math.sin(a)]))}A${r2(r)} ${r2(r)} 0 0 1 ${P(add(C0,[r*Math.cos(a),r*Math.sin(a)]))}" stroke="${col}" stroke-width="1.6" fill="none" stroke-opacity="${r2(1-k*0.12)}"/>`}
+  const C1=[2*Wx-Px-0.3*U,y0+0.25*U];for(let k=1;k<=3;k++){const r=(C1[0]-Wx)+k*0.9*U,a=Math.asin(Math.min(1,1.0*U/r));if(C1[0]-r<C0[0]+0.6*U)break;s+=`<path d="M${P(add(C1,[-r*Math.cos(a),-r*Math.sin(a)]))}A${r2(r)} ${r2(r)} 0 0 0 ${P(add(C1,[-r*Math.cos(a),r*Math.sin(a)]))}" stroke="${col}" stroke-width="1.4" stroke-dasharray="5 4" fill="none" stroke-opacity="${r2(0.85-k*0.12)}"/>`}
   s+=wArrow([Px+0.7*U,y0-1.25*U],[Wx-0.25*U,y0-1.25*U],col,1.8)+wArrow([Wx-0.25*U,y0+1.25*U],[Px+0.7*U,y0+1.25*U],col,1.8);
-  const yd=y0+2.1*U;s+=wDbl([Px,yd],[Wx,yd],'#444',1.2)+wl('d'+(x.vals?' = '+fnum(x.dm,1)+' m':''),[c[0],yd+fs*0.9],fs*0.9,'#222',true);
-  if(x.lab){s+=wNote('sonido emitido',[c[0],y0-1.25*U-fs*0.5],fs);s+=wNote('eco (sonido reflejado)',[c[0],y0+1.25*U-fs*0.75],fs);s+=wNote('pared',[Wx+4,y0-1.9*U-fs*0.7],fs,'middle')}
+  const yd=y0+2.1*U;s+=wDbl([Px,yd],[Wx,yd],'#444',1.2)+wl('d'+(x.vals?' = '+fnum(x.dm,1)+' m':''),[(Px+Wx)/2,yd+fs*0.9],fs*0.9,'#222',true);
+  if(x.lab){s+=wNote('sonido emitido',[(Px+Wx)/2,y0-1.25*U-fs*0.5],fs);s+=wNote('eco (sonido reflejado)',[(Px+Wx)/2,y0+1.25*U-fs*0.75],fs);s+=wNote('pared',[Wx+4,y0-1.9*U-fs*0.7],fs,'middle')}
   if(x.frm){const t=2*x.dm/x.vs;s+=F('t = 2d / v'+(x.vals?' = 2 · '+fnum(x.dm,1)+' / '+fnum(x.vs,0)+' = '+fnum(t,2)+' s':''),2.1*U+fs*2.6)}break}
- case 'refraccion':{const th=clamp(x.ang,0,85)*Math.PI/180,L=3.3*U,W=4.4*U,k=luz?x.n1/x.n2:x.v2/x.v1,s2=Math.sin(th)*k,tir=s2>1,bk=BOOK();
+ case 'refraccion':{const th=clamp(x.ang,-85,85)*Math.PI/180,L=3.3*U,W=4.4*U,k=luz?x.n1/x.n2:x.v2/x.v1,s2=Math.sin(th)*k,tir=Math.abs(s2)>1,bk=BOOK();
   s+=`<rect x="${r2(c[0]-W)}" y="${r2(c[1]-L*1.05)}" width="${r2(2*W)}" height="${r2(L*1.05)}" fill="${bk?'#f3f8fd':'none'}"/><rect x="${r2(c[0]-W)}" y="${r2(c[1])}" width="${r2(2*W)}" height="${r2(L*1.05)}" fill="${luz?(bk?'#cfe3f3':'#eef4fa'):(bk?'#b9dcf2':'#e6f2fb')}" fill-opacity=".9"/>`;
   s+=sline([c[0]-W,c[1]],[c[0]+W,c[1]],'#333',1.6)+dline([c[0],c[1]-L*1.05],[c[0],c[1]+L*1.05],'#6b6b6b',1.1,'7 4');
   const S_=add(c,[-L*Math.sin(th),-L*Math.cos(th)]),l1=(luz?0.55:0.4)*U,l2=clamp(l1*k,0.18*U,2.2*U),L2=luz?L:L*1.25;
   if(x.fr)s+=wFronts(S_,c,l1,0.5*U,col,1.5,luz?0.5:0.9,0,1.25*U);s+=wRay(S_,c,col,luz?2.2:1.6);s+=wSrc(x,add(S_,mul(unit(sub(S_,c)),U*0.45)),Math.atan2(c[1]-S_[1],c[0]-S_[0]));
-  const up=add(c,[0,-30]),dn=add(c,[0,30]);if(x.vals||x.lab)s+=wAng(c,up,S_,32,'θ_1'+(x.vals?' = '+fDeg(x.ang):''),fs,col);
+  const up=add(c,[0,-30]),dn=add(c,[0,30]);if(x.vals||x.lab)s+=wAng(c,up,S_,32,'θ_1'+(x.vals?' = '+fDeg(Math.abs(x.ang)):''),fs,col);
   if(tir){const R_=add(c,[L*Math.sin(th),-L*Math.cos(th)]);s+=wRay(c,R_,col,2)+wl('reflexión total interna',[c[0],c[1]+L*0.5],fs*0.9,col,false,'middle',true)}
-  else{const b=Math.asin(s2),T_=add(c,[L2*Math.sin(b),L2*Math.cos(b)]);if(x.fr)s+=wFronts(c,T_,l2,0.5*U,col,1.5,luz?0.5:0.9,l2>U?0:1.25*U,0);s+=wRay(c,T_,col,luz?2.2:1.6);if(x.vals||x.lab)s+=wAng(c,dn,T_,40,'θ_2'+(x.vals?' = '+fDeg(b*180/Math.PI):''),fs,col);
-   if(x.lab&&x.fr){const u2=unit(sub(T_,c));let n2=perp(u2);if(n2[0]<0)n2=mul(n2,-1);s+=wl('λ_2',add(add(c,mul(u2,L2*0.62)),mul(n2,0.5*U+fs*0.7)),fs*0.85,col,true)}}
+  else{const b=Math.asin(s2),T_=add(c,[L2*Math.sin(b),L2*Math.cos(b)]);if(x.fr)s+=wFronts(c,T_,l2,0.5*U,col,1.5,luz?0.5:0.9,l2>U?0:1.25*U,0);s+=wRay(c,T_,col,luz?2.2:1.6);if(x.vals||x.lab)s+=wAng(c,dn,T_,40,'θ_2'+(x.vals?' = '+fDeg(Math.abs(b*180/Math.PI)):''),fs,col);
+   if(x.lab&&x.fr){const u2=unit(sub(T_,c));let n2=perp(u2);if(n2[0]*(x.ang<0?-1:1)<0)n2=mul(n2,-1);s+=wl('λ_2',add(add(c,mul(u2,L2*0.62)),mul(n2,0.5*U+fs*0.7)),fs*0.85,col,true)}}
   if(x.lab&&x.fr)s+=wl('λ_1',add(mid(S_,c),[-fs*1.1,-fs*0.2]),fs*0.85,col,true,'end');
   const t1=luz?`${x.m1}   n_1 = ${fnum(x.n1,2)}`:`${x.m1}   v_1 = ${fnum(x.v1,0)} m/s`,t2=luz?`${x.m2}   n_2 = ${fnum(x.n2,2)}`:`${x.m2}   v_2 = ${fnum(x.v2,0)} m/s`;
   s+=wl(t1,[c[0]-W+6,c[1]-fs*0.7],fs*0.85,'#222',false,'start')+wl(t2,[c[0]-W+6,c[1]+fs*1.25],fs*0.85,'#222',false,'start');
@@ -2046,7 +2095,7 @@ function drawWphen(o){const x=wx(o),c=o.pts[0],fs=o.fs||15,col=o.s.c,U=WU,luz=x.
   if(x.lab&&x.hip){const y=c[1]+R+d/2+fs*1.2,x0=c[0]-3.6*U;s+=sline([x0,y-fs*0.3],[x0+26,y-fs*0.3],'#e8890c',2.2)+wNote(luz?'interferencia constructiva (franja brillante)':'interferencia constructiva (sonido fuerte)',[x0+32,y],fs,'start');
    s+=dline([x0,y+fs*1.1],[x0+26,y+fs*1.1],'#555',1.4,'6 4')+wNote(luz?'interferencia destructiva (franja oscura)':'interferencia destructiva (casi silencio)',[x0+32,y+fs*1.4],fs,'start')}
   s+=F('Δr = mλ (constructiva)     Δr = (m + ½)λ (destructiva)',R+d/2+fs*(x.lab&&x.hip?4.2:1.4));break}
- case 'young':{const [yc,lf]=YCOL[x.color]||YCOL.rojo,lam=lf*U,dd=Math.max(1,x.d)*lam,Lp=Math.max(2,x.L)*U,H=2.6*U,bx=c[0]-Lp/2,sx=c[0]+Lp/2,gap=7,cid='wcy'+o.id,bk=BOOK();
+ case 'young':{const [yc,lf]=YCOL[x.color]||YCOL.rojo,lam=lf*U,dd=Math.max(1,x.d)*lam,Lp=Math.max(2,x.L)*U,H=2.6*U,bx=c[0]-2.25*U,sx=bx+Lp,gap=7,cid='wcy'+o.id,bk=BOOK();
   for(let k=1;k<=3;k++)s+=sline([bx-k*lam-2,c[1]-H*0.8],[bx-k*lam-2,c[1]+H*0.8],yc,1.5);s+=wLamp([bx-4.2*lam-0.3*U,c[1]],U*0.2);
   const bar=(y1,y2)=>`<rect x="${r2(bx-4)}" y="${r2(y1)}" width="8" height="${r2(y2-y1)}" fill="${bk?'#4b4f5c':'#666'}" stroke="#333" stroke-width=".8"/>`;
   s+=bar(c[1]-H,c[1]-dd/2-gap/2)+bar(c[1]-dd/2+gap/2,c[1]+dd/2-gap/2)+bar(c[1]+dd/2+gap/2,c[1]+H);
@@ -2059,7 +2108,7 @@ function drawWphen(o){const x=wx(o),c=o.pts[0],fs=o.fs||15,col=o.s.c,U=WU,luz=x.
   if(x.lab){const ym=lam*Lp/dd;for(let m=-3;m<=3;m++){const y=m*ym;if(Math.abs(y)>H-4)continue;s+=wl(m===0?'máximo central':'m = '+Math.abs(m),[sx+32+1.3*U+6,c[1]+y+fs*0.3],fs*0.75,'#333',false,'start')}
    s+=wNote('rendijas',[bx,c[1]-H-fs*0.5],fs)+wNote('pantalla',[sx+10,c[1]-H-fs*0.5],fs)+wNote('luz monocromática ('+x.color+')',[bx-2.3*lam,c[1]+H+fs*1.1],fs);
    s+=wDbl([bx-10,c[1]-dd/2],[bx-10,c[1]+dd/2],'#333',1.1)+wl('d',[bx-14,c[1]+fs*0.3],fs*0.9,'#222',true,'end');
-   s+=wDbl([bx,c[1]+H+fs*2.2],[sx,c[1]+H+fs*2.2],'#333',1.1)+wl('L',[c[0],c[1]+H+fs*1.9],fs*0.9,'#222',true)}
+   s+=wDbl([bx,c[1]+H+fs*2.2],[sx,c[1]+H+fs*2.2],'#333',1.1)+wl('L',[(bx+sx)/2,c[1]+H+fs*1.9],fs*0.9,'#222',true)}
   s+=F('d sen θ = mλ        y_m = mλL / d',H+fs*(x.lab?3.8:1.4));break}
  case 'doppler':{const lam=0.72*U,n=Math.max(2,Math.round(x.n)),vr=clamp(x.vr,0,2.5),sh=n*lam*vr/2,S_=[c[0]+sh,c[1]];
   for(let k=1;k<=n;k++){const C=[S_[0]-vr*k*lam,c[1]],r=k*lam,op=r2(1-k*0.5/n);
@@ -2068,8 +2117,8 @@ function drawWphen(o){const x=wx(o),c=o.pts[0],fs=o.fs||15,col=o.s.c,U=WU,luz=x.
   if(vr>=1&&!luz){const al=Math.asin(1/vr),Lc=n*lam*vr*1.02;[-1,1].forEach(sg=>{s+=sline(S_,add(S_,[-Lc*Math.cos(al),sg*Lc*Math.sin(al)]),'#d43c3c',2)});if(x.lab)s+=wNote('onda de choque (estampido sónico)',[S_[0]-Lc*Math.cos(al),c[1]-Lc*Math.sin(al)-fs*0.7],fs,'middle','#d43c3c')}
   if(luz){let d='';for(let i=0;i<10;i++){const r=i%2?U*0.12:U*0.28,t=-Math.PI/2+i*Math.PI/5;d+=(i?'L':'M')+P(add(S_,[r*Math.cos(t),r*Math.sin(t)]))}s+=`<path d="${d}Z" fill="#ffd54a" stroke="#b8860b" stroke-width="1.2"/>`}
   else s+=CIRC(S_,6,`fill="#333"`);
-  s+=wArrow(add(S_,[U*0.3,0]),add(S_,[U*1.25,0]),'#222',2)+wl('v_s',add(S_,[U*0.8,-fs*0.95]),fs*0.9,'#222',true);
-  const right=S_[0]+n*lam*(1-Math.min(vr,0.999))+0.9*U,left=S_[0]-n*lam*(1+vr)-0.9*U;
+  const tipL=0.3*U+vr*1.9*U;if(vr>0.02)s+=wArrow(add(S_,[U*0.3,0]),add(S_,[tipL,0]),'#222',2)+wl('v_s',add(S_,[(0.3*U+tipL)/2,-fs*0.95]),fs*0.9,'#222',true);
+  const right=Math.max(S_[0]+n*lam*(1-Math.min(vr,0.999)),S_[0]+0.3*U+vr*1.9*U)+0.9*U,left=S_[0]-n*lam*(1+vr)-0.9*U;
   if(x.lab){const yb=c[1]+0.55*U;s+=wPerson([left,yb]);if(vr<1)s+=wPerson([right,yb]);
    if(vr<1)s+=wNote(luz?'corrimiento al azul':'λ menor: más agudo',[right-0.3*U,yb+0.55*U+fs*0.6],fs,'start',luz?'#1e66d0':'#333');
    s+=wNote(luz?'corrimiento al rojo':'λ mayor: más grave',[left+0.3*U,yb+0.55*U+fs*0.6],fs,'end',luz?'#d43c3c':'#333')}
@@ -2135,7 +2184,7 @@ function drawWphen(o){const x=wx(o),c=o.pts[0],fs=o.fs||15,col=o.s.c,U=WU,luz=x.
   s+=F('I = I_0 cos^2 θ'+(x.vals?'  →  I = '+fnum(ct*ct,2)+' I_0':''),1.3*U+fs*(x.lab?2.8:1.4));break}
  case 'dispersion':{const side=3.3*U,h=side*Math.sqrt(3)/2,A=[c[0],c[1]-h*2/3],B=[c[0]-side/2,c[1]+h/3],C=[c[0]+side/2,c[1]+h/3],bk=BOOK();
   s+=`<path d="M${P(A)}L${P(B)}L${P(C)}Z" fill="${bk?'#d6ecf8':'#eef6fb'}" fill-opacity=".85" stroke="#335" stroke-width="1.6" stroke-linejoin="round"/>`;
-  const Pin=add(A,mul(sub(B,A),0.55)),din=unit([Math.cos(-22*Math.PI/180),Math.sin(-22*Math.PI/180)]),S0=sub(Pin,mul(din,3*U));
+  const Pin=add(A,mul(sub(B,A),0.55)),din=unit([Math.cos(clamp(x.bd??-22,-60,25)*Math.PI/180),Math.sin(clamp(x.bd??-22,-60,25)*Math.PI/180)]),S0=sub(Pin,mul(din,3*U));
   const outN=(a,b)=>{let nn=unit(perp(sub(b,a)));if(dot(nn,sub(mid(a,b),centroid([A,B,C])))<0)nn=mul(nn,-1);return nn};
   const refr=(i,nO,eta)=>{const ci=-dot(nO,i),k=1-eta*eta*(1-ci*ci);if(k<0)return null;return unit(add(mul(i,eta),mul(nO,eta*ci-Math.sqrt(k))))};
   const hit=(p,u,a,b)=>{const e=sub(b,a),den=u[0]*e[1]-u[1]*e[0];if(Math.abs(den)<1e-9)return null;const w=sub(a,p),t=(w[0]*e[1]-w[1]*e[0])/den,v=(w[0]*u[1]-w[1]*u[0])/den;return t>1e-6&&v>=0&&v<=1?add(p,mul(u,t)):null};
@@ -2154,9 +2203,148 @@ function openWphen(){const card=(med,[k,extra,name])=>{const o={id:'tw'+med+k+(n
   return `<button data-k="${k}" data-med="${med}" data-extra='${esc(JSON.stringify(extra||{}))}'><svg viewBox="-200 -140 400 280" aria-hidden="true"><g>${drawWphen(o)}</g></svg>${esc(name||WKINDS[k][0])}</button>`};
  $('#wp-list').innerHTML=['sonido','luz'].map(m=>`<h3 class="wph">${m==='sonido'?'Sonido':'Luz'}</h3><div class="shgrid wpgrid">${WPICK[m].map(it=>card(m,it)).join('')}</div>`).join('');
  openModal('m-wphen');requestAnimationFrame(()=>document.querySelectorAll('#wp-list svg').forEach(sv=>{try{const b=sv.firstElementChild.getBBox(),pd=8;sv.setAttribute('viewBox',`${r2(b.x-pd)} ${r2(b.y-pd)} ${r2(b.width+2*pd)} ${r2(b.height+2*pd)}`)}catch(e){}}))}
+
+function wGeom(o){const x=wx(o),c=o.pts[0],U=WU;return {x,c,U}}
+function wHandles(o){const {x,c,U}=wGeom(o),H=[];const hp=(k,p)=>H.push({k:'W:'+k,p,t:'r'});
+ switch(x.kind){
+  case 'reflexion':{const th=clamp(x.ang,-85,85)*Math.PI/180,L=3.4*U;hp('src',add(c,[-L*Math.sin(th),-L*Math.cos(th)]));break}
+  case 'refraccion':{const th=clamp(x.ang,-85,85)*Math.PI/180,L=3.3*U;hp('src',add(c,[-L*Math.sin(th),-L*Math.cos(th)]));break}
+  case 'eco':{const ew=clamp(x.ew||7.2,3,16);hp('wall',[c[0]-3.6*U+ew*U,c[1]-1.9*U]);break}
+  case 'difraccion':{const lam=0.6*U,ap=Math.max(0.3,x.a)*lam;hp('gap',[c[0]+4.5,c[1]+ap/2]);break}
+  case 'interferencia':{const lam=0.72*U,d=Math.max(0.5,x.d)*lam;hp('s2',[c[0]+d/2,c[1]]);break}
+  case 'young':{const lam=(YCOL[x.color]||YCOL.rojo)[1]*U,dd=Math.max(1,x.d)*lam,Lp=Math.max(2,x.L)*U,bx=c[0]-2.25*U;hp('screen',[bx+Lp,c[1]-2.6*U]);hp('slit',[bx,c[1]+dd/2]);break}
+  case 'doppler':{const lam=0.72*U,n=Math.max(2,Math.round(x.n)),vr=clamp(x.vr,0,2.5);hp('vs',[c[0]+n*lam*vr/2+0.3*U+vr*1.9*U,c[1]]);break}
+  case 'tubo':{const L=7*U,x0=c[0]-L/2,cer=x.tipo==='cerrado';let n=Math.max(1,Math.round(x.h));if(cer&&n%2===0)n+=1;hp('h',[x0+(cer?L/n:L/(2*n)),c[1]]);break}
+  case 'cuerda':{const L=7*U,x0=c[0]-L/2,n=Math.max(1,Math.round(x.h));hp('h',[x0+L/(2*n),c[1]-0.75*U]);break}
+  case 'polarizacion':{const th=clamp(x.th,0,90);hp('th',add([c[0]+1.65*U,c[1]],rotR([0,-1.55*U],th*Math.PI/180)));break}
+  case 'dispersion':{const side=3.3*U,h=side*Math.sqrt(3)/2,A=[c[0],c[1]-h*2/3],B=[c[0]-side/2,c[1]+h/3],Pin=add(A,mul(sub(B,A),0.55)),a=clamp(x.bd??-22,-60,25)*Math.PI/180;hp('src',sub(Pin,mul([Math.cos(a),Math.sin(a)],3*U)));break}
+  case 'longitudinal':{const W=8*U,lam=W/Math.max(1,x.cyc);hp('lam',[c[0]-W/2+1.5*lam,c[1]-1.05*U-6]);break}
+ }
+ return H}
+function wSetHandle(o,k,p,e){const {x,c,U}=wGeom(o),d=sub(p,c),snap=S.settings.snap&&!(e&&e.altKey);k=k.slice(2);
+ const R=(v,st)=>Math.round(v/st)*st;
+ switch(x.kind){
+  case 'reflexion':case 'refraccion':{if(d[1]>-4)d[1]=-4;let a=Math.atan2(-d[0],-d[1])*180/Math.PI;a=clamp(a,-85,85);o.x.ang=snap?R(a,5):Math.round(a);break}
+  case 'eco':{const old=clamp(x.ew||7.2,3,16),ew=clamp(R((p[0]-(c[0]-3.6*U))/U,0.25),3,16);o.x.dm=Math.max(1,Math.round(x.dm/old*ew));o.x.ew=ew;break}
+  case 'difraccion':o.x.a=clamp(R(2*Math.abs(d[1])/(0.6*U),0.25),0.25,8);break;
+  case 'interferencia':o.x.d=clamp(R(2*Math.abs(d[0])/(0.72*U),0.5),0.5,8);break;
+  case 'young':{const lam=(YCOL[x.color]||YCOL.rojo)[1]*U,bx=c[0]-2.25*U;if(k==='screen')o.x.L=clamp(R((p[0]-bx)/U,0.5),2,12);else o.x.d=clamp(R(2*Math.abs(d[1])/lam,0.5),1,10);break}
+  case 'doppler':{const lam=0.72*U,n=Math.max(2,Math.round(x.n));o.x.vr=clamp(Math.round((d[0]-0.3*U)/(n*lam/2+1.9*U)*20)/20,0,2.5);break}
+  case 'tubo':{const L=7*U,dx=Math.max(4,p[0]-(c[0]-L/2)),cer=x.tipo==='cerrado';let n=Math.round(cer?L/dx:L/(2*dx));n=clamp(n,1,9);if(cer&&n%2===0)n=n+1>9?n-1:n+1;o.x.h=n;break}
+  case 'cuerda':{const L=7*U,dx=Math.max(4,p[0]-(c[0]-L/2));o.x.h=clamp(Math.round(L/(2*dx)),1,10);break}
+  case 'polarizacion':{const q=sub(p,[c[0]+1.65*U,c[1]]);let a=Math.atan2(q[0],-q[1])*180/Math.PI;a=clamp(a,0,90);o.x.th=snap?R(a,5):Math.round(a);break}
+  case 'dispersion':{const side=3.3*U,h=side*Math.sqrt(3)/2,A=[c[0],c[1]-h*2/3],B=[c[0]-side/2,c[1]+h/3],Pin=add(A,mul(sub(B,A),0.55)),q=sub(Pin,p);let a=Math.atan2(q[1],q[0])*180/Math.PI;o.x.bd=clamp(Math.round(a),-60,25);break}
+  case 'longitudinal':{const W=8*U,lam=Math.max(0.2*U,(p[0]-(c[0]-W/2))/1.5);o.x.cyc=clamp(Math.round(W/lam*2)/2,1,8);break}
+ }}
 $('#wp-list').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b)return;const k=b.dataset.k,med=b.dataset.med;let extra={};try{extra=JSON.parse(b.dataset.extra||'{}')}catch(err){}
  const st=GRID*S.settings.step,vc=[(svg.clientWidth/2-view.tx)/view.z,(svg.clientHeight/2-view.ty)/view.z],c=[Math.round(vc[0]/st)*st,Math.round(vc[1]/st)*st];
  const o=make('wphen',[c]);o.pts=[c];o.x={kind:k,med,...extra};o.s.c=WCOL[med];$('#m-wphen').hidden=true;setTool('select');commitNew(o);toast(WKINDS[k][0]+' insertado')});
+/* ---------- cuadro de texto ---------- */
+function tbLines(o,maxW){const fs=o.fs,out=[];String(o.label??'').split('\n').forEach(par=>{const words=par.split(/(\s+)/);let line='';
+  for(const w of words){if(!w)continue;const t=line+w;if(line.trim()&&estW(parseMath(t.trim()),fs)>maxW&&!/^\s+$/.test(w)){out.push(line.trimEnd());line=w}else line=t}out.push(line.trimEnd())});return out}
+function tbBox(o){const [a,b]=o.pts,x0=Math.min(a[0],b[0]),y0=Math.min(a[1],b[1]),w=Math.max(30,Math.abs(b[0]-a[0])),pad=o.x.pad??10,lh=o.fs*1.38;
+ const lines=tbLines(o,Math.max(10,w-2*pad));return {x0,y0,w,h:Math.max(Math.abs(b[1]-a[1]),lines.length*lh+2*pad-(lh-o.fs)*0.4),lines,pad,lh}}
+function drawTbox(o){const x=o.x,{x0,y0,w,h,lines,pad,lh}=tbBox(o),s0=o.s;let s='';
+ const dash=s0.dash==='dash'?` stroke-dasharray="${r2(s0.w*4)} ${r2(s0.w*2.6)}"`:s0.dash==='dot'?` stroke-dasharray="0.1 ${r2(s0.w*2.6)}" stroke-linecap="round"`:'';
+ if(s0.fill!=='none'||x.bd)s+=`<rect x="${r2(x0)}" y="${r2(y0)}" width="${r2(w)}" height="${r2(h)}" rx="${x.rad??6}" fill="${s0.fill!=='none'?s0.fill:'none'}" fill-opacity="${s0.fop}" stroke="${x.bd?s0.c:'none'}" stroke-width="${s0.w}"${dash}/>`;
+ const al=x.al||'left',tx=al==='center'?x0+w/2:al==='right'?x0+w-pad:x0+pad,anchor=al==='center'?'middle':al==='right'?'end':'start';
+ lines.forEach((t,i)=>{if(t)s+=mtext(t,tx,y0+pad+lh*i+lh*0.5-(lh-o.fs)*0.2,{fs:o.fs,c:x.tc||'#1f1f1f',it:o.it,anchor,bold:x.bold})});return s}
+
+/* ---------- modo pizarra ---------- */
+let MODE='diag',DIAG=null,RULER={on:false,c:[0,0],a:0,len:15};
+let BOARD={pages:[{objs:[]}],cur:0,bg:'blanca',t:0};
+const BG={blanca:{c:'#ffffff',n:'Blanca'},cuadros:{c:'#ffffff',grid:'lines',n:'Cuadriculada'},verde:{c:'#23402f',dark:true,n:'Verde'},negra:{c:'#1d1f24',dark:true,n:'Negra'}};
+const PENS={lapiz:{n:'Lápiz',w:[1.6,2.6,4.2]},marcador:{n:'Marcador',w:[4,6.5,10]},resaltador:{n:'Resaltador',w:[12,18,28]}};
+const PAL_L=['#1f1f1f','#1e5bd8','#d43c3c','#1e9e4a','#7b3fd1','#f08c00'],PAL_D=['#f5f5f0','#ffe066','#ff8fa3','#8fd3ff','#a8f0a0','#ffb366'],PAL_H=['#ffe600','#6cf06c','#ff8ad8','#6fd4ff','#ffb347'];
+let PEN={kind:'lapiz',size:1,col:{lapiz:0,marcador:1,resaltador:0},er:1};
+const isBoard=()=>MODE==='board',boardDark=()=>isBoard()&&!!(BG[BOARD.bg]||BG.blanca).dark;
+function penColor(){const i=PEN.col[PEN.kind]||0;if(PEN.kind==='resaltador')return PAL_H[i%PAL_H.length];const pal=boardDark()?PAL_D:PAL_L;return pal[i%pal.length]}
+function penWidth(){return PENS[PEN.kind].w[PEN.size]}
+function inkD(pts){if(pts.length<2)return '';if(pts.length===2)return `M${P(pts[0])}L${P(pts[1])}`;let d=`M${P(pts[0])}L${P(mid(pts[0],pts[1]))}`;for(let i=1;i<pts.length-1;i++)d+=`Q${P(pts[i])} ${P(mid(pts[i],pts[i+1]))}`;return d+`L${P(pts[pts.length-1])}`}
+function drawInk(o){const hl=o.x.pen==='resaltador';let pts=o.pts;if(pts.length===2&&dist(pts[0],pts[1])<0.01)pts=[pts[0],add(pts[0],[0.01,0])];
+ return `<path d="${inkD(pts)}" stroke="${o.s.c}" stroke-width="${o.s.w}" fill="none" stroke-linecap="${hl?'butt':'round'}" stroke-linejoin="round"${hl?' stroke-opacity=".42"':''}/>`}
+function applyBoardLook(){const st=$('#stage');document.body.classList.toggle('board',isBoard());document.body.classList.toggle('board-dark',boardDark());st.style.background=isBoard()?(BG[BOARD.bg]||BG.blanca).c:'';
+ $('#modesw').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===MODE));$('#penbar').hidden=!isBoard();updPenbar()}
+let boardT=null;function saveBoard(){if(isBoard())BOARD.pages[BOARD.cur].objs=S.objs;BOARD.t=Date.now();clearTimeout(boardT);boardT=setTimeout(async()=>{await idb.set('pizarra',BOARD);driveSoon(5000)},350)}
+function diagObjs(){return isBoard()&&DIAG?DIAG.objs:S.objs}
+function switchMode(m){if(m===MODE)return;if(isBoard()){BOARD.pages[BOARD.cur].objs=S.objs;const v=view;S.objs=DIAG.objs;hist=DIAG.hist;fut=DIAG.fut;view=DIAG.view||v;BOARD.view={...v};DIAG=null;idb.set('pizarra',BOARD)}
+ else{DIAG={objs:S.objs,hist,fut,view:{...view}};S.objs=BOARD.pages[BOARD.cur].objs;hist=[];fut=[];view=BOARD.view?{...BOARD.view}:{tx:svg.clientWidth/2,ty:svg.clientHeight/2,z:1}}
+ MODE=m;ls.set('diagramas.app.modo',m);sel.clear();draft=null;mode=null;applyBoardLook();setTool(m==='board'?'ink':'select');renderPanel();render();
+ toast(m==='board'?'Modo pizarra · tu diagrama queda guardado en modo Diagramas':'Modo diagramas')}
+function goPage(i){if(!isBoard())return;i=clamp(i,0,BOARD.pages.length-1);if(i===BOARD.cur)return;BOARD.pages[BOARD.cur].objs=S.objs;BOARD.cur=i;S.objs=BOARD.pages[i].objs;hist=[];fut=[];sel.clear();renderPanel();render();updPenbar();saveBoard()}
+function addPage(){BOARD.pages[BOARD.cur].objs=S.objs;BOARD.pages.splice(BOARD.cur+1,0,{objs:[]});BOARD.cur++;S.objs=BOARD.pages[BOARD.cur].objs;hist=[];fut=[];sel.clear();if(tool==='select')setTool('ink');renderPanel();render();updPenbar();saveBoard();toast('Página '+(BOARD.cur+1)+' agregada')}
+function delPage(btn){if(BOARD.pages.length<2){if(S.objs.length){pushHist();S.objs=[];render();saveBoard();toast('Página borrada · Ctrl+Z para recuperarla')}return}
+ if(!btn.dataset.sure){btn.dataset.sure='1';btn.classList.add('warn');toast('Toca otra vez para eliminar la página '+(BOARD.cur+1));setTimeout(()=>{delete btn.dataset.sure;btn.classList.remove('warn')},2600);return}
+ BOARD.pages.splice(BOARD.cur,1);BOARD.cur=Math.min(BOARD.cur,BOARD.pages.length-1);S.objs=BOARD.pages[BOARD.cur].objs;hist=[];fut=[];sel.clear();renderPanel();render();updPenbar();saveBoard();toast('Página eliminada')}
+const PB_IC={select:'<path d="M5 3l14 7-6 2-2 6z"/>',ink:'<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>',marcador:'<path d="M6 14l7-7 4 4-7 7H6z"/><path d="M13 7l2-2 4 4-2 2"/><path d="M4 20h7"/>',resaltador:'<path d="M9 12l6-6 3 3-6 6z"/><path d="M9 12l-2 5h4l1-2"/><path d="M4 20h16" stroke-width="3" opacity=".45"/>',eraser:'<path d="M8 20h12"/><path d="M3.5 14.5l9-9 7 7-6.5 6.5H8z"/><path d="M8 10l7 7"/>',ruler:'<path d="M3 16L16 3l5 5L8 21z"/><path d="M7 12l2 2M10 9l2 2M13 6l2 2"/>',pan:'<path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>',ins:'<path d="M4 4h10v10H4z"/><path d="M18 10v10H8M14 17h-3M17 14v3"/>'};
+const pbI=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${PB_IC[k]}</svg>`;
+function updPenbar(){const b=$('#penbar');if(!b||!isBoard())return;const pal=PEN.kind==='resaltador'?PAL_H:(boardDark()?PAL_D:PAL_L),ci=PEN.col[PEN.kind]||0,inkOn=tool==='ink',erOn=tool==='eraser';
+ b.innerHTML=`<div class="pbg">
+   <button data-pb="select" class="${tool==='select'?'on':''}" title="Seleccionar y mover">${pbI('select')}<span>Mover</span></button>
+   <button data-pb="lapiz" class="${inkOn&&PEN.kind==='lapiz'?'on':''}" title="Lápiz">${pbI('ink')}<span>Lápiz</span></button>
+   <button data-pb="marcador" class="${inkOn&&PEN.kind==='marcador'?'on':''}" title="Marcador">${pbI('marcador')}<span>Marcador</span></button>
+   <button data-pb="resaltador" class="${inkOn&&PEN.kind==='resaltador'?'on':''}" title="Resaltador">${pbI('resaltador')}<span>Resaltador</span></button>
+   <button data-pb="eraser" class="${erOn?'on':''}" title="Goma: borra solo lo que tocas">${pbI('eraser')}<span>Goma</span></button>
+   <button data-pb="ruler" class="${RULER.on?'on':''}" title="Regla: arrástrala, gírala desde el círculo y traza líneas rectas a lo largo del borde">${pbI('ruler')}<span>Regla</span></button>
+   <button data-pb="pan" class="${tool==='pan'?'on':''}" title="Mover la vista">${pbI('pan')}<span>Vista</span></button></div>
+  <div class="pbg pbc">${erOn?['Pequeña','Mediana','Grande'].map((n,i)=>`<button data-er="${i}" class="sz ${PEN.er===i?'on':''}" title="Goma ${n.toLowerCase()}"><i style="width:${6+i*5}px;height:${6+i*5}px;background:#bbb"></i></button>`).join(''):pal.map((c,i)=>`<button data-col="${i}" class="sw ${ci===i?'on':''}" style="--c:${c}" title="Color"></button>`).join('')+[0,1,2].map(i=>`<button data-sz="${i}" class="sz ${PEN.size===i?'on':''}" title="Grosor"><i style="width:${4+i*4}px;height:${4+i*4}px"></i></button>`).join('')}</div>
+  <div class="pbg"><select id="pb-bg" title="Fondo de la pizarra">${Object.entries(BG).map(([k,v])=>`<option value="${k}"${BOARD.bg===k?' selected':''}>${v.n}</option>`).join('')}</select>
+   <button data-pb="prev" title="Página anterior" ${BOARD.cur?'':'disabled'}>‹</button><span class="pg">${BOARD.cur+1}/${BOARD.pages.length}</span><button data-pb="next" title="Página siguiente" ${BOARD.cur<BOARD.pages.length-1?'':'disabled'}>›</button>
+   <button data-pb="add" title="Agregar página">＋</button><button data-pb="del" title="Eliminar página">✕</button>
+   <button data-pb="ins" title="Insertar un diagrama guardado">${pbI('ins')}<span>Insertar diagrama</span></button></div>`}
+function pbClick(e){const b=e.target.closest('button');if(!b)return;const k=b.dataset.pb;
+ if(b.dataset.col!=null){PEN.col[PEN.kind]=+b.dataset.col;if(tool!=='ink')setTool('ink');updPenbar();return}
+ if(b.dataset.sz!=null){PEN.size=+b.dataset.sz;if(tool!=='ink')setTool('ink');updPenbar();return}
+ if(b.dataset.er!=null){PEN.er=+b.dataset.er;updPenbar();return}
+ if(k==='lapiz'||k==='marcador'||k==='resaltador'){PEN.kind=k;setTool('ink');return}
+ if(k==='select'||k==='eraser'||k==='pan'){setTool(k);return}
+ if(k==='ruler'){RULER.on=!RULER.on;if(RULER.on){const vc=[(svg.clientWidth/2-view.tx)/view.z,(svg.clientHeight/2-view.ty)/view.z],L=Math.min(RULER.len*GRID,svg.clientWidth*0.75/view.z);RULER.len=Math.max(5,Math.floor(L/GRID));RULER.c=[vc[0]-RULER.len*GRID/2,vc[1]-0.8*GRID];RULER.a=0;toast('Regla: arrástrala para moverla y gírala desde el círculo. Dibuja junto al borde superior para trazar una línea recta.')}updPenbar();render();return}
+ if(k==='prev')goPage(BOARD.cur-1);else if(k==='next')goPage(BOARD.cur+1);else if(k==='add')addPage();else if(k==='del')delPage(b);
+ else if(k==='ins'){renderLib();openModal('m-lib')}}
+/* trazos */
+function inkEl(){let el=$('#inkprev');if(!el){el=document.createElementNS('http://www.w3.org/2000/svg','g');el.id='inkprev';el.setAttribute('pointer-events','none');$('#world').appendChild(el)}return el}
+function rulerLocal(p){return rot(sub(p,RULER.c),-RULER.a)}
+function rulerProj(p){const l=rulerLocal(p);return add(RULER.c,rot([clamp(l[0],0,RULER.len*GRID),0],RULER.a))}
+function nearRulerEdge(p){if(!RULER.on)return false;const l=rulerLocal(p);return l[0]>=-6&&l[0]<=RULER.len*GRID+6&&l[1]>=-0.75*GRID&&l[1]<=0.2*GRID}
+function startInk(e,raw){mode='ink';const col=penColor(),w=penWidth();drag={pts:[raw],col,w,kind:PEN.kind};if(nearRulerEdge(raw)){drag.ruler=true;drag.a=rulerProj(raw);drag.b=drag.a}inkPreview()}
+function inkPreview(){const el=inkEl();if(!drag)return;const hl=drag.kind==='resaltador';
+ if(drag.ruler){const Lw=dist(drag.a,drag.b),st=S.settings,m=mid(drag.a,drag.b),txt=fnum(Lw/GRID*st.per,1)+(st.unit?' '+st.unit:' cuadros');
+  el.innerHTML=`<path d="M${P(drag.a)}L${P(drag.b)}" stroke="${drag.col}" stroke-width="${drag.w}" stroke-linecap="${hl?'butt':'round'}"${hl?' stroke-opacity=".42"':''}/>`+(Lw>4?`<g transform="translate(${P(add(m,rot([0,-22/view.z],RULER.a)))})"><rect x="${r2(-34/view.z)}" y="${r2(-11/view.z)}" width="${r2(68/view.z)}" height="${r2(22/view.z)}" rx="${r2(6/view.z)}" fill="#222" fill-opacity=".85"/><text text-anchor="middle" y="${r2(5/view.z)}" font-size="${r2(13/view.z)}" fill="#fff" font-family="${FONT}" font-weight="700">${esc(txt)}</text></g>`:'');return}
+ el.innerHTML=`<path d="${drag.pts.length>1?inkD(drag.pts):`M${P(drag.pts[0])}l0.01 0`}" stroke="${drag.col}" stroke-width="${drag.w}" fill="none" stroke-linecap="${hl?'butt':'round'}" stroke-linejoin="round"${hl?' stroke-opacity=".42"':''}/>`}
+function inkMove(e){if(!drag)return;const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
+ if(drag.ruler){drag.b=rulerProj(toWorld(e));inkPreview();return}
+ for(const ev of (evs.length?evs:[e])){const p=toWorld(ev),l=drag.pts[drag.pts.length-1];if(dist(l,p)*view.z>=1.2)drag.pts.push(p)}inkPreview()}
+function finishInk(){const d=drag;mode=null;drag=null;const el=$('#inkprev');if(el)el.innerHTML='';if(!d)return;
+ let pts=d.ruler?[d.a,d.b]:rdp(d.pts,0.35/view.z);if(pts.length<2)pts=[pts[0],pts[0]];if(d.ruler&&dist(d.a,d.b)*view.z<3)return;
+ const o=make('ink',[pts[0],pts[1]]);o.pts=pts.map(p=>[r2(p[0]),r2(p[1])]);o.s.c=d.col;o.s.w=d.w;o.x={pen:d.kind};o.it=false;pushHist();S.objs.push(o);render();save()}
+/* goma */
+function erR(){return [7,14,26][PEN.er]/view.z}
+function eraseAt(p){const r=erR();let changed=false;const out=[];
+ for(const o of S.objs){if(o.type!=='ink'){out.push(o);continue}const pts=o.pts,rr=r+o.s.w/2;let hit=false;
+  for(let i=0;i<pts.length;i++){if(segDist(p,pts[i],pts[i+1]||pts[i])<rr){hit=true;break}}
+  if(!hit){out.push(o);continue}changed=true;
+  const dense=[];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],n=Math.max(1,Math.ceil(dist(a,b)/Math.max(0.5,r*0.4)));for(let j=0;j<n;j++)dense.push(add(a,mul(sub(b,a),j/n)))}dense.push(pts[pts.length-1]);
+  let run=[];const flush=()=>{if(run.length>=2&&pathLen(run)>0.6){const q=clone(o);q.id=uid();q.pts=rdp(run,0.25/view.z).map(v=>[r2(v[0]),r2(v[1])]);out.push(q)}run=[]};
+  for(const q of dense){if(dist(q,p)<rr)flush();else run.push(q)}flush()}
+ if(changed){if(!drag.pushed){pushHist();drag.pushed=true}S.objs=out;render()}}
+function erCursor(p){const el=inkEl();el.innerHTML=p?`<circle cx="${r2(p[0])}" cy="${r2(p[1])}" r="${r2(erR())}" fill="#fff" fill-opacity=".35" stroke="#555" stroke-width="${r2(1.2/view.z)}" stroke-dasharray="${r2(3/view.z)} ${r2(2/view.z)}"/>`:''}
+function startErase(e,raw){mode='erase';drag={pushed:false,last:raw};eraseAt(raw);erCursor(raw)}
+function eraseMove(raw){const a=drag.last,n=Math.max(1,Math.ceil(dist(a,raw)/(erR()*0.5)));for(let i=1;i<=n;i++)eraseAt(add(a,mul(sub(raw,a),i/n)));drag.last=raw;erCursor(raw)}
+function finishErase(){const pushed=drag&&drag.pushed;mode=null;drag=null;erCursor(null);if(pushed)save()}
+/* regla */
+function rulerSvg(){if(!isBoard()||!RULER.on)return '';const U=GRID,L=RULER.len*U,H=1.6*U,z=view.z,st=S.settings,dark=boardDark();let ticks='',nums='';
+ const step=z>=0.7?U/10:z>=0.35?U/2:U;for(let x=0;x<=L+0.01;x+=step){const k=Math.round(x/U*10),major=k%10===0,half=k%5===0;const h=major?0.42*U:half?0.28*U:0.17*U;ticks+=`M${r2(x)} 0V${r2(h)}`;if(major)nums+=`<text x="${r2(x)}" y="${r2(0.42*U+12/z+2)}" text-anchor="middle" font-size="${r2(11/z)}" font-family="${FONT}" fill="#3a3a3a">${fnum(Math.round(x/U)*st.per,2)}</text>`}
+ const rp=[L+0.55*U,H/2];
+ return `<g transform="translate(${P(RULER.c)}) rotate(${r2(RULER.a)})"><rect data-ruler="body" x="0" y="0" width="${r2(L)}" height="${r2(H)}" rx="${r2(4/z)}" fill="${dark?'#e8eef7':'#fff6c4'}" fill-opacity=".86" stroke="#7a6a2a" stroke-width="${r2(1/z)}" style="cursor:move"/><path d="${ticks}" stroke="#3a3a3a" stroke-width="${r2(1/z)}" pointer-events="none"/><g pointer-events="none">${nums}<text x="${r2(L-6/z)}" y="${r2(H-8/z)}" text-anchor="end" font-size="${r2(11/z)}" font-family="${FONT}" fill="#555">${esc(st.unit||'cuadros')} · ${fnum(((RULER.a%360)+360)%360,0)}°</text></g><circle data-ruler="rot" cx="${r2(rp[0])}" cy="${r2(rp[1])}" r="${r2(11/z)}" fill="var(--primary)" stroke="#fff" stroke-width="${r2(2/z)}" style="cursor:grab"/><path d="M${r2(rp[0]-5/z)} ${r2(rp[1]-2/z)}a${r2(5/z)} ${r2(5/z)} 0 1 1 ${r2(2/z)} ${r2(6/z)}" stroke="#fff" stroke-width="${r2(1.6/z)}" fill="none" pointer-events="none"/></g>`}
+function rulerDown(e,raw,k){mode='ruler';const U=GRID,ctr=add(RULER.c,rot([RULER.len*U/2,0.8*U],RULER.a));drag={k,start:raw,c0:[...RULER.c],ctr}}
+function rulerMove(raw,e){if(drag.k==='body'){RULER.c=add(drag.c0,sub(raw,drag.start))}else{const U=GRID,v=sub(raw,drag.ctr);let a=Math.atan2(v[1],v[0])*180/Math.PI;a=S.settings.snap&&!e.altKey?Math.round(a/5)*5:Math.round(a);RULER.a=a;RULER.c=sub(drag.ctr,rot([RULER.len*U/2,0.8*U],a))}render()}
+/* insertar diagramas en la pizarra */
+function insertObjs(list,name){if(!list||!list.length){toast('Ese diagrama está vacío');return}const objs=clone(list);const g=uid();let sx=0,sy=0,n=0;objs.forEach(o=>{o.id=uid();o.g=g;o.pts.forEach(p=>{sx+=p[0];sy+=p[1];n++})});
+ const c0=[sx/n,sy/n],vc=[(svg.clientWidth/2-view.tx)/view.z,(svg.clientHeight/2-view.ty)/view.z],d=sub(vc,c0);objs.forEach(o=>{o.pts=o.pts.map(p=>add(p,d))});
+ pushHist();S.objs.push(...objs);sel=new Set(objs.map(o=>o.id));setTool('select');renderPanel();render();save();$('#m-lib').hidden=true;toast((name?name+' insertado':'Diagrama insertado')+' · puedes moverlo, agrandarlo o desagruparlo')}
+
+const CHALKF='<filter id="chalkf" filterUnits="userSpaceOnUse" x="-100000" y="-100000" width="200000" height="200000" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"/><feColorMatrix type="hueRotate" values="180"/></filter>';
+const chalkF=o=>boardDark()&&o.type!=='ink'&&o.type!=='image'?' filter="url(#chalkf)"':'';
 /* ---------- editor de ecuaciones ---------- */
 const EQ_PAL={
  'Estructuras':[['a/b','(‸)/()','Fracción'],['xⁿ','^(‸)','Potencia'],['xₙ','_(‸)','Subíndice'],['√x','√(‸)','Raíz cuadrada'],['ⁿ√x','√(‸&)','Raíz n-ésima: índice & radicando'],['( )','(‸)','Paréntesis'],['[ ]','[‸]','Corchetes'],['|x|','abs(‸)','Valor absoluto'],['Vector','vec(‸)','Vector con flecha: vec(F)'],['Barra','bar(‸)','Barra encima (promedio, segmento)'],['∫','int_(‸)^() ','Integral'],['∑','sum_(‸)^() ','Sumatoria'],['lim','lim_(‸->) ','Límite'],['(▦)','(mat(‸&@&))','Matriz 2×2'],['{ ⋮','cases(‸@)','Sistema de ecuaciones'],['(n k)','binom(‸&)','Combinatoria'],['Texto','"‸"','Texto normal (sin cursiva)'],['x°','°','Grados']],
@@ -2419,7 +2607,7 @@ function setTool(t){
  if(t==='wphen'){openWphen();return}
  if(draft){draft=null;mode=null}tool=t;snapMark=null;
  document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
- svg.className.baseVal=t==='select'?'m-select':t==='pan'?'m-pan':'';updHint();render();updPolybar();updSmartbar();
+ svg.className.baseVal=t==='select'?'m-select':t==='pan'?'m-pan':t==='ink'?'m-ink':t==='eraser'?'m-eraser':'';updHint();render();updPolybar();updSmartbar();updPenbar();if(t!=='eraser')erCursor(null);
  if(isMobile()&&t!=='select'){let h=HINTS[t]||'Arrastra con el dedo, o toca el inicio y luego el final';h=h.replace(/doble clic o Enter/g,'el botón Terminar').replace(/o doble clic/g,'o el botón Terminar').replace(/Clic/g,'Toca').replace(/clic/g,'toca').replace(/ · rueda del mouse para acercar o alejar/,' · pellizca para acercar').replace(/ · usa v_0.*$/,'');toast(h)}
 }
 function updHint(){const h=$('#hint');let t=HINTS[tool]||'Arrastra para dibujar, o haz clic en el inicio y luego en el final';
@@ -2471,9 +2659,9 @@ function extraFields(o){
    if(meds.length>1)h+=F.sel('Tipo de onda','x.med',w.med,meds.map(m=>[m,m==='luz'?'Luz':'Sonido']));
    const N=(l,p,st,mn,mx)=>F.num(l,'x.'+p,w[p],st,mn,mx),B=(l,p)=>F.bool(l,'x.'+p,w[p]);
    switch(k){
-    case 'reflexion':h+=N('Ángulo de incidencia (°)','ang',1,0,85)+B('Superficie rugosa (reflexión difusa)','rug')+B('Frentes de onda','fr');break;
+    case 'reflexion':h+=N('Ángulo de incidencia (°)','ang',1,-85,85)+B('Superficie rugosa (reflexión difusa)','rug')+B('Frentes de onda','fr');break;
     case 'eco':h+=row(N('Distancia a la pared d (m)','dm',1,1),N('Rapidez del sonido v (m/s)','vs',1,1));break;
-    case 'refraccion':h+=N('Ángulo de incidencia θ₁ (°)','ang',1,0,85)+(w.med==='luz'?row(N('Índice n₁','n1',0.01,1),N('Índice n₂','n2',0.01,1)):row(N('Rapidez v₁ (m/s)','v1',10,1),N('Rapidez v₂ (m/s)','v2',10,1)))+row(F.text('Medio 1','x.m1',w.m1),F.text('Medio 2','x.m2',w.m2))+B('Frentes de onda','fr');break;
+    case 'refraccion':h+=N('Ángulo de incidencia θ₁ (°)','ang',1,-85,85)+(w.med==='luz'?row(N('Índice n₁','n1',0.01,1),N('Índice n₂','n2',0.01,1)):row(N('Rapidez v₁ (m/s)','v1',10,1),N('Rapidez v₂ (m/s)','v2',10,1)))+row(F.text('Medio 1','x.m1',w.m1),F.text('Medio 2','x.m2',w.m2))+B('Frentes de onda','fr');break;
     case 'difraccion':h+=row(N('Abertura (en λ)','a',0.25,0.25,8),N('Frentes después','n',1,1,12));break;
     case 'interferencia':h+=row(N('Separación de las fuentes (en λ)','d',0.5,0.5,8),N('Frentes','n',1,2,12))+B('Líneas de máximos y mínimos','hip')+B('Valles (circunferencias segmentadas)','fr');break;
     case 'young':h+=F.sel('Color de la luz','x.color',w.color,Object.keys(YCOL).map(c=>[c,c[0].toUpperCase()+c.slice(1)]))+row(N('Separación d (en λ)','d',0.5,1,10),N('Distancia L (cuadros)','L',0.5,2,12));break;
@@ -2484,7 +2672,7 @@ function extraFields(o){
     case 'pulsaciones':h+=row(N('f₁ (ciclos en el ancho)','f1',1,1,60),N('f₂ (ciclos en el ancho)','f2',1,1,60));break;
     case 'superposicion':h+=F.sel('Tipo','x.sup',w.sup,[['cons','Constructiva'],['dest','Destructiva']]);break;
     case 'polarizacion':h+=N('Ángulo del analizador θ (°)','th',5,0,90);break;}
-   return h+B('Rótulos y explicaciones','lab')+B('Fórmula','frm')+B('Mostrar valores','vals')}
+   return WTIP+h+B('Rótulos y explicaciones','lab')+B('Fórmula','frm')+B('Mostrar valores','vals')}
   case 'fronts':return F.sel('Tipo de onda','x.kind',x.kind,[['circ','Circular (fuente puntual)'],['plane','Plana']])+row(F.num('Frentes','x.n',x.n,1,1,20),F.num('Separación λ (cuadros)','x.sp',x.sp,0.25,0.25))+(x.kind==='plane'?F.num('Largo de los frentes','x.len',x.len,0.5,1):'')+F.bool('Rayos (dirección de propagación)','x.rays',x.rays)+F.bool('Marcar la longitud de onda λ','x.lam',x.lam);
   case 'refr':{const r=refrCalc(o);return row(F.num('n₁ (arriba)','x.n1',x.n1,0.01,1),F.num('n₂ (abajo)','x.n2',x.n2,0.01,1))+row(F.text('Medio 1','x.lab1',x.lab1),F.text('Medio 2','x.lab2',x.lab2))+F.num('Ángulo de incidencia θ₁ (°)','x.ang',x.ang,1,0,89)+F.num('Largo de los rayos (cuadros)','x.L',x.L,0.5,1)+F.bool('Rayo reflejado','x.refl',x.refl)+F.bool('Medidas de los ángulos','x.vals',x.vals)+F.bool('Ley de Snell y ángulo límite','x.info',x.info)+`<p class="tip">${r.tir?'Con estos valores hay reflexión total interna.':'θ₂ = '+fDeg(r.b*180/Math.PI)+' (ley de Snell).'} Arrastra el inicio del rayo para cambiar el ángulo.</p>`}
   case 'coaster':return F.text('Alturas de los puntos (m)','x.hs',x.hs,'5; 1; 3,5')+F.text('Nombres','x.names',x.names,'A; B; C')+row(F.num('Ancho','x.W',x.W,20,100,1200),F.num('Escala (px por m)','x.k',x.k,2,5,100))+F.num('Carro en el punto n°','x.ball',x.ball,1,0,20)+F.bool('Alturas','x.hl',x.hl)+F.bool('Barras de energía (Ec y Ep)','x.bars',x.bars)+'<p class="tip">Las barras suponen que el carro parte del reposo en el primer punto y que no hay roce: E = Ec + Ep se conserva.</p>';
@@ -2505,6 +2693,8 @@ function extraFields(o){
   case 'angle':return F.bool('Mostrar medida','x.val',x.val)+row(F.num('Radio del arco','x.r',x.r,2,6,200),F.sel('Arcos','x.arcs',x.arcs,[[1,'1'],[2,'2'],[3,'3']],1))+F.bool('Marca de ángulo recto (90°)','x.sq',x.sq)+F.bool('Dibujar los lados','x.arms',x.arms)+F.bool('Medir el ángulo exterior','x.reflex',x.reflex);
   case 'dim':return F.num('Separación de la cota','x.off',x.off,2,-300,300)+'<p class="tip">Si dejas la etiqueta vacía, la cota muestra la medida.</p>';
   case 'text':return F.bool('Flecha de vector encima','x.over',x.over);
+  case 'tbox':return row(F.sel('Alineación','x.al',x.al||'left',[['left','Izquierda'],['center','Centro'],['right','Derecha']]),F.num('Margen interior','x.pad',x.pad??10,1,0,60))+F.color('Color del texto','x.tc',x.tc||'#1f1f1f')+F.bool('Borde','x.bd',x.bd)+F.bool('Negrita','x.bold',x.bold)+F.bool('Cursiva','it',o.it)+F.num('Esquinas redondeadas','x.rad',x.rad??6,1,0,40)+'<p class="tip">El texto se ajusta solo al ancho del cuadro. Arrastra las esquinas para cambiar su tamaño.</p>';
+  case 'ink':return '';
   case 'eq':return `<div class="acts"><button class="btn pri" data-act="eqedit">Editar ecuación</button><button class="btn" data-act="eqword">Copiar para Word</button></div><p class="tip">También puedes editarla con doble clic. El color se cambia en Trazo.</p>`;
   case 'axes':return row(F.num('x mín.','x.xmin',x.xmin,1),F.num('x máx.','x.xmax',x.xmax,1))+row(F.num('y mín.','x.ymin',x.ymin,1),F.num('y máx.','x.ymax',x.ymax,1))+row(F.num('Marcas cada','x.step',x.step,0.5,0.1),F.num('Tamaño unidad (px)','x.u',x.u,5,10,200))+row(F.text('Eje horizontal','x.lx',x.lx),F.text('Eje vertical','x.ly',x.ly))+F.bool('Mostrar números','x.nums',x.nums)+F.bool('Cuadrícula del plano','x.grid',x.grid)+F.area('Funciones (una por línea)','x.funcs',x.funcs,'2x + 1\nx^2 - 4\nsen(x)')+'<p class="tip">Escribe <code>2x + 1</code>, <code>x^2 - 4</code>, <code>0,5x - 3</code>, <code>raiz(x)</code>, <code>sen(x)</code>, <code>|x|</code>. Cada función toma un color distinto.</p>';
   case 'cart':
@@ -2533,9 +2723,10 @@ function renderPanel(){
  const objs=[...sel].map(getObj).filter(Boolean);
  if(!objs.length){el.innerHTML=settingsPanel();return}
  if(objs.length>1){const grp=objs.every(q=>q.g&&q.g===objs[0].g);el.innerHTML=`<h3>${objs.length} objetos${grp?' (grupo)':''}</h3><p class="sub">Los cambios se aplican a todos los seleccionados.</p><div class="acts" style="margin-bottom:6px">${grp?'<button class="btn" data-act="ungroup">Desagrupar</button>':'<button class="btn pri" data-act="group">Agrupar</button>'}</div>${strokeFields(objs[0],1)}${actions()}`;return}
- const o=objs[0],T=TYPES[o.type];let h=`<h3>${T.n}</h3><p class="sub">${o.type==='eq'?'Doble clic o «Editar ecuación» para cambiarla':o.type==='wphen'?'Arrástralo para moverlo y ajústalo en Opciones':o.type==='polygon'&&!o.x.closed?'Línea poligonal o cable':'Arrastra los puntos para editar la forma'}</p>`;
+ const o=objs[0],T=TYPES[o.type];let h=`<h3>${T.n}</h3><p class="sub">${o.type==='eq'?'Doble clic o «Editar ecuación» para cambiarla':o.type==='wphen'?'Arrastra los círculos morados para mover la fuente y ajústalo en Opciones':o.type==='tbox'?'Doble clic para escribir · arrastra las esquinas para cambiar el tamaño':o.type==='ink'?'Trazo a mano: muévelo, gíralo o cambia su color':o.type==='polygon'&&!o.x.closed?'Línea poligonal o cable':'Arrastra los puntos para editar la forma'}</p>`;
+ if(o.type==='tbox')h+=`<div class="sec"><b>Texto</b>${F.area('Contenido','label',o.label,'Escribe aquí')}${LABHINT}</div>`;
  if(T.lab){h+=`<div class="sec"><b>${o.type==='text'?'Texto':'Etiqueta'}</b>${F.text(o.type==='text'?'Contenido':'Etiqueta','label',o.label,o.type==='angle'?'α (opcional)':'')}${row(F.num('Tamaño de letra','fs',o.fs,1,6,96),`<div style="flex:0 0 auto;padding-bottom:8px">${F.bool('Cursiva','it',o.it)}</div>`)}${LABHINT}${hasLabel(o)?'<p class="tip">El rombo morado mueve la etiqueta.</p>':''}</div>`}
- else if(o.type!=='image')h+=`<div class="sec">${row(o.type==='eq'?F.num('Tamaño de la ecuación','fs',o.fs,1,8,160):F.num('Tamaño de letra','fs',o.fs,1,6,48))}</div>`;
+ else if(o.type!=='image'&&o.type!=='ink')h+=`<div class="sec">${row(o.type==='eq'?F.num('Tamaño de la ecuación','fs',o.fs,1,8,160):F.num('Tamaño de letra','fs',o.fs,1,6,48))}</div>`;
  h+=strokeFields(o);
  if(T.fill||o.type==='ground'){const tx=TEX_TYPES.includes(o.type),tv=o.s.tex||'none';let th='';
   if(tx){th+=F.sel('Textura','s.tex',tv,[['none','Sin textura'],...Object.entries(TEX).map(([k,v])=>[k,v[0]]),['imagen','Imagen propia…']]);
@@ -2643,8 +2834,8 @@ function buildExport(){
  if(grid){x0=Math.floor(x0/GRID)*GRID;y0=Math.floor(y0/GRID)*GRID;x1=Math.ceil(x1/GRID)*GRID;y1=Math.ceil(y1/GRID)*GRID}
  const w=x1-x0,h=y1-y0;let g='';
  if(grid){let d='';for(let x=x0;x<=x1;x+=GRID)d+=`M${x} ${y0}V${y1}`;for(let y=y0;y<=y1;y+=GRID)d+=`M${x0} ${y}H${x1}`;g=`<path d="${d}" stroke="#d6d4e4" stroke-width="1" fill="none"/>`}
- const bg=$('#e-bg').value==='white'?`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#ffffff"/>`:'';
- return {w,h,svg:`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="${x0} ${y0} ${w} ${h}"><defs>${imgSymbols(list)}</defs>${bg}${g}${list.map(o=>`<g>${drawR(o)}</g>`).join('')}</svg>`};
+ const bg=$('#e-bg').value==='white'?`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="${isBoard()?(BG[BOARD.bg]||BG.blanca).c:'#ffffff'}"/>`:'';
+ return {w,h,svg:`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="${x0} ${y0} ${w} ${h}"><defs>${imgSymbols(list)}${boardDark()?CHALKF:''}</defs>${bg}${g}${list.map(o=>`<g${chalkF(o)}>${drawR(o)}</g>`).join('')}</svg>`};
 }
 function refreshExport(){
  const r=buildExport(),img=$('#e-img');if(!r){img.removeAttribute('src');lastPNG=null;return}
@@ -2713,10 +2904,12 @@ async function driveSync(first){
   if(remote&&typeof remote==='object'){
    for(const [n,t] of Object.entries(remote.del||{}))if(!del[n]||del[n]<t)del[n]=t;
    for(const [n,v] of Object.entries(remote.lib||{})){if(!v||!Array.isArray(v.objs))continue;if(!lib[n]||(v.t||0)>(lib[n].t||0)){lib[n]=v;libChanged=true;got++}}
-   const ra=remote.actual;if(first&&ra&&Array.isArray(ra.objs)&&ra.objs.length&&(ra.t||0)>actualT){pushHist();S.objs=ra.objs;actualT=ra.t;sel.clear();renderPanel();render();fit();await idb.set('actual',{objs:S.objs,settings:S.settings,t:actualT});toast('Se abrió tu último diagrama guardado en Drive · Ctrl+Z para volver')}}
+   const rb=remote.pizarra;if(first&&rb&&Array.isArray(rb.pages)&&rb.pages.length&&(rb.t||0)>(BOARD.t||0)){BOARD=rb;BOARD.cur=clamp(BOARD.cur||0,0,BOARD.pages.length-1);await idb.set('pizarra',BOARD);if(isBoard()){S.objs=BOARD.pages[BOARD.cur].objs;hist=[];fut=[];sel.clear();applyBoardLook();renderPanel();render()}}
+   const ra=remote.actual;if(first&&ra&&Array.isArray(ra.objs)&&ra.objs.length&&(ra.t||0)>actualT&&isBoard()){DIAG.objs=ra.objs;actualT=ra.t;await idb.set('actual',{objs:ra.objs,settings:S.settings,t:actualT})}
+   else if(first&&ra&&Array.isArray(ra.objs)&&ra.objs.length&&(ra.t||0)>actualT){pushHist();S.objs=ra.objs;actualT=ra.t;sel.clear();renderPanel();render();fit();await idb.set('actual',{objs:S.objs,settings:S.settings,t:actualT});toast('Se abrió tu último diagrama guardado en Drive · Ctrl+Z para volver')}}
   for(const [n,t] of Object.entries(del))if(lib[n]&&(lib[n].t||0)<=t){delete lib[n];libChanged=true}
   if(libChanged){await setLib(lib);if(!$('#m-lib').hidden)renderLib()}await setDel(del);
-  await driveWrite({app:'taller-diagramas',v:1,t:Date.now(),lib,del,actual:{objs:S.objs,settings:S.settings,t:actualT}});
+  if(isBoard())BOARD.pages[BOARD.cur].objs=S.objs;await driveWrite({app:'taller-diagramas',v:1,t:Date.now(),lib,del,actual:{objs:diagObjs(),settings:S.settings,t:actualT},pizarra:BOARD});
   DR.last=Date.now();driveState('ok');if(first)toast('Drive conectado'+(got?' · '+got+' diagramas recibidos':''))}
  catch(e){if(e.message!=='exp')driveState('error','No se pudo sincronizar con Drive ('+e.message+'). Revisa tu conexión e intenta de nuevo.')}
  DR.busy=false;if(DR.pending){DR.pending=false;driveSync(false)}}
@@ -2728,12 +2921,14 @@ async function getLib(){const v=await idb.get('biblioteca');if(v&&typeof v==='ob
 async function setLib(lib){if(await idb.set('biblioteca',lib))return true;return ls.set(LIBK,JSON.stringify(lib))}
 async function renderLib(){
  const lib=await getLib(),names=Object.keys(lib).sort((a,b)=>lib[b].t-lib[a].t);
- $('#l-list').innerHTML=names.length?names.map(n=>`<div class="it"><div><b>${esc(n)}</b><small>${lib[n].objs.length} objetos · ${new Date(lib[n].t).toLocaleString('es-CL',{dateStyle:'short',timeStyle:'short'})}</small></div><button class="btn" data-open="${esc(n)}">Abrir</button><button class="btn dng" data-del="${esc(n)}">Eliminar</button></div>`).join('')
-  :'<p class="empty">Aún no tienes diagramas guardados. Escribe un nombre arriba y presiona Guardar.</p>';
+ $('#l-list').innerHTML=(isBoard()&&DIAG&&DIAG.objs.length?`<div class="it"><div><b>Diagrama abierto</b><small>el que tienes en modo Diagramas · ${DIAG.objs.length} objetos</small></div><button class="btn pri" data-ins-cur="1">Insertar</button></div>`:'')+(names.length?names.map(n=>`<div class="it"><div><b>${esc(n)}</b><small>${lib[n].objs.length} objetos · ${new Date(lib[n].t).toLocaleString('es-CL',{dateStyle:'short',timeStyle:'short'})}</small></div>${isBoard()?`<button class="btn pri" data-ins="${esc(n)}">Insertar</button>`:`<button class="btn" data-open="${esc(n)}">Abrir</button>`}<button class="btn dng" data-del="${esc(n)}">Eliminar</button></div>`).join('')
+  :'<p class="empty">Aún no tienes diagramas guardados. Escribe un nombre arriba y presiona Guardar.</p>');
 }
 $('#b-lib').onclick=()=>{renderLib();openModal('m-lib');setTimeout(()=>$('#l-name').focus(),30)};
 $('#l-save').onclick=async()=>{const n=$('#l-name').value.trim();if(!n){toast('Escribe un nombre para el diagrama');$('#l-name').focus();return}const lib=await getLib();lib[n]={objs:clone(S.objs),t:Date.now()};const ok=await setLib(lib);await renderLib();driveSoon(800);toast(ok?'Guardado: '+n:'No se pudo guardar: no queda espacio en este navegador. Usa Exportar archivo (.json)')};
 $('#l-list').addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;const lib=await getLib();
+ if(b.dataset.insCur){insertObjs(DIAG&&DIAG.objs,'Diagrama abierto');return}
+ if(b.dataset.ins!=null){const it=lib[b.dataset.ins];if(it)insertObjs(it.objs,b.dataset.ins);return}
  if(b.dataset.open!=null){const it=lib[b.dataset.open];if(!it||!Array.isArray(it.objs)){toast('No se encontró ese diagrama en este navegador');return}pushHist();S.objs=clone(it.objs);sel.clear();$('#l-name').value=b.dataset.open;renderPanel();render();fit();save();$('#m-lib').hidden=true;toast('Abierto: '+b.dataset.open+' · Ctrl+Z para volver')}
  if(b.dataset.del!=null){if(b.dataset.sure){const dl=await getDel();dl[b.dataset.del]=Date.now();await setDel(dl);delete lib[b.dataset.del];await setLib(lib);renderLib();driveSoon(800);toast('Eliminado')}else{b.dataset.sure='1';b.textContent='¿Seguro?';setTimeout(()=>{if(b.isConnected){b.textContent='Eliminar';delete b.dataset.sure}},3000)}}
 });
@@ -2822,8 +3017,12 @@ $('#b-dark').onclick=()=>{const dark=root.dataset.theme?root.dataset.theme==='da
  let loaded=false;try{let cur=await idb.get('actual');if(!cur)cur=JSON.parse(ls.get('diagramas.actual.v1')||'null');if(cur&&Array.isArray(cur.objs)&&cur.objs.length){S.objs=cur.objs;loaded=true;actualT=cur.t||0}}catch(e){}
  try{const lb=await idb.get('biblioteca');const old=ls.get(LIBK);if(!lb&&old){const ok=await idb.set('biblioteca',JSON.parse(old));}}catch(e){}
  view={tx:svg.clientWidth/2,ty:svg.clientHeight/2,z:1};
+ try{const bd=await idb.get('pizarra');if(bd&&Array.isArray(bd.pages)&&bd.pages.length){BOARD=bd;BOARD.cur=clamp(BOARD.cur||0,0,BOARD.pages.length-1)}}catch(e){}
  setTool('select');renderPanel();updLook();
  if(!loaded)loadExample(0,true);else{render();fit()}
+ if(ls.get('diagramas.app.modo')==='board')switchMode('board');
+ $('#modesw').addEventListener('click',e=>{const b=e.target.closest('button[data-m]');if(b)switchMode(b.dataset.m)});
+ $('#penbar').addEventListener('click',pbClick);$('#penbar').addEventListener('change',e=>{if(e.target.id==='pb-bg'){const wasD=boardDark();BOARD.bg=e.target.value;const isD=boardDark();if(wasD!==isD){const A=isD?PAL_L:PAL_D,B=isD?PAL_D:PAL_L;BOARD.pages.forEach((pg,i)=>{(i===BOARD.cur?S.objs:pg.objs).forEach(o=>{if(o.type==='ink'&&o.x.pen!=='resaltador'){const k=A.indexOf(o.s.c);if(k>=0)o.s.c=B[k]}})})}applyBoardLook();render();saveBoard()}});
  window.addEventListener('resize',render);
 })();
 })();
